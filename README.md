@@ -211,5 +211,5 @@ preflight와 승인 경계를 거쳐 검증한다.
 
 - Current: L00 implementation
 - Next: L01 — HAProxy and Toxiproxy Fundamentals
-- Go module: `example.com/demo-github-capacity-cascade` (remote가 없어 사용하는 placeholder)
+- Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

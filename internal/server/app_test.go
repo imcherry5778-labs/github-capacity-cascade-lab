@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"example.com/demo-github-capacity-cascade/internal/fault"
+	"github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/fault"
 )
 
 func TestHealthAndReadyIgnoreFaults(t *testing.T) {

@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"example.com/demo-github-capacity-cascade/internal/fault"
-	"example.com/demo-github-capacity-cascade/internal/telemetry"
+	"github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/fault"
+	"github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/telemetry"
 )
 
 const maxAdminBodyBytes = 16 << 10

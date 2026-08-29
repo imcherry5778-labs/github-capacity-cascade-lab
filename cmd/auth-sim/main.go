@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"example.com/demo-github-capacity-cascade/internal/server"
+	"github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/server"
 )
 
 func main() {

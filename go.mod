@@ -1,4 +1,4 @@
-module example.com/demo-github-capacity-cascade
+module github.com/imcherry5778-labs/github-capacity-cascade-lab
 
 go 1.26
 
