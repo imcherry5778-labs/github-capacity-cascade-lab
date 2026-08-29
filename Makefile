@@ -4,9 +4,11 @@ SHELL := /bin/bash
 BINARY ?= bin/auth-sim
 IMAGE ?= capacity-cascade/auth-sim:dev
 SCENARIO ?=
-K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset
+K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01
+L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
+L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -71,6 +73,37 @@ docker-smoke: ## 이미지에 health/readiness/token 최소 smoke를 실행합�
 	IMAGE="$(IMAGE)" scripts/docker-smoke.sh
 
 verify: fmt-check lint test build k6-check smoke ## 부하 시나리오를 제외한 L00 검증을 실행합니다.
+
+l01-doctor: ## L01에 필요한 Docker Compose와 HTTP 도구를 확인합니다.
+	@missing=0; \
+	for tool in git go k6 docker curl awk tee make; do \
+		if ! command -v "$$tool" >/dev/null 2>&1; then printf '%-16s MISSING\n' "$$tool"; missing=1; else printf '%-16s OK\n' "$$tool"; fi; \
+	done; \
+	if ! docker compose version >/dev/null 2>&1; then printf '%-16s MISSING\n' 'docker compose'; missing=1; else printf '%-16s OK\n' 'docker compose'; fi; \
+	if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi; \
+	exit $$missing
+
+l01-check: l01-doctor ## L01 Compose, HAProxy, k6, shell 구성을 정적으로 검사합니다.
+	AUTH_SIM_IMAGE="$(IMAGE)" HAPROXY_IMAGE="$(L01_HAPROXY_IMAGE)" TOXIPROXY_IMAGE="$(L01_TOXIPROXY_IMAGE)" docker compose --file l01/compose.yaml config --quiet
+	docker run --rm --entrypoint haproxy --volume "$(CURDIR)/l01/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" "$(L01_HAPROXY_IMAGE)" -c -f /usr/local/etc/haproxy/haproxy.cfg
+	k6 inspect load/k6/l01.js >/dev/null
+	bash -n scripts/run-l01-scenario.sh
+
+l01-smoke: docker-build ## 두 L01 정상 경로를 짧게 실행하고 cleanup contract를 확인합니다.
+	LOGICAL_RATE=1 DURATION=1s AUTH_SIM_IMAGE="$(IMAGE)" HAPROXY_IMAGE="$(L01_HAPROXY_IMAGE)" TOXIPROXY_IMAGE="$(L01_TOXIPROXY_IMAGE)" scripts/run-l01-scenario.sh haproxy-control
+	LOGICAL_RATE=1 DURATION=1s AUTH_SIM_IMAGE="$(IMAGE)" HAPROXY_IMAGE="$(L01_HAPROXY_IMAGE)" TOXIPROXY_IMAGE="$(L01_TOXIPROXY_IMAGE)" scripts/run-l01-scenario.sh toxiproxy-control
+
+l01-verify: l01-check l01-smoke ## 정적 검사와 두 정상 경로 smoke를 bounded 실행합니다.
+
+l01-scenario: docker-build ## SCENARIO으로 독립 L01 scenario와 evidence 수집을 실행합니다.
+	@if [[ -z "$(SCENARIO)" ]]; then \
+		printf 'SCENARIO is required (haproxy-control|haproxy-constrained|toxiproxy-control|toxiproxy-latency|toxiproxy-reset-peer)\n' >&2; \
+		exit 2; \
+	fi
+	AUTH_SIM_IMAGE="$(IMAGE)" HAPROXY_IMAGE="$(L01_HAPROXY_IMAGE)" TOXIPROXY_IMAGE="$(L01_TOXIPROXY_IMAGE)" scripts/run-l01-scenario.sh "$(SCENARIO)"
+
+l01-clean: ## 이 repository의 L01 Compose project만 정리하고 evidence는 보존합니다.
+	@scripts/run-l01-scenario.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"

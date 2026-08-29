@@ -9,6 +9,7 @@ results
 docs
 load
 scripts
+l01
 *.tfstate
 *.tfvars
 *.kubeconfig
