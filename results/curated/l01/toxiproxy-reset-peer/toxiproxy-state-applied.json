@@ -1,0 +1,1 @@
+{"name":"auth-sim","listen":"[::]:8666","upstream":"auth-sim:8080","enabled":true,"Logger":{},"toxics":[{"attributes":{"timeout":0},"name":"l01_reset_peer_downstream","type":"reset_peer","stream":"downstream","toxicity":1}]}

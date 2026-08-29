@@ -35,9 +35,15 @@ README에는 임시 P95, RPS 또는 amplification 값을 자동 반영하지 않
 
 - `results/<scenario>/<UTC timestamp>/`는 append-only 실행 단위로 취급한다.
 - 같은 timestamp가 존재하면 suffix를 사용하며 기존 파일을 덮어쓰지 않는다.
-- 성공하지 못한 실험도 삭제하거나 성공처럼 수정하지 않는다.
-- Generated result는 기본적으로 commit하지 않는다.
-- Portfolio로 승격하기 전 secret, 개인 경로, config 일관성을 다시 검토한다.
+- 성공하지 못한 raw 실험도 local에서 삭제하거나 성공처럼 수정하지 않는다.
+- Generated raw result는 기본적으로 ignore하고 commit하지 않는다.
+- 사람이 metadata, config, cleanup, secret과 개인 경로를 검토한 사본만
+  `results/curated/<learning-unit>/`에 복사해 commit할 수 있다. Raw directory는 이동하거나
+  삭제하지 않는다.
+- Curated copy는 measured value를 변경하지 않는다. Redaction이 불가피하면 raw는 보존하고
+  curated README에 대상과 이유를 기록한다.
+- Curated single run도 local exploratory evidence다. Portfolio evidence에는 동일 조건 최소
+  3회 반복 규칙을 그대로 적용한다.
 
 ## Comparison rules
 

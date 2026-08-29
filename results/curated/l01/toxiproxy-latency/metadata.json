@@ -1,0 +1,56 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L01",
+  "phase": "L01",
+  "scenario": "toxiproxy-latency",
+  "started_at_utc": "2026-08-29T13:16:32Z",
+  "git_commit": "3541e908b4db9b1f6b7e72c44d604a41e9902b73",
+  "git_dirty": false,
+  "go_version": "go version go1.26.7 linux/amd64",
+  "k6_version": "k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)",
+  "os": "Linux",
+  "architecture": "x86_64",
+  "tool_versions": {
+    "go": "go version go1.26.7 linux/amd64",
+    "k6": "k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)",
+    "docker": "29.7.2",
+    "docker_compose": "5.1.4",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "2.12.0"
+  },
+  "image_tags": {
+    "auth_sim": "capacity-cascade/auth-sim:dev",
+    "haproxy": "haproxy:3.2.23-alpine",
+    "toxiproxy": "ghcr.io/shopify/toxiproxy:2.12.0"
+  },
+  "base_url": "http://127.0.0.1:32857",
+  "request_path": "k6 -> Toxiproxy -> auth-sim",
+  "logical_rate": 20,
+  "duration": "4s",
+  "request_timeout": "1s",
+  "fault": {
+    "latency_ms": 0,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "application_fault": {
+    "latency_ms": 0,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": null,
+  "network_toxic": {
+    "name": "l01_latency_downstream",
+    "type": "latency",
+    "stream": "downstream",
+    "toxicity": 1,
+    "attributes": {
+      "latency": 150,
+      "jitter": 0
+    }
+  },
+  "retry_policy": "none",
+  "max_attempts": 1
+}

@@ -54,5 +54,6 @@
 
 - Never overwrite a result directory.
 - Record reproducibility metadata without secrets or full personal paths.
-- Preserve failed experiments as evidence.
-- Generated results remain ignored by default; only `results/README.md` is tracked.
+- Preserve failed raw experiments locally as evidence.
+- Generated raw results remain ignored by default. Reviewed copies under `results/curated/` may be tracked after integrity and secret review.
+- Do not alter measured values when curating evidence. A curated single run remains local exploratory evidence, not portfolio evidence.
