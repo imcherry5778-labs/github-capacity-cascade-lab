@@ -1,0 +1,14 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+bin
+dist
+results
+docs
+load
+scripts
+*.tfstate
+*.tfvars
+*.kubeconfig

@@ -1,0 +1,28 @@
+# Build output
+/bin/
+/dist/
+/coverage.out
+
+# Generated experiment evidence (keep the policy file)
+/results/**
+!/results/README.md
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Editor and OS noise
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Future infrastructure secrets/state
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.kubeconfig
+kubeconfig
+secrets.yaml
+secrets.yml
