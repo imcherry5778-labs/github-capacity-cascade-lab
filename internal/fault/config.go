@@ -11,7 +11,7 @@ const (
 	DefaultSeed  int64 = 17_082_026
 )
 
-// Config is an immutable fault snapshot once stored.
+// Config는 저장된 후 변경되지 않는 장애 주입 설정 스냅샷이다.
 type Config struct {
 	LatencyMS   int64   `json:"latency_ms"`
 	ErrorRate   float64 `json:"error_rate"`

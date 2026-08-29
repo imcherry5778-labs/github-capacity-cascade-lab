@@ -8,10 +8,10 @@ K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset
 
 .PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean
 
-help: ## Show available targets.
-	@awk 'BEGIN {FS = ":.*## "; print "Targets:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+help: ## 사용 가능한 대상을 표시합니다.
+	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-doctor: ## Report required local tools and versions.
+doctor: ## 필요한 로컬 도구와 버전을 확인합니다.
 	@missing=0; \
 	for tool in git go k6 docker make; do \
 		if ! command -v "$$tool" >/dev/null 2>&1; then \
@@ -28,50 +28,50 @@ doctor: ## Report required local tools and versions.
 	done; \
 	exit $$missing
 
-fmt: ## Format Go source.
+fmt: ## Go 소스 코드의 형식을 맞춥니다.
 	gofmt -w cmd internal
 
-fmt-check: ## Fail when Go source is not formatted.
+fmt-check: ## Go 소스 코드의 형식이 맞지 않으면 실패합니다.
 	@files="$$(gofmt -l cmd internal)"; \
 	if [[ -n "$$files" ]]; then printf '%s\n' "$$files"; exit 1; fi
 
-lint: ## Run Go vet.
+lint: ## go vet을 실행합니다.
 	go vet ./...
 
-test: ## Run Go tests.
+test: ## Go 테스트를 실행합니다.
 	go test ./...
 
-build: ## Build auth-sim.
+build: ## auth-sim을 빌드합니다.
 	@mkdir -p "$(dir $(BINARY))"
 	go build -trimpath -o "$(BINARY)" ./cmd/auth-sim
 
-run: build ## Run auth-sim with current LAB_* environment.
+run: build ## 현재 LAB_* 환경 변수로 auth-sim을 실행합니다.
 	"$(BINARY)"
 
-k6-check: ## Inspect all k6 scripts for syntax and option errors.
+k6-check: ## 모든 k6 스크립트의 문법과 옵션 오류를 검사합니다.
 	@for script in $(K6_SCRIPTS); do \
 		printf 'inspect load/k6/%s.js\n' "$$script"; \
 		k6 inspect "load/k6/$$script.js" >/dev/null; \
 	done
 
-smoke: build ## Run the short local smoke scenario.
+smoke: build ## 짧은 로컬 smoke 시나리오를 실행합니다.
 	AUTH_SIM_BIN="$(BINARY)" scripts/run-local-scenario.sh smoke
 
-scenario: build ## Run SCENARIO through the local evidence wrapper.
+scenario: build ## 로컬 증거 수집 래퍼로 SCENARIO를 실행합니다.
 	@if [[ -z "$(SCENARIO)" ]]; then \
 		printf 'SCENARIO is required (baseline|latency|bad-retry|good-retry)\n' >&2; \
 		exit 2; \
 	fi
 	AUTH_SIM_BIN="$(BINARY)" scripts/run-local-scenario.sh "$(SCENARIO)"
 
-docker-build: ## Build the explicit-version auth-sim image.
+docker-build: ## 버전이 명시된 auth-sim 이미지를 빌드합니다.
 	docker build --tag "$(IMAGE)" .
 
-docker-smoke: ## Run a minimal health/readiness/token smoke against the image.
+docker-smoke: ## 이미지에 health/readiness/token 최소 smoke를 실행합니다.
 	IMAGE="$(IMAGE)" scripts/docker-smoke.sh
 
-verify: fmt-check lint test build k6-check smoke ## Run bounded L00 verification (not load scenarios).
+verify: fmt-check lint test build k6-check smoke ## 부하 시나리오를 제외한 L00 검증을 실행합니다.
 
-clean: ## Remove generated binaries, preserving evidence.
+clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"
 	@rmdir "$(dir $(BINARY))" 2>/dev/null || true

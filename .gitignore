@@ -1,24 +1,24 @@
-# Build output
+# 빌드 산출물
 /bin/
 /dist/
 /coverage.out
 
-# Generated experiment evidence (keep the policy file)
+# 생성된 실험 증거 (정책 파일은 보존)
 /results/**
 !/results/README.md
 
-# Local configuration
+# 로컬 설정
 .env
 .env.*
 !.env.example
 
-# Editor and OS noise
+# 편집기 및 운영체제 임시 파일
 .idea/
 .vscode/
 *.swp
 .DS_Store
 
-# Future infrastructure secrets/state
+# 향후 인프라 비밀정보 및 상태 파일
 *.tfstate
 *.tfstate.*
 *.tfvars
