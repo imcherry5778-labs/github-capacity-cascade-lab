@@ -54,9 +54,10 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Current phase — L00
+## Current phase — L01
 
-현재 구현 범위는 **L00 — Minimal Workload and k6**다.
+현재 구현 범위는 **L01 — HAProxy and Toxiproxy Fundamentals**다. L00에서 만든 다음
+기반은 그대로 유지한다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -66,7 +67,26 @@ flowchart LR
 - timestamp별 local evidence와 Prometheus application metrics
 - multi-stage, non-root, `scratch` Docker image
 
-## Current L00 architecture
+L01은 application 앞의 두 현상을 한 경로에 섞지 않고 각각 관찰한다.
+
+```mermaid
+flowchart LR
+    K1[k6] --> H[HAProxy control 또는 constrained]
+    H --> A1[auth-sim]
+```
+
+```mermaid
+flowchart LR
+    K2[k6] --> T[Toxiproxy]
+    T --> A2[auth-sim]
+```
+
+HAProxy는 connection capacity와 queue를 관찰하는 HTTP proxy다. Toxiproxy는 GitHub
+architecture 구성요소가 아니라 latency와 TCP reset을 통제해 주입하는
+`LAB_IMPLEMENTATION`이다. 두 요소를 같은 기본 request path에 연결하지 않으므로
+application/proxy/network 원인을 분리해 해석할 수 있다.
+
+## L00 foundation architecture
 
 ```mermaid
 flowchart TD
@@ -76,8 +96,8 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-현재 저장소에는 HAProxy, Toxiproxy, Envoy, Istio, Kubernetes, HPA 또는 Azure
-resource가 없다.
+L01의 상세 topology와 plane 경계는 [architecture](docs/architecture.md)에 있다. Envoy,
+Istio, Kubernetes, HPA와 Azure resource는 아직 없다.
 
 ## Local quick start
 
@@ -91,6 +111,16 @@ make scenario SCENARIO=baseline
 make scenario SCENARIO=latency
 make scenario SCENARIO=bad-retry
 make scenario SCENARIO=good-retry
+make l01-doctor
+make l01-check
+make l01-smoke
+make l01-scenario SCENARIO=haproxy-control
+make l01-scenario SCENARIO=haproxy-constrained
+make l01-scenario SCENARIO=toxiproxy-control
+make l01-scenario SCENARIO=toxiproxy-latency
+make l01-scenario SCENARIO=toxiproxy-reset-peer
+make l01-verify
+make l01-clean
 ```
 
 `make verify`는 format check, `go vet`, Go test/build, 모든 k6 script inspect, 짧은
@@ -108,6 +138,12 @@ make run
 `LAB_ADMIN_TOKEN`이 없으면 `PUT /admin/fault`는 안전하게 실패한다. Remote
 `ADMIN_URL`에 대한 mutation은 `ALLOW_REMOTE_FAULTS=1`을 명시하지 않으면 k6가
 실행을 중단한다.
+
+L01은 Docker Compose와 `curl`을 추가로 사용한다. `make l01-verify`는 config/static
+check와 두 정상 경로의 짧은 smoke만 bounded 실행하며 전체 다섯 scenario를 자동으로
+이어 실행하지 않는다. L01 기본값은 개발자 노트북에서 짧게 끝나는 `lab target`이고
+`LOGICAL_RATE`, `DURATION`, `REQUEST_TIMEOUT`, `HAPROXY_SERVICE_TIME_MS`,
+`TOXIPROXY_LATENCY_MS`로 override할 수 있다.
 
 ### Docker
 
@@ -132,6 +168,8 @@ docker run --rm \
 
 ## Available k6 scenarios
 
+### L00
+
 | Scenario | Fault | Retry policy | Purpose |
 | --- | --- | --- | --- |
 | `smoke` | none | none | health, readiness, token JSON, counters의 strict check |
@@ -144,6 +182,22 @@ docker run --rm \
 기본값은 개발자 노트북에서 빠르게 끝나는 `target` 설정이며 GitHub의 실제 설정값이
 아니다.
 
+### L01
+
+| Scenario | Request path | Isolated condition | Expected signal |
+| --- | --- | --- | --- |
+| `haproxy-control` | k6 → HAProxy control → auth-sim | 넉넉한 HAProxy lab capacity | 정상 request/connection 기준선 |
+| `haproxy-constrained` | k6 → HAProxy constrained → auth-sim | 낮은 HAProxy `maxconn`과 queue timeout | backend queue/capacity, 5xx, latency/failure |
+| `toxiproxy-control` | k6 → Toxiproxy → auth-sim | toxic 없음 | network fault 기준선 |
+| `toxiproxy-latency` | k6 → Toxiproxy → auth-sim | downstream latency toxic | HTTP/logical latency 증가 |
+| `toxiproxy-reset-peer` | k6 → Toxiproxy → auth-sim | downstream TCP reset toxic | connection error와 logical failure |
+
+HAProxy 두 scenario는 같은 workload와 auth-sim service time을 사용하며 HAProxy limit만
+다르다. Toxiproxy 세 scenario는 application latency/error/admission fault를 모두 0으로
+고정한다. 모두 no-retry, max attempts 1이고 HAProxy의 retry/redispatch도 꺼져 있다.
+HAProxy `maxconn`/timeout과 Toxiproxy latency/reset 값은 모두 local 관찰을 위한
+`lab target`이며 GitHub의 topology나 실제 설정을 나타내지 않는다.
+
 ## Evidence structure
 
 각 wrapper 실행은 기존 경로를 덮어쓰지 않고 다음을 만든다.
@@ -152,8 +206,12 @@ docker run --rm \
 results/<scenario>/<UTC timestamp>/
 ├── metadata.json
 ├── k6-summary.json
+├── k6.log
 ├── summary.md
-└── app.log
+├── auth-sim.log
+├── haproxy-stats.csv 또는 toxiproxy-state.json
+├── HAProxy 또는 Toxiproxy log
+└── cleanup.json
 ```
 
 metadata는 선택된 실행 조건과 tool/version만 저장하며 admin token, 전체 environment,
@@ -174,9 +232,9 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. 다음 단계는
-**L01 — HAProxy and Toxiproxy Fundamentals**다. 모든 단계의 학습 질문과 완료 기준은
-[roadmap](docs/roadmap.md)에 있으며 후속 기술은 현재 모두 `Planned`다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00과 L01 구현 뒤 다음
+단계는 **L02 — Envoy Fundamentals**다. 모든 단계의 학습 질문과 완료 기준은
+[roadmap](docs/roadmap.md)에 있다.
 
 ## Experiments
 
@@ -209,7 +267,8 @@ preflight와 승인 경계를 거쳐 검증한다.
 
 ## Repository status
 
-- Current: L00 implementation
-- Next: L01 — HAProxy and Toxiproxy Fundamentals
+- Completed foundation: L00 — Minimal Workload and k6
+- Current: L01 — HAProxy and Toxiproxy Fundamentals (implementation verified)
+- Next: L02 — Envoy Fundamentals
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

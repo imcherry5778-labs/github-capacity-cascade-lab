@@ -27,6 +27,10 @@
 | L00-04 | LAB_IMPLEMENTATION | k6 bad/good retry는 비교용 bounded policy이며 VS Code 또는 GitHub gateway implementation 복제가 아니다. | Repository L00 design | Immediate retry와 bounded backoff/jitter의 physical attempts를 비교한다. |
 | L00-05 | LAB_IMPLEMENTATION | Public server와 bearer-protected mutation을 가진 admin server를 loopback 기본값으로 분리한다. | Repository L00 design | Fault control이 workload endpoint와 섞이지 않게 한다. |
 | L00-06 | LAB_IMPLEMENTATION | Istio IngressGateway는 현재 L00 범위에 없다. | [Scope](scope.md) | Gateway 종류를 현재 architecture에 그리지 않는다. |
+| L01-01 | LAB_IMPLEMENTATION | HAProxy control과 constrained frontend/backend를 한 lab config에 두고 같은 auth-sim service time에서 server `maxconn`과 queue timeout만 비교한다. | Repository L01 config | 선택한 topology와 수치는 GitHub 설정이 아닌 local `lab target`이다. |
+| L01-02 | LAB_IMPLEMENTATION | L01 HAProxy와 k6는 retry를 끄고 max attempts 1을 사용한다. | Repository L01 config/scenario | Logical request와 physical attempt가 1:1인 상태에서 proxy capacity를 먼저 관찰한다. |
+| L01-03 | LAB_IMPLEMENTATION | Toxiproxy 2.12.0은 HAProxy와 분리된 path에서 downstream latency와 `reset_peer`를 주입한다. | [Toxiproxy upstream](https://github.com/Shopify/toxiproxy) | Toxiproxy는 GitHub 실제 architecture 구성요소가 아니다. |
+| L01-04 | LAB_IMPLEMENTATION | HAProxy 3.2.23과 Toxiproxy 2.12.0 image tag, capacity, latency와 timeout 값은 실행 metadata에 기록한다. | Repository L01 runner | 모든 값은 local `lab target`이며 GitHub의 실제 값이나 production 권고가 아니다. |
 | U01 | UNKNOWN | GitHub의 정확한 network topology와 Northern Virginia infrastructure topology는 공개되지 않았다. | Official sources에서 확인 불가 | Lab diagram을 GitHub topology로 표현하지 않는다. |
 | U02 | UNKNOWN | 정확한 Istio resource, concurrency 값, scaling limit과 HPA metric configuration은 공개되지 않았다. | Official sources에서 확인 불가 | 후속 단계의 값은 lab target으로 별도 선택한다. |
 | U03 | UNKNOWN | HAProxy flow implementation의 상세 구조와 gateway가 Istio IngressGateway였는지는 확인할 수 없다. | Official sources에서 확인 불가 | 특정 implementation을 incident FACT로 단정하지 않는다. |

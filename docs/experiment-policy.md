@@ -49,6 +49,31 @@ Good retry의 physical attempts가 bad retry보다 많다면 기대에 맞게 �
 Logical count, dropped iteration, retry classification, timeout, backoff 동안 필요한 VU,
 deterministic profile을 조사한 뒤 새 timestamp로 다시 실행한다.
 
+### L01 HAProxy comparison
+
+- Control과 constrained는 logical rate, duration, request timeout, no-retry policy와
+  auth-sim service time을 고정한다.
+- Application error rate는 0, `max_in_flight`는 unlimited로 두고 HAProxy capacity만 바꾼다.
+- CSV/Prometheus의 queue, current/max sessions, connection/error/5xx signal을 k6 logical
+  failure와 P95와 함께 해석한다.
+- Queue가 관측되지 않으면 완료로 고치지 않고 failed run을 보존한 뒤 workload/capacity
+  조건을 점검해 새 timestamp로 실행한다.
+
+### L01 Toxiproxy comparison
+
+- Control, latency, reset은 logical rate, duration, request timeout과 max attempts 1을 고정한다.
+- Application latency/error/max-in-flight는 모두 0으로 유지하고 network toxic만 바꾼다.
+- Toxic을 적용하기 전에 `/reset`하고 실제 proxy state를 저장한다. 종료 시 다시 reset한
+  뒤 enabled proxy와 빈 toxic 배열을 확인한다.
+- Latency는 control과 P95를 비교하되 머신 독립적인 절대 P95 threshold를 자동화하지 않는다.
+- Connection fault는 toxic state와 k6 connection error/logical failure를 함께 보존한다.
+
+### L01 evidence
+
+HAProxy stats, Toxiproxy state, 각 component log와 `cleanup.json`을 k6 evidence와 같은
+timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`이고 반복·조건
+검토 전에는 portfolio evidence 또는 일반적인 성능 결론이 아니다.
+
 ## Reporting rules
 
 - 측정하지 않은 값은 결과로 작성하지 않는다.

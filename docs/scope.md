@@ -48,6 +48,29 @@ L00에서는 다음을 구현하지 않는다.
 
 이 항목은 필요 단계에서만 `Planned` 카드로 다룬다.
 
+## L01 goal
+
+Application 앞의 proxy capacity/queue와 network fault를 서로 다른 request path에서
+관찰한다. L00의 auth-sim, logical/physical counter와 append-only evidence를 재사용한다.
+
+## L01 in scope
+
+- k6 → HAProxy → auth-sim control/constrained path
+- 같은 workload/service time에서 HAProxy connection capacity와 queue 비교
+- k6 → Toxiproxy → auth-sim control, downstream latency, downstream TCP reset
+- HAProxy CSV/Prometheus snapshot과 Toxiproxy proxy/toxic JSON state
+- application fault, toxic과 Compose resource의 reset/cleanup evidence
+- 명시적 HAProxy/Toxiproxy image version과 loopback-only host publish
+
+## L01 out of scope
+
+- GitHub의 HAProxy topology, node 수, flow algorithm, limit 또는 timeout 추정
+- HAProxy와 Toxiproxy를 같은 기본 request path에 연결
+- production HAProxy tuning 또는 새로운 retry mitigation
+- Envoy, Istio, Kubernetes, Helm, HPA/KEDA, Chaos Mesh
+- Prometheus server/Grafana, Azure/AKS, Terraform/OpenTofu, GitHub Actions
+- full capacity cascade
+
 ## Core vs Optional Extension
 
 - **Core:** L00–L10. 최소 workload에서 시작해 proxy, sidecar metric, autoscaling blind

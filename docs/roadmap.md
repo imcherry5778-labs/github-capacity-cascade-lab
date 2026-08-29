@@ -14,7 +14,7 @@
 - **Done:** Go verify, k6 inspect/smoke, 4개 scenario 실행, evidence/secret/process 검증, Docker build/smoke가 통과한다.
 - **Non-goals:** Proxy, Kubernetes, autoscaling, cloud, 실제 authentication.
 - **Dependencies:** Git, Go 1.26+, k6, Make; Docker verification에는 Docker daemon.
-- **Status:** Current — implementation complete; 생성 결과는 local exploratory evidence.
+- **Status:** Complete — implementation verified; 생성 결과는 local exploratory evidence.
 
 ## L01 — HAProxy and Toxiproxy Fundamentals
 
@@ -27,7 +27,7 @@
 - **Done:** 정상, latency, connection fault를 서로 혼동하지 않고 재현·reset·증명한다.
 - **Non-goals:** GitHub HAProxy topology 복제, Envoy/Istio, Kubernetes.
 - **Dependencies:** L00.
-- **Status:** Planned — next.
+- **Status:** Current — implementation complete and verified; 생성 결과는 local exploratory evidence.
 
 ## L02 — Envoy Fundamentals
 
@@ -40,7 +40,7 @@
 - **Done:** Retry와 capacity protection의 효과를 고정 조건 evidence로 설명한다.
 - **Non-goals:** Istio control plane, service mesh 전체, production tuning.
 - **Dependencies:** L00; L01의 proxy 관찰 경험.
-- **Status:** Planned.
+- **Status:** Planned — next.
 
 ## L03 — k3d and Helm Baseline
 
