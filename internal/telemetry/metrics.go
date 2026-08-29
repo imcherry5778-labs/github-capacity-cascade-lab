@@ -9,6 +9,7 @@ import (
 )
 
 type Metrics struct {
+	// Default registry와 분리해 test/application instance별 metric이 섞이지 않게 한다.
 	registry            *prometheus.Registry
 	httpRequests        *prometheus.CounterVec
 	httpRequestDuration *prometheus.HistogramVec
@@ -18,6 +19,7 @@ type Metrics struct {
 }
 
 func New() *Metrics {
+	// Label은 고정 route, method, status class, fault kind로 제한해 cardinality가 입력 수에 따라 늘지 않게 한다.
 	metrics := &Metrics{
 		registry: prometheus.NewRegistry(),
 		httpRequests: prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -51,6 +53,7 @@ func New() *Metrics {
 		prometheus.NewGoCollector(),
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
+	// Fault가 없는 baseline에서도 두 bounded series가 /metrics에 노출되게 미리 생성한다.
 	metrics.faultInjections.WithLabelValues("latency").Add(0)
 	metrics.faultInjections.WithLabelValues("error").Add(0)
 	return metrics
@@ -78,5 +81,6 @@ func (m *Metrics) IncAdmissionRejection() {
 }
 
 func (m *Metrics) Handler() http.Handler {
+	// 별도 registry만 exposition해 프로세스 전역 metric 오염을 막는다.
 	return promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{})
 }

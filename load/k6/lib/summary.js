@@ -1,6 +1,7 @@
 import { BASE_URL } from './config.js';
 
 export function createSummaryHandler(experiment) {
+  // k6 handleSummary를 scenario별로 재사용해 raw metric, 재현 metadata, 사람이 읽는 Markdown을 함께 남긴다.
   return (data) => {
     const resultDirectory = __ENV.RESULT_DIR;
     if (!resultDirectory) {
@@ -9,11 +10,13 @@ export function createSummaryHandler(experiment) {
     const logicalCount = metricValue(data, 'logical_requests', 'count');
     const physicalCount = metricValue(data, 'physical_attempts', 'count');
     const retryCount = metricValue(data, 'retry_attempts', 'count') ?? 0;
+    // Retry amplification은 별도 gauge가 아니라 실행 종료 후 누적 counter로 계산한다.
     const amplification = logicalCount > 0 ? physicalCount / logicalCount : null;
     const logicalFailureRate = metricValue(data, 'logical_failures', 'rate');
     const logicalP95 = metricValue(data, 'logical_request_duration', 'p(95)');
     const httpP95 = metricValue(data, 'http_req_duration', 'p(95)');
 
+    // 비교에 필요한 조건만 저장하고 admin token이나 전체 environment는 기록하지 않는다.
     const metadata = {
       project: 'GitHub Capacity Cascade Lab',
       phase: 'L00',
@@ -33,6 +36,7 @@ export function createSummaryHandler(experiment) {
       max_attempts: experiment.maxAttempts,
     };
 
+    // Local runner가 먼저 만든 고유 result directory에만 새 파일을 쓴다.
     return {
       [`${resultDirectory}/metadata.json`]: `${JSON.stringify(metadata, null, 2)}\n`,
       [`${resultDirectory}/k6-summary.json`]: `${JSON.stringify(data, null, 2)}\n`,
@@ -106,6 +110,7 @@ function formatMilliseconds(value) {
 }
 
 function safeOrigin(value) {
+  // URL에 credential이 포함되어도 metadata에는 scheme과 host/port만 남긴다.
   const match = value.match(/^(https?:\/\/)(?:[^/@]+@)?([^/?#]+)/i);
   return match ? `${match[1]}${match[2]}` : 'redacted-invalid-url';
 }
