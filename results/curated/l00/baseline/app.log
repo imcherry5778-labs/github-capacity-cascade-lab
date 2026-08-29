@@ -1,0 +1,2 @@
+{"time":"2026-08-29T18:22:31.421348865+09:00","level":"INFO","msg":"auth-sim starting","public_addr":"127.0.0.1:8080","admin_addr":"127.0.0.1:9090"}
+{"time":"2026-08-29T18:22:37.381154355+09:00","level":"INFO","msg":"auth-sim stopped"}

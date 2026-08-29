@@ -32,4 +32,4 @@ credential, 개인 절대 경로는 raw와 curated evidence 어디에도 저장�
 수정하지 않으며 redaction이 불가피하면 raw는 그대로 두고 curated README에 대상과 이유를
 기록한다.
 
-현재 추적하는 curated set은 [L01 curated evidence](curated/l01/README.md)에서 확인한다.
+현재 추적하는 learning unit별 set은 [curated evidence index](curated/README.md)에서 확인한다.
