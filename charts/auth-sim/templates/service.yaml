@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "auth-sim.fullname" . }}
+  labels:
+    {{- include "auth-sim.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "auth-sim.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: public
+      port: {{ .Values.service.port }}
+      targetPort: public
+      protocol: TCP

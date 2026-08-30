@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: capacity-cascade/auth-sim
+  tag: l03-dev
+  pullPolicy: Never
+
+adminSecret:
+  name: auth-sim-admin
+  key: token
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+service:
+  port: 8080

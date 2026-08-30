@@ -45,10 +45,13 @@ export function teardown() {
 }
 
 export const handleSummary = createSummaryHandler({
+  phase: __ENV.LEARNING_UNIT || 'L00',
   scenario: 'smoke',
   logicalRate: null,
   duration: 'single iteration',
   fault,
+  requestPath: __ENV.REQUEST_PATH || 'k6 -> auth-sim',
   retryPolicy: policy.name,
   maxAttempts: policy.maxAttempts,
+  imageTags: __ENV.AUTH_SIM_IMAGE ? { auth_sim: __ENV.AUTH_SIM_IMAGE } : null,
 });

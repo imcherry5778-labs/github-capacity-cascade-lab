@@ -1,0 +1,6 @@
+apiVersion: v2
+name: auth-sim
+description: Minimal L03 Helm packaging for the local auth-sim workload
+type: application
+version: 0.1.0
+appVersion: "l03"
