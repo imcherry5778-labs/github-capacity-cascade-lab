@@ -1,0 +1,46 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L03",
+  "classification": "local exploratory evidence",
+  "scenario": "k3d-helm-baseline",
+  "started_at_utc": "2026-08-30T13:40:44Z",
+  "git_commit": "926336252c9118f17eb6e4fc52cc4c261fc25612",
+  "git_dirty": false,
+  "tool_versions": {
+    "git": "2.55.0",
+    "go": "go1.26.7",
+    "k6": "v2.2.0",
+    "docker": "29.7.2",
+    "k3d": "v5.9.0",
+    "k3d_default_k3s": "v1.35.5-k3s1",
+    "kubectl_client": "v1.36.1",
+    "kubernetes_server": "v1.35.5+k3s1",
+    "helm": "v4.2.3"
+  },
+  "cluster": {
+    "name": "capacity-cascade-l03",
+    "servers": 1,
+    "agents": 0,
+    "k3s_image": "rancher/k3s:v1.35.5-k3s1",
+    "api_exposure": "dynamic loopback port",
+    "disabled_packaged_components": ["traefik", "servicelb", "local-storage"]
+  },
+  "workload": {
+    "chart": "charts/auth-sim",
+    "release": "auth-sim",
+    "namespace": "capacity-cascade-l03",
+    "image": "capacity-cascade/auth-sim:l03-926336252c91",
+    "image_id": "sha256:9b653a21b08a4f261451ab210c5a9f89e52f7cbec4de812ae93651a9aa9b8cb4",
+    "image_pull_policy": "Never",
+    "replicas": 1,
+    "resources": {
+      "requests": {"cpu": "25m", "memory": "32Mi"},
+      "limits": {"cpu": "250m", "memory": "128Mi"}
+    }
+  },
+  "access": {
+    "public": "host k6 -> loopback kubectl port-forward -> ClusterIP Service -> auth-sim Pod:8080",
+    "admin": "runner -> loopback kubectl port-forward -> Deployment-selected auth-sim Pod:9090",
+    "original_context_state": "unset"
+  }
+}

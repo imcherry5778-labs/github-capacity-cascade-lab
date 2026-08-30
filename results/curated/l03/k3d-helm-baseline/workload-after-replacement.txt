@@ -1,0 +1,13 @@
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                       SELECTOR
+deployment.apps/auth-sim   1/1     1            1           39s   auth-sim     capacity-cascade/auth-sim:l03-926336252c91   app.kubernetes.io/instance=auth-sim,app.kubernetes.io/name=auth-sim
+
+NAME                                  DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES                                       SELECTOR
+replicaset.apps/auth-sim-5548b49c55   0         0         0       39s   auth-sim     capacity-cascade/auth-sim:l03-926336252c91   app.kubernetes.io/instance=auth-sim,app.kubernetes.io/name=auth-sim,pod-template-hash=5548b49c55
+replicaset.apps/auth-sim-64dff7bbc8   1         1         1       3s    auth-sim     capacity-cascade/auth-sim:l03-926336252c91   app.kubernetes.io/instance=auth-sim,app.kubernetes.io/name=auth-sim,pod-template-hash=64dff7bbc8
+
+NAME                            READY   STATUS        RESTARTS   AGE   IP          NODE                                NOMINATED NODE   READINESS GATES
+pod/auth-sim-5548b49c55-4srcb   1/1     Terminating   0          38s   10.42.0.2   k3d-capacity-cascade-l03-server-0   <none>           <none>
+pod/auth-sim-64dff7bbc8-pz7wd   1/1     Running       0          3s    10.42.0.5   k3d-capacity-cascade-l03-server-0   <none>           <none>
+
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/auth-sim   ClusterIP   10.43.189.111   <none>        8080/TCP   39s   app.kubernetes.io/instance=auth-sim,app.kubernetes.io/name=auth-sim

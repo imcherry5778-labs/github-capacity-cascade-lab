@@ -1,0 +1,47 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L03",
+  "phase": "L03",
+  "scenario": "smoke",
+  "started_at_utc": "2026-08-30T13:40:44Z",
+  "git_commit": "926336252c9118f17eb6e4fc52cc4c261fc25612",
+  "git_dirty": false,
+  "go_version": "go version go1.26.7 linux/amd64",
+  "k6_version": "k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)",
+  "os": "Linux",
+  "architecture": "x86_64",
+  "tool_versions": {
+    "go": "go version go1.26.7 linux/amd64",
+    "k6": "k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)",
+    "docker": "29.7.2",
+    "docker_compose": "not-used",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "not-used",
+    "envoy_server": "not-used"
+  },
+  "image_tags": {
+    "auth_sim": "capacity-cascade/auth-sim:l03-926336252c91"
+  },
+  "base_url": "http://127.0.0.1:43355",
+  "request_path": "host k6 -> loopback kubectl port-forward -> ClusterIP Service -> auth-sim Pod",
+  "logical_rate": null,
+  "duration": "single iteration",
+  "request_timeout": "2s",
+  "fault": {
+    "latency_ms": 0,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "application_fault": {
+    "latency_ms": 0,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": null,
+  "network_toxic": null,
+  "envoy_proxy": null,
+  "retry_policy": "none",
+  "max_attempts": 1
+}
