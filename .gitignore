@@ -3,9 +3,11 @@
 /dist/
 /coverage.out
 
-# 생성된 실험 증거 (정책 파일은 보존)
+# 생성된 raw 실험 증거는 제외하고, 검토해 승격한 curated evidence만 보존
 /results/**
 !/results/README.md
+!/results/curated/
+!/results/curated/**
 
 # 로컬 설정
 .env

@@ -1,4 +1,4 @@
-import { BASE_URL } from './config.js';
+import { BASE_URL, REQUEST_TIMEOUT } from './config.js';
 
 export function createSummaryHandler(experiment) {
   // k6 handleSummary를 scenario별로 재사용해 raw metric, 재현 metadata, 사람이 읽는 Markdown을 함께 남긴다.
@@ -17,9 +17,11 @@ export function createSummaryHandler(experiment) {
     const httpP95 = metricValue(data, 'http_req_duration', 'p(95)');
 
     // 비교에 필요한 조건만 저장하고 admin token이나 전체 environment는 기록하지 않는다.
+    const phase = experiment.phase || 'L00';
     const metadata = {
       project: 'GitHub Capacity Cascade Lab',
-      phase: 'L00',
+      learning_unit: phase,
+      phase,
       scenario: experiment.scenario,
       started_at_utc: __ENV.STARTED_AT_UTC || 'unknown',
       git_commit: __ENV.GIT_COMMIT || 'unknown',
@@ -28,10 +30,24 @@ export function createSummaryHandler(experiment) {
       k6_version: __ENV.K6_VERSION || 'unknown',
       os: __ENV.LAB_OS || 'unknown',
       architecture: __ENV.LAB_ARCH || 'unknown',
+      tool_versions: {
+        go: __ENV.GO_VERSION || 'unknown',
+        k6: __ENV.K6_VERSION || 'unknown',
+        docker: __ENV.DOCKER_VERSION || 'not-used',
+        docker_compose: __ENV.DOCKER_COMPOSE_VERSION || 'not-used',
+        haproxy_server: __ENV.HAPROXY_VERSION || 'not-used',
+        toxiproxy_server: __ENV.TOXIPROXY_VERSION || 'not-used',
+      },
+      image_tags: experiment.imageTags || null,
       base_url: safeOrigin(BASE_URL),
+      request_path: experiment.requestPath || 'k6 -> auth-sim',
       logical_rate: experiment.logicalRate,
       duration: experiment.duration,
+      request_timeout: experiment.requestTimeout || REQUEST_TIMEOUT,
       fault: experiment.fault,
+      application_fault: experiment.applicationFault || experiment.fault,
+      proxy_capacity: experiment.proxyCapacity || null,
+      network_toxic: experiment.networkToxic || null,
       retry_policy: experiment.retryPolicy,
       max_attempts: experiment.maxAttempts,
     };
@@ -41,6 +57,7 @@ export function createSummaryHandler(experiment) {
       [`${resultDirectory}/metadata.json`]: `${JSON.stringify(metadata, null, 2)}\n`,
       [`${resultDirectory}/k6-summary.json`]: `${JSON.stringify(data, null, 2)}\n`,
       [`${resultDirectory}/summary.md`]: renderMarkdown({
+        phase,
         experiment,
         logicalCount,
         physicalCount,
@@ -63,6 +80,7 @@ function renderMarkdown(values) {
 | Metric | Value |
 | --- | ---: |
 | Scenario | ${values.experiment.scenario} |
+| Learning Unit | ${values.phase} |
 | Logical Requests | ${formatCount(values.logicalCount)} |
 | Physical Attempts | ${formatCount(values.physicalCount)} |
 | Retry Attempts | ${formatCount(values.retryCount)} |
@@ -73,12 +91,20 @@ function renderMarkdown(values) {
 
 ## 실행 조건
 
+- Request path: ${values.experiment.requestPath || 'k6 -> auth-sim'}
 - Logical rate: ${values.experiment.logicalRate === null ? 'not applicable' : `${values.experiment.logicalRate} ops/s`}
 - Duration: ${values.experiment.duration}
+- Request timeout: ${values.experiment.requestTimeout || REQUEST_TIMEOUT}
 - Fault: latency_ms=${values.experiment.fault.latency_ms}, error_rate=${values.experiment.fault.error_rate}, max_in_flight=${values.experiment.fault.max_in_flight}, seed=${values.experiment.fault.seed}
+- Proxy capacity: ${formatObject(values.experiment.proxyCapacity)}
+- Network toxic: ${formatObject(values.experiment.networkToxic)}
 - Retry policy: ${values.experiment.retryPolicy}
 - Max attempts: ${values.experiment.maxAttempts}
 `;
+}
+
+function formatObject(value) {
+  return value === null || value === undefined ? 'not applicable' : JSON.stringify(value);
 }
 
 function renderConsole(scenario, logicalCount, physicalCount, amplification) {

@@ -1,6 +1,6 @@
-# L00 architecture
+# Lab architecture
 
-## Current structure
+## L00 foundation
 
 ```mermaid
 flowchart LR
@@ -87,8 +87,55 @@ Local runner는 고유 UTC result directory를 먼저 만들고 `auth-sim` stdou
 metadata, raw k6 summary, Markdown summary를 기록한다. EXIT trap은 가능한 admin
 reset 후 소유한 child process를 종료한다. 기존 result directory는 덮어쓰지 않는다.
 
+## L01 HAProxy path
+
+```mermaid
+flowchart LR
+    K[k6 on host] -->|dynamic loopback port| HF[HAProxy control or constrained frontend]
+    HF --> HB[separate HAProxy backend]
+    HB -->|Compose network| P[auth-sim public :8080]
+    R[L01 runner] -->|dynamic loopback port| A[auth-sim admin :9090]
+    R -->|dynamic loopback port| S[HAProxy read-only stats :8404]
+    S --> E[CSV and Prometheus snapshots]
+```
+
+한 HAProxy config에 control과 constrained frontend/backend를 따로 둔다. 두 scenario는
+같은 logical rate, duration, request timeout과 auth-sim service time을 사용하고 server
+`maxconn`과 `timeout queue`만 비교한다. Application `max_in_flight`는 unlimited다.
+HAProxy `retries 0`과 `no option redispatch`로 proxy retry를 끄며 k6도 max attempts 1을
+사용한다. 이 topology와 모든 capacity/timeout 값은 `LAB_IMPLEMENTATION`과 `lab target`이다.
+
+## L01 Toxiproxy path
+
+```mermaid
+flowchart LR
+    K[k6 on host] -->|dynamic loopback port| T[Toxiproxy data :8666]
+    T -->|Compose network| P[auth-sim public :8080]
+    R[L01 runner] -->|dynamic loopback port| C[Toxiproxy control API :8474]
+    R -->|dynamic loopback port| A[auth-sim admin :9090]
+    C --> E[proxy and toxic JSON snapshots]
+```
+
+Toxiproxy path에는 HAProxy가 없다. Control은 toxic이 없고, latency는 downstream data에
+고정 지연을 적용하며, connection fault는 downstream `reset_peer`로 TCP reset을 만든다.
+세 경우 모두 auth-sim fault는 latency/error/max-in-flight 0이고 retry는 없다. Toxiproxy는
+GitHub 실제 architecture가 아니라 network fault 주입을 위한 `LAB_IMPLEMENTATION`이다.
+
+## L01 plane and host boundary
+
+- Public workload plane: HAProxy frontend 또는 Toxiproxy data port 하나만 k6가 사용한다.
+- Application admin plane: bearer token을 process environment로만 받고 host loopback의
+  Docker 할당 port에만 publish한다.
+- HAProxy stats plane: read-only stats/Prometheus endpoint이며 host loopback에만 publish한다.
+- Toxiproxy control plane: proxy/toxic 생성과 reset API이며 host loopback에만 publish한다.
+- Compose network: auth-sim public port는 host에 직접 publish하지 않는다.
+
+Runner는 매 실행 고유 Compose project와 동적 host port를 사용한다. 종료 시 application
+fault와 toxic을 reset해 state를 저장한 뒤 해당 project의 container/network만 제거한다.
+Failed evidence도 삭제하지 않는다.
+
 ## Planned architecture only
 
-후속 단계에서 HAProxy/Toxiproxy, Envoy, k3d/Helm, Istio sidecar metrics, HPA, Chaos Mesh,
-AKS를 순차 검토한다. 현재 L00 architecture에는 이 구성요소가 없으며 구체 topology,
-resource, YAML, threshold, cloud SKU는 아직 결정하지 않았다.
+후속 단계에서 Envoy, k3d/Helm, Istio sidecar metrics, HPA, Chaos Mesh, AKS를 순차
+검토한다. 현재 architecture에는 이 구성요소가 없으며 구체 topology, resource, YAML,
+threshold, cloud SKU는 아직 결정하지 않았다.

@@ -1,0 +1,23 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "phase": "L00",
+  "scenario": "bad-retry",
+  "started_at_utc": "2026-08-29T09:37:42Z",
+  "git_commit": "6c38157ab840e1a9ba54b6aca4e077020db7a8de",
+  "git_dirty": false,
+  "go_version": "go version go1.26.7 linux/amd64",
+  "k6_version": "k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)",
+  "os": "Linux",
+  "architecture": "x86_64",
+  "base_url": "http://127.0.0.1:8080",
+  "logical_rate": 5,
+  "duration": "5s",
+  "fault": {
+    "latency_ms": 0,
+    "error_rate": 0.35,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "retry_policy": "bad-immediate-retry",
+  "max_attempts": 5
+}

@@ -6,14 +6,14 @@ export const ADMIN_URL = trimTrailingSlash(__ENV.ADMIN_URL || 'http://127.0.0.1:
 export const REQUEST_TIMEOUT = envDuration('REQUEST_TIMEOUT', '2s');
 export const DEFAULT_SEED = envInteger('FAULT_SEED', 17082026);
 
-export function arrivalSettings() {
+export function arrivalSettings(defaults = {}) {
   // 모든 비교 scenario가 같은 logical rate, duration, VU 기준을 공유하되 환경 변수로 명시적 override할 수 있다.
-  const logicalRate = envInteger('LOGICAL_RATE', 5, 1, 1000000);
+  const logicalRate = envInteger('LOGICAL_RATE', defaults.logicalRate || 5, 1, 1000000);
   const preAllocatedVUs = envInteger('PRE_ALLOCATED_VUS', Math.max(10, logicalRate * 2), 1, 1000000);
   const maxVUs = envInteger('MAX_VUS', Math.max(50, preAllocatedVUs * 2), preAllocatedVUs, 1000000);
   return {
     logicalRate,
-    duration: envDuration('DURATION', '5s'),
+    duration: envDuration('DURATION', defaults.duration || '5s'),
     preAllocatedVUs,
     maxVUs,
   };

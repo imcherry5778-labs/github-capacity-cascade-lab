@@ -1,0 +1,8 @@
+{
+  "auth_sim_reset": true,
+  "toxiproxy_reset": true,
+  "toxics_empty": true,
+  "compose_down": true,
+  "remaining_containers": 0,
+  "remaining_networks": 0
+}
