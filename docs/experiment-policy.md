@@ -13,6 +13,20 @@ Retry amplification은 별도 Gauge로 근사하지 않고 run 종료 시 Counte
 Retry Amplification = physical_attempts / logical_requests
 ```
 
+L02에서는 client와 proxy 관찰 단위를 추가로 분리한다.
+
+- **Envoy downstream request:** Envoy HCM이 client에서 받은 request
+- **Envoy upstream attempt:** 최초 upstream 전달과 Envoy internal retry의 합
+- **auth-sim token request delta:** application이 `/token` handler 완료 시 기록한 request 증가량
+
+```text
+Client Retry Amplification = k6 physical_attempts / logical_requests
+Envoy Upstream Attempt Amplification = Envoy upstream attempts / logical_requests
+```
+
+L02 k6 retry는 항상 `none`, max attempts 1이다. Envoy retry를 `physical_attempts`로
+재정의하지 않으며 기존 L00/L01 metric 의미를 바꾸지 않는다.
+
 ## Exploratory result vs Portfolio evidence
 
 - **Local exploratory result:** 구현 검증과 가설 탐색을 위한 단일 또는 임시 run. 머신
@@ -79,6 +93,43 @@ deterministic profile을 조사한 뒤 새 timestamp로 다시 실행한다.
 HAProxy stats, Toxiproxy state, 각 component log와 `cleanup.json`을 k6 evidence와 같은
 timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`이고 반복·조건
 검토 전에는 portfolio evidence 또는 일반적인 성능 결론이 아니다.
+
+### L02 control vs timeout
+
+- Logical rate, duration, k6 request timeout/no-retry, application service time/error/admission과
+  cluster circuit breaker threshold를 고정한다.
+- `envoy-timeout`은 route timeout만 2s에서 100ms로 바꾼다.
+- 실제 downstream status, logical failure, `upstream_rq_timeout`, upstream attempt와 auth-sim
+  token/status delta를 함께 본다. Envoy와 application 완료 결과가 다르면 취소/완료 시점을
+  조사하고 수치를 맞추지 않는다.
+
+### L02 retry-disabled vs retry-bounded
+
+- Workload, k6 timeout/no-retry, persistent application 503, route timeout, endpoint와 circuit
+  breaker threshold를 고정한다.
+- Bounded 쪽만 `retry_on: 5xx`, `num_retries: 2`를 적용한다.
+- `upstream_rq_retry`, `upstream_rq_retry_limit_exceeded`, `upstream_rq_total`과 auth-sim token
+  delta로 internal attempt 증가와 configured bound를 확인한다.
+- Persistent failure에서 최종 success가 개선되지 않는 결과도 그대로 보존한다.
+
+### L02 control vs circuit breaker
+
+- Workload, route/k6 timeout, no-retry와 application latency/error/admission을 고정한다.
+- Constrained cluster만 `max_requests`를 100에서 1로 낮춘다. 두 값 모두 local `lab target`이다.
+- Envoy v1.39.1에서 이 경로의 authoritative signal인 `upstream_rq_active_overflow`를 판정에
+  사용하고, `upstream_rq_pending_overflow`와 `upstream_rq_retry_overflow`도 snapshot에 남긴다.
+- Upstream pressure 감소와 downstream 503/latency trade-off를 함께 기록하며 보편적인
+  안정성 또는 성능 향상으로 일반화하지 않는다.
+
+### L02 evidence
+
+- 동일한 fresh Envoy process 안의 stats before/after delta만 비교한다. 다른 run의 cumulative
+  absolute counter를 빼지 않는다.
+- `/stats`에서 실제 selected version이 내보내는 `http.<stat_prefix>`와
+  `cluster.<name>` metric 이름을 확인한다. 예상 metric이 없으면 이름을 추측하지 않는다.
+- Application metrics before는 Envoy stats before보다 먼저, application metrics after는
+  Envoy stats after보다 나중에 수집해 observation request를 Envoy workload delta에서 뺀다.
+- 단일 clean run도 local exploratory evidence이며 machine-independent benchmark가 아니다.
 
 ## Reporting rules
 
