@@ -96,6 +96,36 @@ before/after metric delta로 관찰한다.
 - Prometheus server, Grafana, production tuning 또는 보편적 성능/안정성 결론
 - HPA/KEDA, Chaos Mesh, Azure/AKS, Terraform/OpenTofu, GitHub Actions
 
+## L03 goal
+
+이후 mesh/scaling 실험이 재사용할 수 있도록 기존 auth-sim을 작은 local Kubernetes에
+배포하고, readiness, Service backend, Pod replacement, resource observation과 전체
+lifecycle cleanup을 한 baseline에서 검증한다.
+
+## L03 in scope
+
+- server 1개, agent 0개의 local k3d/K3s cluster와 pinned K3s image
+- 기존 auth-sim Docker image build와 k3d local image import
+- replica 1개의 최소 Helm Deployment와 public `ClusterIP` Service
+- `/readyz` readiness, `/healthz` liveness와 명시적 CPU/memory requests/limits
+- Deployment-driven Pod replacement 전후 name/UID/readiness
+- Service selector와 EndpointSlice backend 연결
+- public Service와 admin Deployment를 위한 분리된 loopback port-forward
+- 기존 L00 smoke의 logical/physical/no-retry contract 재사용
+- Metrics API의 단일 시점 node/Pod usage snapshot
+- Helm install/uninstall, namespace와 cluster delete, container/network/process cleanup evidence
+- global context를 건드리지 않는 실행별 임시 kubeconfig
+
+## L03 out of scope
+
+- GitHub production Kubernetes topology, resource 또는 configuration 추정
+- Envoy/Istio sidecar, Ambient, Ingress, Gateway, TLS/mTLS
+- HPA/KEDA, autoscaling experiment, Chaos Mesh 또는 artificial resource exhaustion
+- Prometheus server, Grafana, Loki, tracing, ServiceMonitor
+- PersistentVolume, database, Kafka, multi-node HA 또는 cloud parity
+- Azure/AKS, Terraform/OpenTofu, GitHub Actions, Argo CD
+- production security/performance tuning 또는 단일 snapshot 기반 production sizing
+
 ## Core vs Optional Extension
 
 - **Core:** L00–L10. 최소 workload에서 시작해 proxy, sidecar metric, autoscaling blind

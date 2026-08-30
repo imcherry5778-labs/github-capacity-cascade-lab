@@ -54,10 +54,10 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Current phase — L02
+## Current phase — L03
 
-현재 구현 범위는 **L02 — Envoy Fundamentals**다. L00/L01에서 만든 다음 기반은 그대로
-유지한다.
+현재 구현 범위는 **L03 — k3d and Helm Baseline**이다. L00/L01/L02에서 만든 다음 기반은
+의미를 바꾸지 않고 재사용한다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -67,26 +67,24 @@ flowchart LR
 - timestamp별 local evidence와 Prometheus application metrics
 - multi-stage, non-root, `scratch` Docker image
 
-L02는 HAProxy/Toxiproxy를 request path에 넣지 않고 standalone Envoy만 관찰한다.
+L03는 기존 auth-sim image를 작은 local Kubernetes baseline으로 옮긴다. HAProxy,
+Toxiproxy, Envoy, Istio는 이 request path에 없다.
 
 ```mermaid
 flowchart LR
-    K[k6 on host] -->|dynamic loopback port| L[Envoy listener]
-    L --> R[route]
-    R --> C[upstream cluster]
-    C -->|Compose network| A[auth-sim public :8080]
+    B[Docker build] --> I[k3d image import]
+    I --> P[auth-sim Pod]
+    K[k6 on host] -->|loopback kubectl port-forward| S[ClusterIP Service :8080]
+    S -->|selector and targetPort| P
+    R[L03 runner] -->|separate loopback port-forward :9090| P
 ```
 
-```mermaid
-flowchart LR
-    X[L02 runner] -->|loopback dynamic port| D[auth-sim admin :9090]
-    X -->|loopback dynamic port| S[Envoy admin :9901]
-```
-
-Envoy listener는 downstream 연결을 받고, route가 요청을 cluster에 매핑하며, cluster의
-endpoint가 upstream auth-sim을 가리킨다. Envoy admin과 auth-sim admin은 host loopback에만
-publish된다. Static bootstrap, image/version, timeout/retry/circuit-breaker 값은 모두
-`LAB_IMPLEMENTATION` 또는 local `lab target`이며 GitHub production 설정이 아니다.
+Cluster는 server 1개, agent 0개와 pinned `rancher/k3s:v1.35.5-k3s1` image를 사용한다.
+Helm chart는 replica 1개의 Deployment와 public `ClusterIP` Service만 만든다. Admin token은
+runner가 임시 Secret으로 만들고 admin port는 Service에 노출하지 않는다. Public/admin
+port-forward와 Kubernetes API는 host loopback에만 bind한다. 이 topology, resource 값과
+access model은 모두 `LAB_IMPLEMENTATION`/local `lab target`이며 production ingress,
+GitHub Kubernetes topology 또는 production sizing을 뜻하지 않는다.
 
 ## L00 foundation architecture
 
@@ -98,9 +96,8 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L01은 completed foundation이며 상세 topology와 L02 plane 경계는
-[architecture](docs/architecture.md)에 있다. Istio, Kubernetes, HPA와 Azure resource는
-아직 없다.
+L00/L01/L02는 completed foundation이다. 상세 topology와 단계별 plane 경계는
+[architecture](docs/architecture.md)에 있다. Istio, HPA와 Azure resource는 아직 없다.
 
 ## Local quick start
 
@@ -134,6 +131,11 @@ make l02-scenario SCENARIO=envoy-retry-bounded
 make l02-scenario SCENARIO=envoy-circuit-breaker
 make l02-verify
 make l02-clean
+make l03-doctor
+make l03-check
+make l03-smoke
+make l03-verify
+make l03-clean
 ```
 
 `make verify`는 format check, `go vet`, Go test/build, 모든 k6 script inspect, 짧은
@@ -163,6 +165,12 @@ L02도 Docker Compose와 `curl`을 사용한다. `make l02-check`는 Compose, �
 `make l02-smoke`와 `make l02-verify`는 `envoy-control`만 1 ops/s, 1s로 bounded 실행하며,
 전체 fault scenario는 `make l02-scenario SCENARIO=...`로 각각 독립 실행한다. 기본 20
 ops/s, 4s, application service time 250 ms는 짧은 local signal을 위한 `lab target`이다.
+
+L03는 Docker, kubectl, k3d와 Helm을 추가로 사용한다. `make l03-check`는 chart lint/template,
+rendered Secret 부재, pinned image, k6 inspect와 runner syntax를 확인한다. `make l03-verify`는
+clean bootstrap부터 image import, Helm deploy, Deployment-driven Pod replacement, Metrics API
+snapshot, 기존 L00 smoke, uninstall/delete cleanup까지 전체 lifecycle을 한 번만 실행한다.
+Raw evidence는 `results/k3d-helm-baseline/<UTC timestamp>/`에 append-only로 남는다.
 
 ### Docker
 
@@ -249,6 +257,15 @@ L02의 한계는 명확하다. 단일 local Envoy와 static bootstrap만 사용�
 HTTP/2·HTTP/3, gRPC, tracing, service mesh, xDS, Istio, Kubernetes와 production tuning을
 다루지 않는다. 단일 run은 production benchmark나 GitHub topology 재현 evidence가 아니다.
 
+### L03
+
+L03 baseline은 Node Ready, Deployment Available, initial/replacement Pod name과 UID,
+Service EndpointSlice, requests/limits, `kubectl top` snapshot과 L00 smoke를 함께 기록한다.
+Pod restart는 container crash 횟수 증가가 아니라 `kubectl rollout restart`로 수행하는
+Deployment-driven Pod replacement다. `kubectl top` 값은 단일 local snapshot이며
+benchmark나 production sizing 근거가 아니다. Port-forward 경로는 ClusterIP/selector/backend
+연결을 확인하지만 production ingress, external network, TLS/mTLS를 검증하지 않는다.
+
 ## Evidence structure
 
 각 wrapper 실행은 기존 경로를 덮어쓰지 않고 다음을 만든다.
@@ -274,6 +291,11 @@ L02는 공통 파일에 `envoy-version.txt`, before/after Envoy text/Prometheus 
 `auth-sim-metrics-delta.json`, `contract.json`, `envoy.log`, `cleanup.json`을 추가한다. Envoy
 누적 counter는 fresh run 안의 before/after delta로만 해석한다.
 
+L03는 `metadata.json`, `summary.md`, `contract.json`, `cleanup.json`과 함께 Kubernetes/tool
+version, Node capacity/allocatable, Deployment/ReplicaSet/Pod/Service, EndpointSlice,
+requests/limits, `kubectl top`, Helm lifecycle, initial/replacement Pod와 `smoke/` evidence를
+남긴다. Kubeconfig 본문, Secret data, admin token과 개인 절대 경로는 저장하지 않는다.
+
 ## Application metrics
 
 `GET /metrics`는 다음 low-cardinality metric을 노출한다.
@@ -288,9 +310,10 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00과 L01은 completed
-foundation이고 현재 단계는 **L02 — Envoy Fundamentals**, 다음 단계는 **L03 — k3d and
-Helm Baseline**이다. 모든 단계의 학습 질문과 완료 기준은 [roadmap](docs/roadmap.md)에 있다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00/L01/L02는 completed
+foundation이고 현재 단계는 **L03 — k3d and Helm Baseline**, 다음 단계는 **L04 — Istio
+Sidecar and Proxy Metrics**다. 모든 단계의 학습 질문과 완료 기준은
+[roadmap](docs/roadmap.md)에 있다.
 
 ## Experiments
 
@@ -325,7 +348,8 @@ preflight와 승인 경계를 거쳐 검증한다.
 
 - Completed foundation: L00 — Minimal Workload and k6
 - Completed foundation: L01 — HAProxy and Toxiproxy Fundamentals
-- Current: L02 — Envoy Fundamentals (implementation verified; local exploratory evidence)
-- Next: L03 — k3d and Helm Baseline
+- Completed foundation: L02 — Envoy Fundamentals
+- Current: L03 — k3d and Helm Baseline (implementation verified; local exploratory evidence)
+- Next: L04 — Istio Sidecar and Proxy Metrics
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

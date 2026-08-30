@@ -42,6 +42,21 @@ L02는 Envoy cumulative absolute counter를 서로 다른 run 사이에서 비�
 run의 before/after delta만 해석한다. Metric name은 selected Envoy version의 실제 `/stats`
 output에서 확인하며 application과 Envoy 수치가 다르면 임의로 맞추지 않는다.
 
+L03는 `results/k3d-helm-baseline/<UTC timestamp>/` 한 경로에 다음을 추가한다.
+
+- `metadata.json`: source/tool/K3s/Kubernetes/Helm/image/topology/resource identity
+- `nodes.txt`, `node-capacity-allocatable.txt`, `kubernetes-version.json`: Node와 runtime identity
+- `workload-*.txt`, `service.yaml`, `endpointslices-*.yaml`, `pod-resources.txt`: Kubernetes state
+- `initial-pod.json`, `replacement-pod.json`, `rollout-*.log`: Deployment-driven Pod replacement
+- `top-nodes.txt`, `top-pods.txt`, `metrics-api.yaml`: 단일 시점 Metrics API snapshot
+- `helm-status.json`, install/uninstall/list log: Helm release lifecycle
+- `smoke/`: 기존 L00 smoke의 L03 path metadata, k6 summary와 console log
+- `contract.json`, `cleanup.json`: lifecycle condition과 release/namespace/cluster/process cleanup
+
+L03 evidence에는 kubeconfig 본문, Secret data, admin token, 전체 environment나 사용자 context
+이름을 저장하지 않는다. Resource usage는 단일 local snapshot이며 performance benchmark나
+production sizing 근거가 아니다.
+
 Scenario 도중 실패한 파일도 raw directory에 보존한다. Curated copy에는 해석에 필요한
 파일만 포함하며 전체 noisy log를 자동으로 복사하지 않는다. Admin token, 전체 environment,
 credential, 개인 절대 경로는 raw와 curated evidence 어디에도 저장하지 않는다. 측정값은

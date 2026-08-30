@@ -131,6 +131,27 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
   Envoy stats after보다 나중에 수집해 observation request를 Envoy workload delta에서 뺀다.
 - 단일 clean run도 local exploratory evidence이며 machine-independent benchmark가 아니다.
 
+### L03 baseline evidence
+
+- 실행은 exact L03 cluster/container/network 부재와 사용자 current-context snapshot 확인 뒤
+  시작하며, 기존 cluster를 자동 교체하지 않는다.
+- 각 run은 새 `results/k3d-helm-baseline/<UTC timestamp>/`를 사용한다. 실패한 bootstrap,
+  lifecycle과 cleanup evidence도 삭제하거나 성공 run으로 수정하지 않는다.
+- Pod replacement는 `kubectl rollout restart` 뒤 old/new Pod name과 UID가 다르고 새 Pod가
+  Ready이며 EndpointSlice가 새 UID를 ready backend로 참조할 때만 통과한다. 이를 container
+  crash restart count 증가로 표현하지 않는다.
+- Resource requests/limits와 `kubectl top node/pod`를 별도 저장한다. Usage는 Metrics API의
+  단일 시점 local snapshot이며 benchmark, historical monitoring, machine-independent result나
+  production sizing 근거가 아니다.
+- Metrics API가 bounded wait 안에 node와 Pod 값을 모두 제공하지 않으면 값을 추측하지 않고
+  해당 raw run을 incomplete로 보존한다. 이를 위해 Prometheus/Grafana를 추가하지 않는다.
+- Global kubeconfig update와 context switch를 끄고 실행별 임시 kubeconfig만 사용한다.
+  Kubeconfig 본문, credential, Secret data와 context 이름은 evidence에 저장하지 않는다.
+- Helm release/namespace 제거, exact cluster 부재, container/network와 추적한 port-forward 0,
+  임시 kubeconfig 삭제와 original context 불변을 `cleanup.json`과 `contract.json`으로 판정한다.
+- L00 smoke는 Kubernetes Service path에서도 logical request와 physical attempt가 같고 retry가
+  0이어야 한다. 단일 clean run은 여전히 local exploratory evidence다.
+
 ## Reporting rules
 
 - 측정하지 않은 값은 결과로 작성하지 않는다.

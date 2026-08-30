@@ -199,8 +199,59 @@ L02 k6 max attempts는 항상 1이므로 client amplification은 1x를 유지할
 breaker rejection은 upstream으로 전달되지 않으므로 반대로 upstream attempt가 downstream
 request보다 작을 수 있다.
 
+## L03 k3d and Helm path
+
+```mermaid
+flowchart LR
+    B[Docker build] --> I[k3d image import]
+    I --> P[auth-sim Pod :8080/:9090]
+    K[k6 on host] -->|127.0.0.1 dynamic port| PF[kubectl port-forward Service]
+    PF --> S[ClusterIP Service :8080]
+    S -->|app labels and public targetPort| P
+    R[L03 runner] -->|separate 127.0.0.1 dynamic port| AF[kubectl port-forward Deployment :9090]
+    AF --> P
+```
+
+이 경로는 `LAB_IMPLEMENTATION`이다. Cluster는 server 1개, agent 0개이고 k3d가 API용
+load-balancer container를 관리한다. K3s image는 `rancher/k3s:v1.35.5-k3s1`로 고정한다.
+Traefik, ServiceLB, local-storage는 L03에 필요하지 않아 비활성화하고 Metrics Server와
+CoreDNS는 유지한다. GitHub production Kubernetes topology를 나타내지 않는다.
+
+## L03 Deployment, Service and resource boundary
+
+- Helm chart는 replica 1개의 `apps/v1` Deployment와 public `ClusterIP` Service만 만든다.
+- Service는 `app.kubernetes.io/name`/`instance` selector로 Pod의 named `public` port를 찾는다.
+- Admin `:9090`은 Service에 넣지 않고 runner가 Deployment-selected Pod에 별도 port-forward한다.
+- Container는 기존 image의 UID/GID 65532 non-root 특성을 유지하고 service-account token을
+  자동 mount하지 않는다.
+- Request `25m` CPU/`32Mi` memory와 limit `250m` CPU/`128Mi` memory는 local smoke를 위한
+  `lab target`이며 production sizing이 아니다.
+- `imagePullPolicy: Never`는 imported local image만 사용하게 해 registry fallback을 막는다.
+
+`kubectl top`은 K3s가 제공하는 Metrics API의 단일 시점 signal이다. requests/limits는 scheduler와
+runtime에 선언한 policy이고 usage는 관찰 시점의 실제 값이므로 서로 같은 의미가 아니다.
+이 snapshot은 historical monitoring, benchmark 또는 production sizing 근거가 아니다.
+
+## L03 kubeconfig and lifecycle boundary
+
+Runner는 실행 전 사용자의 current-context를 메모리에서만 비교하고 k3d의 default kubeconfig
+update/context switch를 모두 끈다. 권한 0600의 임시 kubeconfig만 `KUBECONFIG`로 사용하며
+내용이나 credential을 evidence에 복사하지 않는다. k3d v5.9.0이 host port 0의 실제 Docker
+binding을 kubeconfig에 반영하지 않는 경우에도 실제 loopback binding을 임시 파일에만
+적용한다.
+
+Lifecycle은 image build → cluster create → image import → namespace/ephemeral Secret → Helm
+upgrade/install → readiness/EndpointSlice/resource snapshot → `kubectl rollout restart` → 새 Pod
+UID/Ready → 두 port-forward → L00 smoke → Helm uninstall → namespace delete → cluster delete
+순서다. Pod restart는 container crash restart count가 아니라 Deployment-driven Pod
+replacement다. EXIT/INT/TERM cleanup은 추적한 port-forward, exact L03 cluster와 임시
+kubeconfig만 정리하고 raw evidence는 보존한다.
+
+Port-forward는 Service selector와 Pod backend가 연결됐음을 local에서 확인하는 방법이다.
+Ingress, external load balancer, production network path, TLS/mTLS를 검증하지 않는다.
+
 ## Planned architecture only
 
-후속 단계에서 k3d/Helm, Istio sidecar metrics, HPA, Chaos Mesh, AKS를 순차 검토한다.
-현재 architecture에는 이 구성요소가 없으며 구체 topology, resource, YAML, threshold,
-cloud SKU는 아직 결정하지 않았다.
+후속 L04+에서 Istio sidecar metrics, HPA, Chaos Mesh와 AKS를 순차 검토한다. 현재
+architecture에는 이 구성요소가 없으며 구체 topology, resource, YAML, threshold와 cloud
+SKU는 아직 결정하지 않았다.
