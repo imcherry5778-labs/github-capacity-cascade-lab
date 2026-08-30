@@ -1,0 +1,62 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L02",
+  "phase": "L02",
+  "scenario": "envoy-timeout",
+  "started_at_utc": "2026-08-30T08:43:43Z",
+  "git_commit": "95b14ae1dbd246cd4575d050cda0e7389833c36b",
+  "git_dirty": false,
+  "go_version": "go version go1.26.7 linux/amd64",
+  "k6_version": "k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)",
+  "os": "Linux",
+  "architecture": "x86_64",
+  "tool_versions": {
+    "go": "go version go1.26.7 linux/amd64",
+    "k6": "k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)",
+    "docker": "29.7.2",
+    "docker_compose": "5.1.4",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "not-used",
+    "envoy_server": "envoy  version: b579d07d3ad7ee11d32b105e91a5a39ad24718d7/1.39.1/Clean/RELEASE/BoringSSL"
+  },
+  "image_tags": {
+    "auth_sim": "capacity-cascade/auth-sim:dev",
+    "envoy": "envoyproxy/envoy:v1.39.1"
+  },
+  "base_url": "http://127.0.0.1:32876",
+  "request_path": "k6 -> l02_timeout_listener -> l02_timeout_routes -> l02_timeout_cluster -> auth-sim",
+  "logical_rate": 20,
+  "duration": "4s",
+  "request_timeout": "1s",
+  "fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "application_fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": null,
+  "network_toxic": null,
+  "envoy_proxy": {
+    "listener": "l02_timeout_listener",
+    "route": "l02_timeout_routes",
+    "cluster": "l02_timeout_cluster",
+    "stat_prefix": "l02_timeout",
+    "route_timeout": "100ms",
+    "retry_on": "none",
+    "num_retries": 0,
+    "circuit_breakers": {
+      "max_connections": 100,
+      "max_pending_requests": 100,
+      "max_requests": 100,
+      "max_retries": 100
+    }
+  },
+  "retry_policy": "none",
+  "max_attempts": 1
+}

@@ -8,7 +8,8 @@ evidence의 누적 index다. 각 learning unit은 source run, 설정, 측정 결
 | --- | --- | --- | --- |
 | L00 — Minimal Workload and k6 | Retry/workload fundamentals | Local exploratory evidence available | [L00](l00/README.md) |
 | L01 — HAProxy and Toxiproxy Fundamentals | Proxy capacity와 network fault 분리 | Local exploratory evidence available | [L01](l01/README.md) |
-| L02+ | 후속 learning unit | 아직 curated evidence 없음 | — |
+| L02 — Envoy Fundamentals | Timeout, internal retry, circuit-breaker 관찰 단위 분리 | Local exploratory evidence available | [L02](l02/README.md) |
+| L03+ | 후속 learning unit | 아직 curated evidence 없음 | — |
 
 Curated evidence도 단일 local run이면 portfolio final evidence나 production benchmark가
 아니다. Raw result는 기존 timestamp directory에 append-only로 남고, curated 파일은
