@@ -71,6 +71,31 @@ Application 앞의 proxy capacity/queue와 network fault를 서로 다른 reques
 - Prometheus server/Grafana, Azure/AKS, Terraform/OpenTofu, GitHub Actions
 - full capacity cascade
 
+## L02 goal
+
+Standalone Envoy에서 downstream request가 listener/route를 거쳐 upstream auth-sim으로
+전달되는 기본 lifecycle과 route timeout, bounded retry, circuit breaker의 서로 다른 효과를
+before/after metric delta로 관찰한다.
+
+## L02 in scope
+
+- k6 host → dynamic loopback Envoy listener → static route/cluster → auth-sim public path
+- scenario별 listener, route, cluster와 HCM `stat_prefix`
+- control/timeout, retry-disabled/retry-bounded, control/circuit-breaker 단일 변수 비교
+- k6 retry `none`, max attempts 1과 Envoy internal retry attempt의 분리
+- Envoy `v1.39.1` actual version, text/Prometheus stats와 auth-sim Prometheus snapshot
+- actual `upstream_rq_retry`, `upstream_rq_timeout`, `upstream_rq_active_overflow` delta
+- dynamic loopback admin port, 실행별 Compose project, reset/down/잔여 resource 0 evidence
+
+## L02 out of scope
+
+- GitHub의 실제 proxy 종류/version/topology 또는 timeout/retry/circuit-breaker 설정 추정
+- HAProxy/Toxiproxy를 Envoy request path에 연결하거나 full cascade를 구성
+- Envoy Gateway, Istio, Kubernetes, Helm, xDS control plane, service mesh
+- TLS/mTLS, HTTP/2, HTTP/3, gRPC, tracing, Lua, WASM
+- Prometheus server, Grafana, production tuning 또는 보편적 성능/안정성 결론
+- HPA/KEDA, Chaos Mesh, Azure/AKS, Terraform/OpenTofu, GitHub Actions
+
 ## Core vs Optional Extension
 
 - **Core:** L00–L10. 최소 workload에서 시작해 proxy, sidecar metric, autoscaling blind

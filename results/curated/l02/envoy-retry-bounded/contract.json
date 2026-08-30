@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "scenario_exit": 0,
+  "contract_exit": 0,
+  "logical_requests": 81,
+  "physical_attempts": 81,
+  "k6_retry_attempts": 0,
+  "downstream_status": {"200": 0, "503": 81, "504": 0}
+}

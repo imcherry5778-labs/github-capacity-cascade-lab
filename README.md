@@ -54,37 +54,39 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Current phase — L01
+## Current phase — L02
 
-현재 구현 범위는 **L01 — HAProxy and Toxiproxy Fundamentals**다. L00에서 만든 다음
-기반은 그대로 유지한다.
+현재 구현 범위는 **L02 — Envoy Fundamentals**다. L00/L01에서 만든 다음 기반은 그대로
+유지한다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
 - runtime latency, deterministic error, application admission limit
-- bounded bad/good retry를 비교하는 k6 scenario
+- client no-retry와 logical/physical counter를 제공하는 k6 harness
 - logical request와 physical attempt의 분리 측정
 - timestamp별 local evidence와 Prometheus application metrics
 - multi-stage, non-root, `scratch` Docker image
 
-L01은 application 앞의 두 현상을 한 경로에 섞지 않고 각각 관찰한다.
+L02는 HAProxy/Toxiproxy를 request path에 넣지 않고 standalone Envoy만 관찰한다.
 
 ```mermaid
 flowchart LR
-    K1[k6] --> H[HAProxy control 또는 constrained]
-    H --> A1[auth-sim]
+    K[k6 on host] -->|dynamic loopback port| L[Envoy listener]
+    L --> R[route]
+    R --> C[upstream cluster]
+    C -->|Compose network| A[auth-sim public :8080]
 ```
 
 ```mermaid
 flowchart LR
-    K2[k6] --> T[Toxiproxy]
-    T --> A2[auth-sim]
+    X[L02 runner] -->|loopback dynamic port| D[auth-sim admin :9090]
+    X -->|loopback dynamic port| S[Envoy admin :9901]
 ```
 
-HAProxy는 connection capacity와 queue를 관찰하는 HTTP proxy다. Toxiproxy는 GitHub
-architecture 구성요소가 아니라 latency와 TCP reset을 통제해 주입하는
-`LAB_IMPLEMENTATION`이다. 두 요소를 같은 기본 request path에 연결하지 않으므로
-application/proxy/network 원인을 분리해 해석할 수 있다.
+Envoy listener는 downstream 연결을 받고, route가 요청을 cluster에 매핑하며, cluster의
+endpoint가 upstream auth-sim을 가리킨다. Envoy admin과 auth-sim admin은 host loopback에만
+publish된다. Static bootstrap, image/version, timeout/retry/circuit-breaker 값은 모두
+`LAB_IMPLEMENTATION` 또는 local `lab target`이며 GitHub production 설정이 아니다.
 
 ## L00 foundation architecture
 
@@ -96,8 +98,9 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L01의 상세 topology와 plane 경계는 [architecture](docs/architecture.md)에 있다. Envoy,
-Istio, Kubernetes, HPA와 Azure resource는 아직 없다.
+L01은 completed foundation이며 상세 topology와 L02 plane 경계는
+[architecture](docs/architecture.md)에 있다. Istio, Kubernetes, HPA와 Azure resource는
+아직 없다.
 
 ## Local quick start
 
@@ -121,6 +124,16 @@ make l01-scenario SCENARIO=toxiproxy-latency
 make l01-scenario SCENARIO=toxiproxy-reset-peer
 make l01-verify
 make l01-clean
+make l02-doctor
+make l02-check
+make l02-smoke
+make l02-scenario SCENARIO=envoy-control
+make l02-scenario SCENARIO=envoy-timeout
+make l02-scenario SCENARIO=envoy-retry-disabled
+make l02-scenario SCENARIO=envoy-retry-bounded
+make l02-scenario SCENARIO=envoy-circuit-breaker
+make l02-verify
+make l02-clean
 ```
 
 `make verify`는 format check, `go vet`, Go test/build, 모든 k6 script inspect, 짧은
@@ -144,6 +157,12 @@ check와 두 정상 경로의 짧은 smoke만 bounded 실행하며 전체 다섯
 이어 실행하지 않는다. L01 기본값은 개발자 노트북에서 짧게 끝나는 `lab target`이고
 `LOGICAL_RATE`, `DURATION`, `REQUEST_TIMEOUT`, `HAPROXY_SERVICE_TIME_MS`,
 `TOXIPROXY_LATENCY_MS`로 override할 수 있다.
+
+L02도 Docker Compose와 `curl`을 사용한다. `make l02-check`는 Compose, 실제
+`envoyproxy/envoy:v1.39.1`의 `--mode validate`, k6 inspect와 shell syntax를 확인한다.
+`make l02-smoke`와 `make l02-verify`는 `envoy-control`만 1 ops/s, 1s로 bounded 실행하며,
+전체 fault scenario는 `make l02-scenario SCENARIO=...`로 각각 독립 실행한다. 기본 20
+ops/s, 4s, application service time 250 ms는 짧은 local signal을 위한 `lab target`이다.
 
 ### Docker
 
@@ -198,6 +217,38 @@ HAProxy 두 scenario는 같은 workload와 auth-sim service time을 사용하며
 HAProxy `maxconn`/timeout과 Toxiproxy latency/reset 값은 모두 local 관찰을 위한
 `lab target`이며 GitHub의 topology나 실제 설정을 나타내지 않는다.
 
+### L02
+
+| Scenario | Only comparison variable | Purpose |
+| --- | --- | --- |
+| `envoy-control` | 넉넉한 `max_requests`, route timeout 2s | listener → route → cluster → endpoint 정상 기준선 |
+| `envoy-timeout` | route timeout `2s → 100ms` | 250 ms application service time보다 짧은 route timeout의 outcome |
+| `envoy-retry-disabled` | retry policy 없음 | persistent application 503의 no-retry 기준선 |
+| `envoy-retry-bounded` | `retry_on: 5xx`, `num_retries: 2` | 같은 503에서 bounded Envoy retry의 upstream attempt 증가 |
+| `envoy-circuit-breaker` | cluster `max_requests: 100 → 1` | 같은 control workload에서 capacity rejection과 overflow signal |
+
+모든 L02 scenario에서 k6 retry policy는 `none`, max attempts는 1이다. 따라서 client
+amplification은 다음과 같이 계산하며 Envoy internal retry를 포함하지 않는다.
+
+```text
+Client Retry Amplification = k6 physical_attempts / logical_requests
+Envoy Upstream Attempt Amplification = Envoy upstream attempts / logical_requests
+```
+
+- `logical_requests`: 사용자가 의도한 operation 수
+- `physical_attempts`: k6가 Envoy downstream에 실제 보낸 client HTTP attempt 수
+- Envoy downstream requests: listener/HCM이 client에서 받은 request 수
+- Envoy upstream attempts: 최초 전달과 Envoy internal retry를 합한 cluster request 수
+- auth-sim token request delta: application이 실제 완료 관찰한 `/token` request 증가량
+
+Circuit breaker는 retry, timeout 또는 rate limit과 같은 기능이 아니다. 이 L02 pair에서는
+outstanding upstream request 수를 제한해 auth-sim pressure를 줄이는 대신 일부 downstream
+request에 빠른 503 rejection을 반환하는 trade-off를 관찰한다.
+
+L02의 한계는 명확하다. 단일 local Envoy와 static bootstrap만 사용하며 TLS/mTLS,
+HTTP/2·HTTP/3, gRPC, tracing, service mesh, xDS, Istio, Kubernetes와 production tuning을
+다루지 않는다. 단일 run은 production benchmark나 GitHub topology 재현 evidence가 아니다.
+
 ## Evidence structure
 
 각 wrapper 실행은 기존 경로를 덮어쓰지 않고 다음을 만든다.
@@ -218,6 +269,11 @@ metadata는 선택된 실행 조건과 tool/version만 저장하며 admin token,
 credential 또는 개인 절대 경로를 저장하지 않는다. 생성 결과는 기본적으로 Git에서
 제외한다. 자세한 비교 원칙은 [experiment policy](docs/experiment-policy.md)를 따른다.
 
+L02는 공통 파일에 `envoy-version.txt`, before/after Envoy text/Prometheus stats,
+`envoy-stats-delta.json`, before/after auth-sim Prometheus snapshot,
+`auth-sim-metrics-delta.json`, `contract.json`, `envoy.log`, `cleanup.json`을 추가한다. Envoy
+누적 counter는 fresh run 안의 before/after delta로만 해석한다.
+
 ## Application metrics
 
 `GET /metrics`는 다음 low-cardinality metric을 노출한다.
@@ -232,9 +288,9 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00과 L01 구현 뒤 다음
-단계는 **L02 — Envoy Fundamentals**다. 모든 단계의 학습 질문과 완료 기준은
-[roadmap](docs/roadmap.md)에 있다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00과 L01은 completed
+foundation이고 현재 단계는 **L02 — Envoy Fundamentals**, 다음 단계는 **L03 — k3d and
+Helm Baseline**이다. 모든 단계의 학습 질문과 완료 기준은 [roadmap](docs/roadmap.md)에 있다.
 
 ## Experiments
 
@@ -268,7 +324,8 @@ preflight와 승인 경계를 거쳐 검증한다.
 ## Repository status
 
 - Completed foundation: L00 — Minimal Workload and k6
-- Current: L01 — HAProxy and Toxiproxy Fundamentals (implementation verified)
-- Next: L02 — Envoy Fundamentals
+- Completed foundation: L01 — HAProxy and Toxiproxy Fundamentals
+- Current: L02 — Envoy Fundamentals (implementation verified; local exploratory evidence)
+- Next: L03 — k3d and Helm Baseline
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

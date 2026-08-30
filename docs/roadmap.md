@@ -27,7 +27,7 @@
 - **Done:** 정상, latency, connection fault를 서로 혼동하지 않고 재현·reset·증명한다.
 - **Non-goals:** GitHub HAProxy topology 복제, Envoy/Istio, Kubernetes.
 - **Dependencies:** L00.
-- **Status:** Current — implementation complete and verified; 생성 결과는 local exploratory evidence.
+- **Status:** Complete — implementation verified; 생성 결과는 local exploratory evidence.
 
 ## L02 — Envoy Fundamentals
 
@@ -35,12 +35,12 @@
 - **Title:** Envoy Fundamentals
 - **Goal:** Envoy의 기본 request lifecycle과 bounded retry behavior를 standalone 환경에서 학습한다.
 - **Learn:** Upstream cluster, timeout, retry, circuit-breaking signal의 역할을 구분한다.
-- **Build:** 최소 standalone Envoy experiment와 L00 workload 연결.
-- **Observe:** Envoy request/retry/upstream metrics와 application metrics의 차이.
-- **Done:** Retry와 capacity protection의 효과를 고정 조건 evidence로 설명한다.
+- **Build:** Static bootstrap standalone Envoy, scenario별 listener/route/cluster, no-retry k6 workload, before/after stats와 cleanup contract.
+- **Observe:** Downstream request, upstream attempt, timeout, bounded retry, active overflow와 application token request delta의 차이.
+- **Done:** Control/timeout, retry-disabled/bounded, control/circuit-breaker pair를 독립 실행하고 실제 v1.39.1 metric과 local evidence로 설명한다.
 - **Non-goals:** Istio control plane, service mesh 전체, production tuning.
 - **Dependencies:** L00; L01의 proxy 관찰 경험.
-- **Status:** Planned — next.
+- **Status:** Current — implementation complete and verified; 생성 결과는 local exploratory evidence.
 
 ## L03 — k3d and Helm Baseline
 
@@ -53,7 +53,7 @@
 - **Done:** Clean bootstrap부터 L00 smoke까지 재현되고 소유 resource가 정리된다.
 - **Non-goals:** Istio, HPA, Chaos Mesh, cloud parity.
 - **Dependencies:** L00.
-- **Status:** Planned.
+- **Status:** Planned — next.
 
 ## L04 — Istio Sidecar and Proxy Metrics
 

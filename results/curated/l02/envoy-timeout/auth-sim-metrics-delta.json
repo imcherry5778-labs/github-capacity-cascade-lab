@@ -1,0 +1,10 @@
+{
+  "metrics": {
+    "token_requests": "capacity_cascade_http_requests_total{route=/token}",
+    "token_2xx": "capacity_cascade_http_requests_total{route=/token,status_class=2xx}",
+    "token_5xx": "capacity_cascade_http_requests_total{route=/token,status_class=5xx}"
+  },
+  "before": {"token_requests": 0, "token_2xx": 0, "token_5xx": 0},
+  "after": {"token_requests": 80, "token_2xx": 80, "token_5xx": 0},
+  "delta": {"token_requests": 80, "token_2xx": 80, "token_5xx": 0}
+}

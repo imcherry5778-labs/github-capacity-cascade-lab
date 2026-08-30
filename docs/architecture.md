@@ -134,8 +134,73 @@ Runner는 매 실행 고유 Compose project와 동적 host port를 사용한다.
 fault와 toxic을 reset해 state를 저장한 뒤 해당 project의 container/network만 제거한다.
 Failed evidence도 삭제하지 않는다.
 
+## L02 standalone Envoy path
+
+```mermaid
+flowchart LR
+    K[k6 on host] -->|downstream HTTP, dynamic loopback port| L[Envoy listener]
+    L --> H[HTTP connection manager]
+    H --> R[static route]
+    R --> C[upstream cluster]
+    C --> E[auth-sim endpoint :8080]
+    X[L02 runner] -->|loopback only| EA[Envoy admin :9901]
+    X -->|loopback only| AA[auth-sim admin :9090]
+```
+
+Envoy 용어에서 downstream은 Envoy에 연결해 request를 보내는 k6 방향이고, upstream은
+Envoy가 연결하고 request를 전달하는 auth-sim 방향이다.
+
+- **Listener:** downstream client가 연결하는 이름 있는 network address/port다.
+- **Route:** incoming HTTP request를 어떤 cluster로 보낼지 선택하고 timeout/retry policy를 적용한다.
+- **Cluster:** Envoy가 연결하는 논리적으로 같은 upstream host 집합과 capacity policy다.
+- **Endpoint:** 이 lab에서는 cluster가 실제로 연결하는 `auth-sim:8080` 한 개다.
+
+한 Envoy process에 scenario별 listener/route/cluster를 분리한다. 각 HCM은 별도
+`stat_prefix`, 각 cluster는 별도 이름을 사용하므로 downstream, upstream attempt, retry,
+timeout, overflow counter가 scenario별로 섞이지 않는다.
+
+| Scenario | Listener port inside Compose | Route timeout | Retry | Cluster max requests |
+| --- | ---: | ---: | --- | ---: |
+| `envoy-control` | 10000 | 2s | none | 100 |
+| `envoy-timeout` | 10001 | 100ms | none | 100 |
+| `envoy-retry-disabled` | 10002 | 2s | none | 100 |
+| `envoy-retry-bounded` | 10003 | 2s | `5xx`, 2 retries | 100 |
+| `envoy-circuit-breaker` | 10004 | 2s | none | 1 |
+
+모든 값과 standalone topology는 local signal을 위한 `LAB_IMPLEMENTATION`/`lab target`이다.
+Control/timeout과 control/circuit-breaker는 20 ops/s, 4s, auth-sim service time 250 ms를
+공유한다. Retry pair는 같은 persistent 503 profile과 workload를 공유하고 route
+`retry_policy`만 다르다.
+
+## L02 observation and host boundary
+
+- Public workload plane: k6는 선택한 Envoy listener의 dynamic loopback port만 사용한다.
+- Envoy upstream plane: auth-sim public `:8080`은 Compose network 안에서만 endpoint로 사용한다.
+- Application admin plane: bearer token은 process environment에만 있고 host loopback의
+  dynamic port로 fault reset/apply에 사용한다.
+- Envoy admin plane: host loopback의 dynamic port에서 `/ready`와 read-only `/stats`만 읽는다.
+- Snapshot order: application metrics before → Envoy stats before → workload → Envoy stats
+  after → application metrics after 순서로 수집해 observation request를 Envoy delta에서 뺀다.
+
+Route timeout은 complete upstream response를 기다리는 request budget이고, cluster
+`connect_timeout`은 upstream TCP connection 성립을 기다리는 별도 budget이다. Retry route의
+2s timeout은 최초 attempt와 두 internal retry 전체를 포함한다.
+
+## L02 measurement units
+
+- k6 `logical_requests`: 사용자가 의도한 operation 수
+- k6 `physical_attempts`: k6가 Envoy에 보낸 downstream HTTP attempt 수
+- Envoy downstream request: HCM이 k6에서 받은 request 수
+- Envoy upstream attempt: 최초 전달과 Envoy internal retry를 합한 cluster request 수
+- auth-sim token request delta: application Prometheus counter가 관찰한 `/token` 완료 수
+
+L02 k6 max attempts는 항상 1이므로 client amplification은 1x를 유지할 수 있지만,
+`envoy-retry-bounded`의 upstream attempt amplification은 1x보다 커질 수 있다. Circuit
+breaker rejection은 upstream으로 전달되지 않으므로 반대로 upstream attempt가 downstream
+request보다 작을 수 있다.
+
 ## Planned architecture only
 
-후속 단계에서 Envoy, k3d/Helm, Istio sidecar metrics, HPA, Chaos Mesh, AKS를 순차
-검토한다. 현재 architecture에는 이 구성요소가 없으며 구체 topology, resource, YAML,
-threshold, cloud SKU는 아직 결정하지 않았다.
+후속 단계에서 k3d/Helm, Istio sidecar metrics, HPA, Chaos Mesh, AKS를 순차 검토한다.
+현재 architecture에는 이 구성요소가 없으며 구체 topology, resource, YAML, threshold,
+cloud SKU는 아직 결정하지 않았다.

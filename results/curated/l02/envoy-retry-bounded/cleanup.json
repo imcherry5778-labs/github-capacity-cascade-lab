@@ -1,0 +1,9 @@
+{
+  "scenario_exit": 0,
+  "contract_exit": 0,
+  "runner_exit_before_cleanup": 0,
+  "auth_sim_reset": true,
+  "compose_down": true,
+  "remaining_containers": 0,
+  "remaining_networks": 0
+}

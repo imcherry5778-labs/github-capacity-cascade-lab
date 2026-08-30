@@ -26,6 +26,22 @@ L00 run은 `metadata.json`, `k6-summary.json`, `summary.md`, `app.log`를 남긴
   `toxiproxy-state.json`, `toxiproxy-state-after-reset.json`: proxy/toxic 적용과 reset state
 - `cleanup.json`: application/Toxiproxy reset, Compose down, 잔여 container/network 수
 
+L02는 공통 file에 다음을 추가한다.
+
+- `envoy-version.txt`, `envoy-image-digest.txt`: selected image의 actual binary version과 digest
+- `envoy-stats-before/after.txt`, `envoy-stats-before/after-filtered.txt`,
+  `envoy-stats-before/after.prom`: absolute raw/filtered Envoy stats snapshot
+- `envoy-stats-delta.json`: 실제 metric name과 downstream/upstream/retry/timeout/overflow delta
+- `auth-sim-metrics-before/after.prom`, `auth-sim-metrics-delta.json`: application `/token`
+  counter의 before/after와 status-class delta
+- `contract.json`: logical/physical/no-client-retry와 scenario별 signal 판정
+- `envoy.log`: access response code/flag와 component log
+- `cleanup.json`: application reset, Compose down, 잔여 L02 container/network 수와 exit code
+
+L02는 Envoy cumulative absolute counter를 서로 다른 run 사이에서 비교하지 않고, 같은 fresh
+run의 before/after delta만 해석한다. Metric name은 selected Envoy version의 실제 `/stats`
+output에서 확인하며 application과 Envoy 수치가 다르면 임의로 맞추지 않는다.
+
 Scenario 도중 실패한 파일도 raw directory에 보존한다. Curated copy에는 해석에 필요한
 파일만 포함하며 전체 noisy log를 자동으로 복사하지 않는다. Admin token, 전체 environment,
 credential, 개인 절대 경로는 raw와 curated evidence 어디에도 저장하지 않는다. 측정값은
