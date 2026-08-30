@@ -1,0 +1,292 @@
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+
+static_resources:
+  listeners:
+    - name: l02_control_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10000
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: l02_control
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                      log_format:
+                        text_format_source:
+                          inline_string: "l02_control %REQ(:METHOD)% %REQ(:PATH)% %RESPONSE_CODE% %RESPONSE_FLAGS%\n"
+                route_config:
+                  name: l02_control_routes
+                  virtual_hosts:
+                    - name: l02_control_service
+                      domains: ["*"]
+                      routes:
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: l02_control_cluster
+                            timeout: 2s
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+    - name: l02_timeout_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10001
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: l02_timeout
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                      log_format:
+                        text_format_source:
+                          inline_string: "l02_timeout %REQ(:METHOD)% %REQ(:PATH)% %RESPONSE_CODE% %RESPONSE_FLAGS%\n"
+                route_config:
+                  name: l02_timeout_routes
+                  virtual_hosts:
+                    - name: l02_timeout_service
+                      domains: ["*"]
+                      routes:
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: l02_timeout_cluster
+                            timeout: 0.100s
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+    - name: l02_retry_disabled_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10002
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: l02_retry_disabled
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                      log_format:
+                        text_format_source:
+                          inline_string: "l02_retry_disabled %REQ(:METHOD)% %REQ(:PATH)% %RESPONSE_CODE% %RESPONSE_FLAGS%\n"
+                route_config:
+                  name: l02_retry_disabled_routes
+                  virtual_hosts:
+                    - name: l02_retry_disabled_service
+                      domains: ["*"]
+                      routes:
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: l02_retry_disabled_cluster
+                            timeout: 2s
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+    - name: l02_retry_bounded_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10003
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: l02_retry_bounded
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                      log_format:
+                        text_format_source:
+                          inline_string: "l02_retry_bounded %REQ(:METHOD)% %REQ(:PATH)% %RESPONSE_CODE% %RESPONSE_FLAGS%\n"
+                route_config:
+                  name: l02_retry_bounded_routes
+                  virtual_hosts:
+                    - name: l02_retry_bounded_service
+                      domains: ["*"]
+                      routes:
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: l02_retry_bounded_cluster
+                            timeout: 2s
+                            retry_policy:
+                              retry_on: 5xx
+                              num_retries: 2
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+    - name: l02_circuit_breaker_listener
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10004
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: l02_circuit_breaker
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                      log_format:
+                        text_format_source:
+                          inline_string: "l02_circuit_breaker %REQ(:METHOD)% %REQ(:PATH)% %RESPONSE_CODE% %RESPONSE_FLAGS%\n"
+                route_config:
+                  name: l02_circuit_breaker_routes
+                  virtual_hosts:
+                    - name: l02_circuit_breaker_service
+                      domains: ["*"]
+                      routes:
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: l02_circuit_breaker_cluster
+                            timeout: 2s
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    - name: l02_control_cluster
+      type: STRICT_DNS
+      connect_timeout: 1s
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: l02_control_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: auth-sim
+                      port_value: 8080
+      circuit_breakers:
+        thresholds:
+          - priority: DEFAULT
+            max_connections: 100
+            max_pending_requests: 100
+            max_requests: 100
+            max_retries: 100
+            track_remaining: true
+
+    - name: l02_timeout_cluster
+      type: STRICT_DNS
+      connect_timeout: 1s
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: l02_timeout_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: auth-sim
+                      port_value: 8080
+      circuit_breakers:
+        thresholds:
+          - priority: DEFAULT
+            max_connections: 100
+            max_pending_requests: 100
+            max_requests: 100
+            max_retries: 100
+            track_remaining: true
+
+    - name: l02_retry_disabled_cluster
+      type: STRICT_DNS
+      connect_timeout: 1s
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: l02_retry_disabled_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: auth-sim
+                      port_value: 8080
+      circuit_breakers:
+        thresholds:
+          - priority: DEFAULT
+            max_connections: 100
+            max_pending_requests: 100
+            max_requests: 100
+            max_retries: 100
+            track_remaining: true
+
+    - name: l02_retry_bounded_cluster
+      type: STRICT_DNS
+      connect_timeout: 1s
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: l02_retry_bounded_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: auth-sim
+                      port_value: 8080
+      circuit_breakers:
+        thresholds:
+          - priority: DEFAULT
+            max_connections: 100
+            max_pending_requests: 100
+            max_requests: 100
+            max_retries: 100
+            track_remaining: true
+
+    - name: l02_circuit_breaker_cluster
+      type: STRICT_DNS
+      connect_timeout: 1s
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: l02_circuit_breaker_cluster
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: auth-sim
+                      port_value: 8080
+      circuit_breakers:
+        thresholds:
+          - priority: DEFAULT
+            max_connections: 100
+            max_pending_requests: 100
+            # Control과 동일 조건에서 outstanding upstream request limit만 낮춘 lab target이다.
+            max_requests: 1
+            max_retries: 100
+            track_remaining: true

@@ -1,0 +1,31 @@
+services:
+  auth-sim:
+    image: ${AUTH_SIM_IMAGE:-capacity-cascade/auth-sim:dev}
+    environment:
+      LAB_PUBLIC_ADDR: 0.0.0.0:8080
+      LAB_ADMIN_ADDR: 0.0.0.0:9090
+      # Secret은 compose file에 넣지 않고 runner process environment에서만 전달한다.
+      LAB_ADMIN_TOKEN:
+    ports:
+      # Admin control plane만 host loopback의 Docker 할당 port로 공개한다.
+      - "127.0.0.1::9090"
+
+  envoy:
+    image: ${ENVOY_IMAGE:-envoyproxy/envoy:v1.39.1}
+    depends_on:
+      - auth-sim
+    command:
+      - -c
+      - /etc/envoy/envoy.yaml
+      - --log-level
+      - info
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      # 각 workload listener와 admin stats plane은 동적 loopback port만 사용한다.
+      - "127.0.0.1::10000"
+      - "127.0.0.1::10001"
+      - "127.0.0.1::10002"
+      - "127.0.0.1::10003"
+      - "127.0.0.1::10004"
+      - "127.0.0.1::9901"
