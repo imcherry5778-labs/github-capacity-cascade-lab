@@ -1,2 +1,0 @@
-NAME                                CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
-k3d-capacity-cascade-l03-server-0   483m         2%       433Mi           1%          

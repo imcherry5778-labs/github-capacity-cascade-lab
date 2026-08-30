@@ -1,2 +1,0 @@
-NAME                        CPU(cores)   MEMORY(bytes)   
-auth-sim-5548b49c55-4srcb   3m           2Mi             

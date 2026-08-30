@@ -82,13 +82,14 @@ machine-independent result 또는 production sizing 근거가 아니다.
 - Workload: initial/after-replacement Deployment·ReplicaSet·Pod·Service state, Service와
   before/after EndpointSlice, requests/limits
 - Replacement: initial/replacement Pod identity와 rollout command/status
-- Resource usage: `top-nodes.txt`, `top-pods.txt`
-- Helm/image lifecycle: image import, install/status, uninstall/list와 namespace/cluster delete
+- Resource usage: raw `summary.md`에 포함된 node/Pod snapshot
+- Helm/image lifecycle: install/status, uninstall/list와 namespace delete
 - Smoke: `smoke/metadata.json`, `smoke/k6-summary.json`, `smoke/summary.md`
 
-전체 Docker build/k3d create log, rendered chart, empty transient error log, Secret creation log,
-port-forward log와 k6 console log는 noisy하거나 source/config/summary와 중복되어 raw notebook에만
-남겼다. Redaction은 적용하지 않았고 measured value를 수정하지 않았다.
+전체 Docker build/k3d create/image import/cluster delete log, rendered chart, raw `kubectl top`
+table, empty transient error log, Secret creation log, port-forward log와 k6 console log는
+padding 공백이 있거나 source/config/summary/contract와 중복되어 raw notebook에만 남겼다.
+Redaction은 적용하지 않았고 measured value를 수정하지 않았다.
 
 ## Meaningful development observations
 
