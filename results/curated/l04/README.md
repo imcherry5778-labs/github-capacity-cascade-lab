@@ -87,10 +87,14 @@ removed; and original kube context/global Helm configuration unchanged.
 
 The curated pair includes root identity/chart/control-plane/config-diff/contract/cleanup/summary and,
 for each scenario, injected workload state, Sidecar/EnvoyFilter resource, target cluster/route,
-Service/EndpointSlice/datapath proof, actual proxy mapping/stats, application metrics/samples/usage,
-k6 metadata/summary and scenario contract. Full config dumps, rendered manifests, command/port-forward/
-Secret creation/k6 console logs and temporary files remain in the append-only raw notebook. No redaction
-or measured-value editing was applied; development and incomplete raw runs were not curated.
+Service/EndpointSlice/datapath proof, actual proxy mapping and observation before/after, application
+metrics/samples, summary-recorded container-usage snapshot, k6 metadata/summary and scenario contract.
+Full config dumps, rendered manifests, command/port-forward/Secret creation/k6 console logs and temporary
+files remain in the append-only raw notebook. Raw `cluster-delete.log`, `container-usage.txt`,
+`init-containers.txt`, `proxy-server-info.json`, `proxy-stats-*.txt` and `sidecar-field-explain.txt`
+have CLI padding or an extra final blank line, so they remain raw-only rather than being modified for
+Git whitespace rules. No redaction or measured-value editing was applied; development and incomplete
+raw runs were not curated.
 
 ## Limitations
 

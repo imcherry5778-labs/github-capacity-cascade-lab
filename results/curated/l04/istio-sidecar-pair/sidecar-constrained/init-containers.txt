@@ -1,2 +1,0 @@
-istio-init	registry.istio.io/release/proxyv2:1.30.4	
-istio-proxy	registry.istio.io/release/proxyv2:1.30.4	Always
