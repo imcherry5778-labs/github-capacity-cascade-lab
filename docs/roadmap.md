@@ -40,7 +40,7 @@
 - **Done:** Control/timeout, retry-disabled/bounded, control/circuit-breaker pair를 독립 실행하고 실제 v1.39.1 metric과 local evidence로 설명한다.
 - **Non-goals:** Istio control plane, service mesh 전체, production tuning.
 - **Dependencies:** L00; L01의 proxy 관찰 경험.
-- **Status:** Current — implementation complete and verified; 생성 결과는 local exploratory evidence.
+- **Status:** Complete — implementation verified; 생성 결과는 local exploratory evidence.
 
 ## L03 — k3d and Helm Baseline
 
@@ -53,7 +53,7 @@
 - **Done:** Clean bootstrap부터 L00 smoke까지 재현되고 소유 resource가 정리된다.
 - **Non-goals:** Istio, HPA, Chaos Mesh, cloud parity.
 - **Dependencies:** L00.
-- **Status:** Planned — next.
+- **Status:** Current — implementation complete and verified; 생성 결과는 local exploratory evidence.
 
 ## L04 — Istio Sidecar and Proxy Metrics
 
@@ -66,7 +66,7 @@
 - **Done:** L00 application admission과 sidecar capacity가 다른 mechanism임을 evidence로 설명한다.
 - **Non-goals:** GitHub sidecar setting 복제, Ambient mode, ingress gateway 단정.
 - **Dependencies:** L03; L02 권장.
-- **Status:** Planned.
+- **Status:** Planned — next.
 
 ## L05 — HPA Blind Spot
 

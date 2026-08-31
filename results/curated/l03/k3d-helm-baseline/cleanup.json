@@ -1,0 +1,11 @@
+{
+  "runner_exit_before_cleanup": 0,
+  "helm_release_removed": true,
+  "namespace_or_owned_resources_removed": true,
+  "cluster_removed": true,
+  "remaining_cluster_containers": 0,
+  "remaining_cluster_networks": 0,
+  "remaining_port_forwards": 0,
+  "temporary_kubeconfig_removed": true,
+  "original_context_unchanged": true
+}

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: auth-sim
+    meta.helm.sh/release-namespace: capacity-cascade-l03
+  creationTimestamp: "2026-08-30T13:41:10Z"
+  labels:
+    app.kubernetes.io/instance: auth-sim
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: auth-sim
+    app.kubernetes.io/version: l03
+    helm.sh/chart: auth-sim-0.1.0
+  name: auth-sim
+  namespace: capacity-cascade-l03
+  resourceVersion: "432"
+  uid: ea0b4723-2fa5-4989-9792-6a9823560158
+spec:
+  clusterIP: 10.43.189.111
+  clusterIPs:
+  - 10.43.189.111
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: public
+    port: 8080
+    protocol: TCP
+    targetPort: public
+  selector:
+    app.kubernetes.io/instance: auth-sim
+    app.kubernetes.io/name: auth-sim
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

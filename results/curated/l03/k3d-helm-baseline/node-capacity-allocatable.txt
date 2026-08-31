@@ -1,0 +1,2 @@
+NAME                                CAPACITY_CPU   CAPACITY_MEMORY   ALLOCATABLE_CPU   ALLOCATABLE_MEMORY
+k3d-capacity-cascade-l03-server-0   22             32339208Ki        22                32339208Ki

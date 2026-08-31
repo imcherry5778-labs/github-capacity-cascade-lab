@@ -1,0 +1,8 @@
+Release "auth-sim" does not exist. Installing it now.
+NAME: auth-sim
+LAST DEPLOYED: Sun Aug 30 22:41:10 2026
+NAMESPACE: capacity-cascade-l03
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None

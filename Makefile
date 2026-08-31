@@ -8,8 +8,12 @@ K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02
 L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
 L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 L02_ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
+L03_K3S_IMAGE ?= rancher/k3s:v1.35.5-k3s1
+L03_CHART ?= charts/auth-sim
+L03_RENDER_REPOSITORY ?= capacity-cascade/auth-sim
+L03_RENDER_TAG ?= l03-dev
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-verify l02-scenario l02-clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-verify l02-scenario l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -135,6 +139,43 @@ l02-scenario: docker-build ## SCENARIO으로 독립 L02 scenario와 evidence 수
 
 l02-clean: ## 이 repository의 L02 Compose project만 정리하고 evidence는 보존합니다.
 	@scripts/run-l02-scenario.sh clean
+
+l03-doctor: ## L03에 필요한 k3d, Kubernetes, Helm, Docker와 기존 도구를 확인합니다.
+	@missing=0; \
+	for tool in git go k6 docker kubectl k3d helm make curl awk sed grep wc tr; do \
+		if ! command -v "$$tool" >/dev/null 2>&1; then printf '%-16s MISSING\n' "$$tool"; missing=1; else printf '%-16s OK\n' "$$tool"; fi; \
+	done; \
+	if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi; \
+	if command -v k3d >/dev/null 2>&1; then k3d version; fi; \
+	if command -v kubectl >/dev/null 2>&1; then kubectl version --client; fi; \
+	if command -v helm >/dev/null 2>&1; then helm version --short; fi; \
+	exit $$missing
+
+l03-check: l03-doctor ## L03 chart, rendered manifest, k6 재사용과 runner를 정적으로 검사합니다.
+	@set -euo pipefail; \
+	rendered="$$(mktemp)"; \
+	trap 'rm -f "$$rendered"' EXIT; \
+	helm lint "$(L03_CHART)" --set-string image.repository="$(L03_RENDER_REPOSITORY)" --set-string image.tag="$(L03_RENDER_TAG)"; \
+	helm template auth-sim "$(L03_CHART)" --namespace capacity-cascade-l03 \
+		--set-string image.repository="$(L03_RENDER_REPOSITORY)" \
+		--set-string image.tag="$(L03_RENDER_TAG)" >"$$rendered"; \
+	if grep -Eq 'image:[[:space:]].*:latest([[:space:]]|$$)' "$$rendered"; then printf 'latest image is forbidden\n' >&2; exit 1; fi; \
+	if grep -Eq '^kind:[[:space:]]+Secret$$' "$$rendered"; then printf 'chart must not render Secret data\n' >&2; exit 1; fi; \
+	grep -q 'name: LAB_ADMIN_TOKEN' "$$rendered"; \
+	grep -q 'secretKeyRef:' "$$rendered"; \
+	grep -q 'type: ClusterIP' "$$rendered"; \
+	if grep -Eq 'replace-with|LAB_ADMIN_TOKEN_PLACEHOLDER|local-[0-9]+-[0-9]+' "$$rendered"; then printf 'secret placeholder rendered\n' >&2; exit 1; fi
+	@case "$(L03_K3S_IMAGE)" in *:latest|latest) printf 'latest K3s image is forbidden\n' >&2; exit 1 ;; *:*) ;; *) printf 'K3s image must have an explicit tag\n' >&2; exit 1 ;; esac
+	k6 inspect load/k6/smoke.js >/dev/null
+	bash -n scripts/run-l03-baseline.sh
+
+l03-smoke: l03-check ## Clean bootstrap부터 L00 smoke와 L03 cleanup contract까지 실행합니다.
+	K3S_IMAGE="$(L03_K3S_IMAGE)" scripts/run-l03-baseline.sh run
+
+l03-verify: l03-smoke ## L03 static check와 bounded lifecycle을 한 번 실행합니다.
+
+l03-clean: ## exact L03 cluster만 정리하고 evidence는 보존합니다.
+	@K3S_IMAGE="$(L03_K3S_IMAGE)" scripts/run-l03-baseline.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"

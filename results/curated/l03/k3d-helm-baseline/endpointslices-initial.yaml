@@ -1,0 +1,50 @@
+apiVersion: v1
+items:
+- addressType: IPv4
+  apiVersion: discovery.k8s.io/v1
+  endpoints:
+  - addresses:
+    - 10.42.0.2
+    conditions:
+      ready: true
+      serving: true
+      terminating: false
+    nodeName: k3d-capacity-cascade-l03-server-0
+    targetRef:
+      kind: Pod
+      name: auth-sim-5548b49c55-4srcb
+      namespace: capacity-cascade-l03
+      uid: f40cd024-dfc0-475c-a082-e15e9f51eed8
+  kind: EndpointSlice
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2026-08-30T13:41:19Z"
+    creationTimestamp: "2026-08-30T13:41:10Z"
+    generateName: auth-sim-
+    generation: 3
+    labels:
+      app.kubernetes.io/instance: auth-sim
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: auth-sim
+      app.kubernetes.io/version: l03
+      endpointslice.kubernetes.io/managed-by: endpointslice-controller.k8s.io
+      helm.sh/chart: auth-sim-0.1.0
+      kubernetes.io/service-name: auth-sim
+    name: auth-sim-2wkxg
+    namespace: capacity-cascade-l03
+    ownerReferences:
+    - apiVersion: v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Service
+      name: auth-sim
+      uid: ea0b4723-2fa5-4989-9792-6a9823560158
+    resourceVersion: "460"
+    uid: 5d753b56-dc9f-4317-b03d-b12325301228
+  ports:
+  - name: public
+    port: 8080
+    protocol: TCP
+kind: List
+metadata:
+  resourceVersion: ""
