@@ -4,7 +4,7 @@ SHELL := /bin/bash
 BINARY ?= bin/auth-sim
 IMAGE ?= capacity-cascade/auth-sim:dev
 SCENARIO ?=
-K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02
+K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04
 L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
 L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 L02_ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
@@ -12,8 +12,11 @@ L03_K3S_IMAGE ?= rancher/k3s:v1.35.5-k3s1
 L03_CHART ?= charts/auth-sim
 L03_RENDER_REPOSITORY ?= capacity-cascade/auth-sim
 L03_RENDER_TAG ?= l03-dev
+L04_ISTIO_VERSION ?= 1.30.4
+L04_K6_IMAGE ?= grafana/k6:2.2.0
+L04_K3S_IMAGE ?= $(L03_K3S_IMAGE)
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-verify l02-scenario l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-verify l02-scenario l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -176,6 +179,78 @@ l03-verify: l03-smoke ## L03 static check와 bounded lifecycle을 한 번 실행
 
 l03-clean: ## exact L03 cluster만 정리하고 evidence는 보존합니다.
 	@K3S_IMAGE="$(L03_K3S_IMAGE)" scripts/run-l03-baseline.sh clean
+
+l04-doctor: ## L04에 필요한 Istio/sidecar lifecycle 및 JSON/stat 처리 도구를 확인합니다.
+	@missing=0; \
+	for tool in git go k6 docker kubectl k3d helm curl awk sed grep jq ruby tee wc tr mktemp sha256sum diff cmp sort find ps make; do \
+		if ! command -v "$$tool" >/dev/null 2>&1; then printf '%-16s MISSING\n' "$$tool"; missing=1; else printf '%-16s OK\n' "$$tool"; fi; \
+	done; \
+	if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi; \
+	if command -v k3d >/dev/null 2>&1; then k3d version; fi; \
+	if command -v kubectl >/dev/null 2>&1; then kubectl version --client; fi; \
+	if command -v helm >/dev/null 2>&1; then helm version --short; fi; \
+	if command -v k6 >/dev/null 2>&1; then k6 version | head -n 1; fi; \
+	exit $$missing
+
+l04-check: l04-doctor ## L04 pinned charts, manifests, k6, scope와 runner를 정적으로 검사합니다.
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d "$${TMPDIR:-/tmp}/capacity-cascade-l04-check.XXXXXX")"; \
+	cleanup_l04_check() { find "$$tmp" -depth -delete; }; \
+	trap cleanup_l04_check EXIT; \
+	export HELM_CONFIG_HOME="$$tmp/helm-config" HELM_CACHE_HOME="$$tmp/helm-cache" HELM_DATA_HOME="$$tmp/helm-data"; \
+	mkdir -p "$$HELM_CONFIG_HOME" "$$HELM_CACHE_HOME" "$$HELM_DATA_HOME"; \
+	helm lint "$(L03_CHART)" --set-string image.repository="$(L03_RENDER_REPOSITORY)" --set-string image.tag="l04-check"; \
+	helm template auth-sim-control "$(L03_CHART)" --namespace capacity-cascade-l04-control \
+		--set-string image.repository="$(L03_RENDER_REPOSITORY)" --set-string image.tag="l04-check" >"$$tmp/auth-sim.yaml"; \
+	helm repo add istio https://istio-release.storage.googleapis.com/charts >/dev/null; \
+	helm repo update istio >/dev/null; \
+	helm show chart istio/base --version "$(L04_ISTIO_VERSION)" >"$$tmp/base-chart.yaml"; \
+	helm show chart istio/istiod --version "$(L04_ISTIO_VERSION)" >"$$tmp/istiod-chart.yaml"; \
+	helm template istio-base istio/base --version "$(L04_ISTIO_VERSION)" --namespace istio-system \
+		--set defaultRevision=default --kube-version 1.35.5 >"$$tmp/base.yaml"; \
+	helm template istiod istio/istiod --version "$(L04_ISTIO_VERSION)" --namespace istio-system \
+		--values l04/istiod-values.yaml --kube-version 1.35.5 >"$$tmp/istiod.yaml"; \
+	grep -q "version: $(L04_ISTIO_VERSION)" "$$tmp/base-chart.yaml"; \
+	grep -q "version: $(L04_ISTIO_VERSION)" "$$tmp/istiod-chart.yaml"; \
+	if grep -ERq ':latest|[[:space:]]latest[[:space:]]' l04 load/k6/l04.js; then printf 'latest is forbidden in L04\n' >&2; exit 1; fi; \
+	if grep -Eq 'image:[[:space:]].*:latest' "$$tmp/base.yaml" "$$tmp/istiod.yaml" "$$tmp/auth-sim.yaml"; then printf 'rendered latest image is forbidden\n' >&2; exit 1; fi; \
+	if grep -Eq '^kind: (Gateway|GatewayClass|HorizontalPodAutoscaler|DaemonSet|ScaledObject)$$' "$$tmp/base.yaml" "$$tmp/istiod.yaml" l04/*.yaml; then printf 'out-of-scope resource rendered\n' >&2; exit 1; fi; \
+	if grep -ERq '^kind: (ProxyConfig|VirtualService|DestinationRule)$$' l04; then printf 'unexpected L04 traffic/proxy resource\n' >&2; exit 1; fi; \
+	if [[ "$$(grep -ERc '^kind: EnvoyFilter$$' l04/retry-disabled-*.yaml | awk -F: '{sum += $$2} END {print sum+0}')" -ne 2 ]]; then printf 'expected the bounded retry-disable EnvoyFilter pair\n' >&2; exit 1; fi; \
+	grep -q 'context: SIDECAR_INBOUND' l04/retry-disabled-control.yaml; \
+	grep -q 'applyTo: VIRTUAL_HOST' l04/retry-disabled-control.yaml; \
+	grep -q 'operation: REPLACE' l04/retry-disabled-control.yaml; \
+	if grep -q 'retry_policy:' l04/retry-disabled-*.yaml; then printf 'retry-disable replacement must omit retry_policy\n' >&2; exit 1; fi; \
+	if grep -ERq '(^|[[:space:]])concurrency:' l04; then printf 'ProxyConfig concurrency is not an active-request limit\n' >&2; exit 1; fi; \
+	if grep -ERq 'replace-with|LAB_ADMIN_TOKEN_PLACEHOLDER|local-[0-9]+-[0-9]+' l04 "$$tmp/auth-sim.yaml"; then printf 'secret literal or placeholder found\n' >&2; exit 1; fi; \
+	grep -q 'http2MaxRequests: 100' l04/sidecar-control.yaml; \
+	grep -q 'http2MaxRequests: 1' l04/sidecar-constrained.yaml; \
+	sed -E '/namespace:/d; /app.kubernetes.io\/instance:/d; s/http2MaxRequests: [0-9]+/http2MaxRequests: TARGET/' l04/sidecar-control.yaml >"$$tmp/control-normalized.yaml"; \
+	sed -E '/namespace:/d; /app.kubernetes.io\/instance:/d; s/http2MaxRequests: [0-9]+/http2MaxRequests: TARGET/' l04/sidecar-constrained.yaml >"$$tmp/constrained-normalized.yaml"; \
+	cmp -s "$$tmp/control-normalized.yaml" "$$tmp/constrained-normalized.yaml"; \
+	sed -E '/namespace:/d; /app.kubernetes.io\/instance:/d; /# Istio 1.30.4 HTTP_ROUTE/,/# inbound virtual host preserves its one route without retry_policy./d; /# Control과 동일한/,/# Comparison variable은 inbound active-request capacity 하나다./d; s/capacity-cascade-l04-(control|constrained)/capacity-cascade-l04-SCENARIO/' l04/retry-disabled-control.yaml >"$$tmp/retry-control-normalized.yaml"; \
+	sed -E '/namespace:/d; /app.kubernetes.io\/instance:/d; /# Istio 1.30.4 HTTP_ROUTE/,/# inbound virtual host preserves its one route without retry_policy./d; /# Control과 동일한/,/# Comparison variable은 inbound active-request capacity 하나다./d; s/capacity-cascade-l04-(control|constrained)/capacity-cascade-l04-SCENARIO/' l04/retry-disabled-constrained.yaml >"$$tmp/retry-constrained-normalized.yaml"; \
+	cmp -s "$$tmp/retry-control-normalized.yaml" "$$tmp/retry-constrained-normalized.yaml"; \
+	ruby -e 'require "yaml"; ARGV.each { |f| d=YAML.safe_load_file(f, aliases: true); abort("invalid Sidecar manifest: #{f}") unless d["apiVersion"]=="networking.istio.io/v1" && d["kind"]=="Sidecar" && d.dig("spec","ingress",0,"port","number")==8080 && d.dig("spec","ingress",0,"connectionPool","http","http2MaxRequests").is_a?(Integer) }' l04/sidecar-control.yaml l04/sidecar-constrained.yaml; \
+	ruby -e 'require "yaml"; ARGV.each { |f| d=YAML.safe_load_file(f, aliases: true); p=d.dig("spec","configPatches",0); route=p.dig("patch","value","routes",0,"route"); abort("invalid retry-disable manifest: #{f}") unless d["apiVersion"]=="networking.istio.io/v1alpha3" && d["kind"]=="EnvoyFilter" && p["applyTo"]=="VIRTUAL_HOST" && p.dig("match","context")=="SIDECAR_INBOUND" && p.dig("patch","operation")=="REPLACE" && route["cluster"]=="inbound|8080||" && !route.key?("retry_policy") }' l04/retry-disabled-control.yaml l04/retry-disabled-constrained.yaml; \
+	k6 inspect load/k6/l04.js >/dev/null; \
+	bash -n scripts/run-l04-sidecar.sh
+
+l04-smoke: l04-check ## Control sidecar injection/datapath와 cleanup을 1 ops/s, 1s lifecycle로 확인합니다.
+	LOGICAL_RATE=1 DURATION=1s ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L04_K6_IMAGE)" K3S_IMAGE="$(L04_K3S_IMAGE)" scripts/run-l04-sidecar.sh smoke
+
+l04-scenario: l04-check ## SCENARIO의 fresh sidecar 단일 lifecycle과 evidence를 생성합니다.
+	@if [[ "$(SCENARIO)" != "sidecar-control" && "$(SCENARIO)" != "sidecar-constrained" ]]; then \
+		printf 'SCENARIO is required (sidecar-control|sidecar-constrained)\n' >&2; \
+		exit 2; \
+	fi
+	ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L04_K6_IMAGE)" K3S_IMAGE="$(L04_K3S_IMAGE)" scripts/run-l04-sidecar.sh "$(SCENARIO)"
+
+l04-verify: l04-check ## Control/constrained pair를 한 cluster lifecycle에서 한 번 실행합니다.
+	ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L04_K6_IMAGE)" K3S_IMAGE="$(L04_K3S_IMAGE)" scripts/run-l04-sidecar.sh pair
+
+l04-clean: ## exact L04 cluster/process만 정리하고 evidence는 보존합니다.
+	@ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L04_K6_IMAGE)" K3S_IMAGE="$(L04_K3S_IMAGE)" scripts/run-l04-sidecar.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"
