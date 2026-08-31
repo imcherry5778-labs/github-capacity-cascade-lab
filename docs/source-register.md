@@ -71,7 +71,7 @@ architecture, component documentation과 별도 incident를 분리한다. Freshn
 ## Component primary documentation
 
 이 section의 source type은 모두 `COMPONENT_PRIMARY_DOCUMENTATION`이다.
-아래 source는 repository가 L01–L03에서 실제 선택한 component와 contract에만 적용한다.
+아래 source는 repository가 L01–L04에서 실제 선택한 component와 contract에만 적용한다.
 `Does not support` 제한은 각 source에 독립적으로 적용된다.
 
 | ID | Version / source | Supports | Does not support | Relevant learning units | Verification status |
@@ -86,6 +86,13 @@ architecture, component documentation과 별도 incident를 분리한다. Freshn
 | COMP-HELM-01 | [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) | L03 `upgrade --install` command contract | GitHub의 deployment tooling 또는 Helm 사용 | L03 | VERIFIED 2026-08-31 |
 | COMP-K8S-01 | [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) | Deployment rollout/replacement와 availability contract | GitHub의 exact workload controller, replica 또는 rollout setting | L03 | VERIFIED 2026-08-31 |
 | COMP-K8S-02 | [Kubernetes Service](https://kubernetes.io/docs/concepts/services-networking/service/) | ClusterIP, selector와 target port contract | GitHub의 service/network topology | L03 | VERIFIED 2026-08-31 |
+| COMP-IST-01 | [Istio supported releases](https://istio.io/latest/docs/releases/supported-releases/) / [Istio 1.30.4 announcement](https://istio.io/latest/news/releases/1.30.x/announcing-1.30.4/) | L04 selected Istio 1.30.4 release identity와 supported Kubernetes overlap 검토 | GitHub의 August 17, 2026 exact Istio version, sidecar configuration, concurrency value 또는 production topology를 지원하지 않는다. | L04 | VERIFIED 2026-08-31; selected version 1.30.4 |
+| COMP-IST-02 | [Istio Helm install](https://istio.io/latest/docs/setup/install/helm/) | L04 pinned `istio-base` → `istiod` Helm install contract | GitHub의 August 17, 2026 exact Istio version, sidecar configuration, concurrency value 또는 production topology를 지원하지 않는다. | L04 | VERIFIED 2026-08-31; selected version 1.30.4 |
+| COMP-IST-03 | [Automatic sidecar injection](https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/) | Namespace label based automatic injection과 Pod-level verification contract | GitHub의 August 17, 2026 exact Istio version, sidecar configuration, concurrency value 또는 production topology를 지원하지 않는다. | L04 | VERIFIED 2026-08-31; selected version 1.30.4 |
+| COMP-IST-04 | [Envoy statistics](https://istio.io/latest/docs/ops/configuration/telemetry/envoy-stats/) | ProxyStatsMatcher와 selected proxy stats discovery/interpretation contract | GitHub의 August 17, 2026 exact Istio version, sidecar configuration, concurrency value 또는 production topology를 지원하지 않는다. Actual selected proxy output remains the metric-name authority. | L04 | VERIFIED 2026-08-31; selected version 1.30.4 |
+| COMP-IST-05 | [Sidecar API](https://istio.io/latest/docs/reference/config/networking/sidecar/) | Workload-selected inbound connection pool과 `http2MaxRequests` API meaning | GitHub의 August 17, 2026 exact Istio version, sidecar configuration, concurrency value 또는 production topology를 지원하지 않는다. | L04 | VERIFIED 2026-08-31; selected version 1.30.4 |
+| COMP-IST-06 | [ProxyConfig API](https://istio.io/latest/docs/reference/config/networking/proxy-config/) | `ProxyConfig.concurrency`가 Envoy worker thread setting이며 L04 active-request limit이 아니라는 boundary | GitHub의 August 17, 2026 exact Istio version, sidecar configuration, concurrency value 또는 production topology를 지원하지 않는다. | L04 | VERIFIED 2026-08-31; selected version 1.30.4 |
+| COMP-IST-07 | [EnvoyFilter API](https://istio.io/latest/docs/reference/config/networking/envoy-filter/) | Selected 1.30.4 generated inbound retry를 no-retry contract로 교체하는 bounded fallback의 API/upgrade-fragility warning | GitHub의 August 17, 2026 exact Istio version, sidecar configuration, concurrency value 또는 production topology를 지원하지 않는다. | L04 | VERIFIED 2026-08-31; selected version 1.30.4; fallback used |
 
 ## Related incidents excluded from Core
 
