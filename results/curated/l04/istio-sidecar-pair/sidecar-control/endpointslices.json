@@ -1,0 +1,71 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "addressType": "IPv4",
+            "apiVersion": "discovery.k8s.io/v1",
+            "endpoints": [
+                {
+                    "addresses": [
+                        "10.42.0.5"
+                    ],
+                    "conditions": {
+                        "ready": true,
+                        "serving": true,
+                        "terminating": false
+                    },
+                    "nodeName": "k3d-capacity-cascade-l04-server-0",
+                    "targetRef": {
+                        "kind": "Pod",
+                        "name": "auth-sim-control-588c6d7f8d-s26ms",
+                        "namespace": "capacity-cascade-l04-control",
+                        "uid": "a1b49ce7-ca4e-4897-a9d4-009afee0331a"
+                    }
+                }
+            ],
+            "kind": "EndpointSlice",
+            "metadata": {
+                "annotations": {
+                    "endpoints.kubernetes.io/last-change-trigger-time": "2026-08-31T08:28:32Z"
+                },
+                "creationTimestamp": "2026-08-31T08:28:15Z",
+                "generateName": "auth-sim-control-",
+                "generation": 3,
+                "labels": {
+                    "app.kubernetes.io/instance": "auth-sim-control",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "auth-sim",
+                    "app.kubernetes.io/version": "l03",
+                    "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+                    "helm.sh/chart": "auth-sim-0.1.0",
+                    "kubernetes.io/service-name": "auth-sim-control"
+                },
+                "name": "auth-sim-control-lm4np",
+                "namespace": "capacity-cascade-l04-control",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "Service",
+                        "name": "auth-sim-control",
+                        "uid": "4a8c6669-898d-4bbd-aaaa-209fbf7f0e61"
+                    }
+                ],
+                "resourceVersion": "664",
+                "uid": "176e000c-7ef5-4f97-a80e-5204f12e8482"
+            },
+            "ports": [
+                {
+                    "name": "public",
+                    "port": 8080,
+                    "protocol": "TCP"
+                }
+            ]
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

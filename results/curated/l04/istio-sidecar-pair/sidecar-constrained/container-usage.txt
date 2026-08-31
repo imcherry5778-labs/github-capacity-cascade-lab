@@ -1,0 +1,3 @@
+POD                                     NAME          CPU(cores)   MEMORY(bytes)   
+auth-sim-constrained-69f65cd499-s89sv   auth-sim      5m           5Mi             
+auth-sim-constrained-69f65cd499-s89sv   istio-proxy   58m          28Mi            

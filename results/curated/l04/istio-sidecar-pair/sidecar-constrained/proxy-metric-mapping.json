@@ -1,0 +1,16 @@
+{
+  "cluster": "inbound|8080||",
+  "hcm_stat_prefix": "inbound_10.42.0.10_8080;",
+  "proxy_downstream_total": "http.inbound_10.42.0.10_8080;.downstream_rq_total",
+  "proxy_downstream_active": "http.inbound_10.42.0.10_8080;.downstream_rq_active",
+  "proxy_downstream_5xx": "http.inbound_10.42.0.10_8080;.downstream_rq_5xx",
+  "proxy_upstream_total": "cluster.inbound|8080||;.upstream_rq_total",
+  "proxy_upstream_active": "cluster.inbound|8080||;.upstream_rq_active",
+  "proxy_pending_active": "cluster.inbound|8080||;.upstream_rq_pending_active",
+  "proxy_active_overflow": "cluster.inbound|8080||;.upstream_rq_active_overflow",
+  "proxy_pending_overflow": "cluster.inbound|8080||;.upstream_rq_pending_overflow",
+  "proxy_retry": "cluster.inbound|8080||;.upstream_rq_retry",
+  "proxy_timeout": "cluster.inbound|8080||;.upstream_rq_timeout",
+  "inbound_retry_policy_count": 0,
+  "inbound_retry_budget_max": 0
+}

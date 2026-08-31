@@ -1,0 +1,50 @@
+{
+  "@type": "type.googleapis.com/envoy.config.cluster.v3.Cluster",
+  "name": "inbound|8080||",
+  "type": "STATIC",
+  "connect_timeout": "10s",
+  "circuit_breakers": {
+    "thresholds": [
+      {
+        "max_connections": 4294967295,
+        "max_pending_requests": 4294967295,
+        "max_requests": 1,
+        "max_retries": 4294967295
+      }
+    ]
+  },
+  "metadata": {
+    "filter_metadata": {
+      "istio": {
+        "services": [
+          {
+            "host": "auth-sim-constrained.capacity-cascade-l04-constrained.svc.cluster.local",
+            "namespace": "capacity-cascade-l04-constrained",
+            "name": "auth-sim-constrained"
+          }
+        ]
+      }
+    }
+  },
+  "common_lb_config": {},
+  "alt_stat_name": "inbound|8080||;",
+  "load_assignment": {
+    "cluster_name": "inbound|8080||",
+    "endpoints": [
+      {
+        "lb_endpoints": [
+          {
+            "endpoint": {
+              "address": {
+                "socket_address": {
+                  "address": "127.0.0.1",
+                  "port_value": 8080
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

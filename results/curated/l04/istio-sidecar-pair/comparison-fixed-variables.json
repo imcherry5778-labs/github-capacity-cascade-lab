@@ -1,0 +1,31 @@
+{
+  "source_commit": "5a5d1fc8623a6cd4681247678b233eaa96c155ab",
+  "auth_sim_image": "capacity-cascade/auth-sim:l04-5a5d1fc8623a",
+  "k3s_image": "rancher/k3s:v1.35.5-k3s1",
+  "istio_version": "1.30.4",
+  "replicas": 1,
+  "application_fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "workload": {
+    "logical_rate": 20,
+    "duration": "4s",
+    "request_timeout": "1s",
+    "logical_id_namespace": "l04-sidecar-pair",
+    "client_retry": "none",
+    "max_attempts": 1,
+    "proxy_retry": "none"
+  },
+  "observation": {
+    "method": "pilot-agent actual stats plus direct application metrics",
+    "sampling_interval": "0.5s"
+  },
+  "only_difference": {
+    "field": "Sidecar ingress port 8080 connectionPool.http.http2MaxRequests",
+    "control": 100,
+    "constrained": 1
+  }
+}

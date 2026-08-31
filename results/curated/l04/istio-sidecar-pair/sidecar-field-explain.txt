@@ -1,0 +1,11 @@
+GROUP:      networking.istio.io
+KIND:       Sidecar
+VERSION:    v1
+
+FIELD: http2MaxRequests <integer>
+
+
+DESCRIPTION:
+    Maximum number of active requests to a destination.
+    
+

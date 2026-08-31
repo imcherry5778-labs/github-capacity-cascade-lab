@@ -1,0 +1,2 @@
+NAME                                READY   STATUS    RESTARTS   AGE   IP          NODE                                NOMINATED NODE   READINESS GATES
+auth-sim-control-588c6d7f8d-f7rw6   2/2     Running   0          5s    10.42.0.6   k3d-capacity-cascade-l04-server-0   <none>           <none>

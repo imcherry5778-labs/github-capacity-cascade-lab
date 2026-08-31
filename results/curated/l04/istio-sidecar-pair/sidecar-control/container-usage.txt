@@ -1,0 +1,3 @@
+POD                                 NAME          CPU(cores)   MEMORY(bytes)   
+auth-sim-control-588c6d7f8d-f7rw6   auth-sim      3m           3Mi             
+auth-sim-control-588c6d7f8d-f7rw6   istio-proxy   31m          29Mi            
