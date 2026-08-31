@@ -20,10 +20,15 @@ node의 flow limit 소진, gateway authentication path 저하, optimistic retry�
 부하를 악화시켰다. 복구 중에는 VS Code의 잠재된 retry behavior가 Copilot Token
 Service 요청을 약 10배 증폭시켰다.
 
-공식 출처:
+Primary incident sources:
 
 - [GitHub Status — Incident with GitHub.com](https://www.githubstatus.com/incidents/zkxwbgr0cnmx)
 - [The August 17 outage, and the work ahead](https://github.blog/news-insights/company-news/the-august-17-outage-and-the-work-ahead/)
+
+Source별 supports/does-not-support와 freshness는 [source register](docs/source-register.md),
+공개된 UTC event와 recovery 순서는 [incident timeline](docs/incident-timeline.md)에 있다.
+Reliability program, historical architecture와 component documentation은 context이며 위
+incident의 개별 FACT를 대신 입증하지 않는다.
 
 ## Source integrity and disclaimer
 
@@ -36,7 +41,7 @@ Service 요청을 약 10배 증폭시켰다.
 
 Go `auth-sim`은 GitHub Token Service가 아니며, application `max_in_flight`는 Istio
 sidecar concurrency limit 복제가 아니다. k6 retry도 GitHub gateway 또는 VS Code의
-실제 algorithm을 구현하지 않는다. 세부 분류는
+실제 algorithm을 구현하지 않는다. Claim별 세부 분류는
 [facts-and-assumptions](docs/facts-and-assumptions.md)에 기록한다.
 
 ## Public RCA failure chain
@@ -54,10 +59,10 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Current phase — L03
+## Completed through L03 — next L04
 
-현재 구현 범위는 **L03 — k3d and Helm Baseline**이다. L00/L01/L02에서 만든 다음 기반은
-의미를 바꾸지 않고 재사용한다.
+현재 완료된 구현 범위는 **L03 — k3d and Helm Baseline**까지다. L04는
+**Planned — next**이며, L00/L01/L02에서 만든 다음 기반은 의미를 바꾸지 않고 재사용한다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -96,7 +101,7 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L00/L01/L02는 completed foundation이다. 상세 topology와 단계별 plane 경계는
+L00/L01/L02/L03는 completed foundation이다. 상세 topology와 단계별 plane 경계는
 [architecture](docs/architecture.md)에 있다. Istio, HPA와 Azure resource는 아직 없다.
 
 ## Local quick start
@@ -310,9 +315,9 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00/L01/L02는 completed
-foundation이고 현재 단계는 **L03 — k3d and Helm Baseline**, 다음 단계는 **L04 — Istio
-Sidecar and Proxy Metrics**다. 모든 단계의 학습 질문과 완료 기준은
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L03까지는 completed
+foundation이고 다음 단계는 **L04 — Istio Sidecar and Proxy Metrics** (`Planned — next`)다.
+모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
 ## Experiments
@@ -349,7 +354,7 @@ preflight와 승인 경계를 거쳐 검증한다.
 - Completed foundation: L00 — Minimal Workload and k6
 - Completed foundation: L01 — HAProxy and Toxiproxy Fundamentals
 - Completed foundation: L02 — Envoy Fundamentals
-- Current: L03 — k3d and Helm Baseline (implementation verified; local exploratory evidence)
-- Next: L04 — Istio Sidecar and Proxy Metrics
+- Completed foundation: L03 — k3d and Helm Baseline (implementation verified; local exploratory evidence)
+- Next: L04 — Istio Sidecar and Proxy Metrics (`Planned — next`)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

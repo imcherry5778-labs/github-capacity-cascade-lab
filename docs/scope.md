@@ -6,6 +6,19 @@ GitHub의 2026-08-17 공개 RCA에서 드러난 capacity cascade와 retry amplif
 failure effect를 작은 실험 단위로 학습한다. 이 프로젝트는 GitHub 내부 시스템의
 복제품이나 incident 전체 재현이 아니다.
 
+## Official source boundary
+
+- August 17의 Core FACT는 [Source Register](source-register.md)의
+  `PRIMARY_INCIDENT_SOURCE`가 직접 지원하는 범위로 제한한다.
+- 2026 reliability context는 capacity, isolation, coupling, load shedding과 migration의
+  program 방향을 설명하지만 August 17의 exact cause나 topology를 입증하지 않는다.
+- Historical GitHub architecture는 발행 당시 context일 뿐 August 17, 2026 topology 또는
+  configuration proof가 아니다.
+- Component documentation은 `LAB_IMPLEMENTATION`의 config, metric, version과 command
+  contract에만 사용한다.
+- August 6, August 26 등 related incident는 [August 17 timeline](incident-timeline.md)과
+  Core FACT에 합치지 않는다.
+
 ## Core research question
 
 **What happens when failures generate more traffic than users?**
