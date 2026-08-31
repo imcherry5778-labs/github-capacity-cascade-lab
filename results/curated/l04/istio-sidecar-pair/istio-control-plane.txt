@@ -1,0 +1,8 @@
+NAME                     READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                   SELECTOR
+deployment.apps/istiod   1/1     1            1           22s   discovery    registry.istio.io/release/pilot:1.30.4   istio=pilot
+
+NAME                          READY   STATUS    RESTARTS   AGE   IP          NODE                                NOMINATED NODE   READINESS GATES
+pod/istiod-5744fc4965-d2sbq   1/1     Running   0          22s   10.42.0.2   k3d-capacity-cascade-l04-server-0   <none>           <none>
+
+NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                 AGE   SELECTOR
+service/istiod   ClusterIP   10.43.229.200   <none>        15010/TCP,15012/TCP,443/TCP,15014/TCP   23s   app=istiod,istio=pilot

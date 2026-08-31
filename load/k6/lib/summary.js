@@ -48,6 +48,7 @@ export function createSummaryHandler(experiment) {
       image_tags: experiment.imageTags || null,
       base_url: safeOrigin(BASE_URL),
       request_path: experiment.requestPath || 'k6 -> auth-sim',
+      logical_id_namespace: experiment.logicalIdNamespace || null,
       logical_rate: experiment.logicalRate,
       duration: experiment.duration,
       request_timeout: experiment.requestTimeout || REQUEST_TIMEOUT,
@@ -102,6 +103,7 @@ ${renderDownstreamStatusRows(values)}
 ## 실행 조건
 
 - Request path: ${values.experiment.requestPath || 'k6 -> auth-sim'}
+- Logical ID namespace: ${values.experiment.logicalIdNamespace || 'not specified'}
 - Logical rate: ${values.experiment.logicalRate === null ? 'not applicable' : `${values.experiment.logicalRate} ops/s`}
 - Duration: ${values.experiment.duration}
 - Request timeout: ${values.experiment.requestTimeout || REQUEST_TIMEOUT}
@@ -115,7 +117,7 @@ ${renderDownstreamStatusRows(values)}
 }
 
 function renderDownstreamStatusRows(values) {
-  if (values.phase !== 'L02') {
+  if (values.phase !== 'L02' && values.phase !== 'L04') {
     return '';
   }
   const counts = values.downstreamStatusCounts;

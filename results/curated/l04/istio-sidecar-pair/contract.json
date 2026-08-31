@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "mode": "pair",
+  "scenario_contracts_passed": true,
+  "pair_comparison_applicable": true,
+  "generated_config_equal_except_max_requests": true,
+  "expected_capacity_targets_observed": true,
+  "control_overflow_zero": true,
+  "constrained_overflow_positive": true,
+  "constrained_failures_greater_than_control": true,
+  "cleanup_passed": true
+}

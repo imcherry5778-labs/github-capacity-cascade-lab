@@ -1,0 +1,341 @@
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "annotations": {
+            "deployment.kubernetes.io/revision": "1",
+            "meta.helm.sh/release-name": "istiod",
+            "meta.helm.sh/release-namespace": "istio-system"
+        },
+        "creationTimestamp": "2026-08-31T08:27:51Z",
+        "generation": 1,
+        "labels": {
+            "app": "istiod",
+            "app.kubernetes.io/instance": "istiod",
+            "app.kubernetes.io/managed-by": "Helm",
+            "app.kubernetes.io/name": "istiod",
+            "app.kubernetes.io/part-of": "istio",
+            "app.kubernetes.io/version": "1.30.4",
+            "helm.sh/chart": "istiod-1.30.4",
+            "install.operator.istio.io/owning-resource": "unknown",
+            "istio": "pilot",
+            "istio.io/rev": "default",
+            "operator.istio.io/component": "Pilot",
+            "release": "istiod"
+        },
+        "name": "istiod",
+        "namespace": "istio-system",
+        "resourceVersion": "578",
+        "uid": "1ca7f0d9-2452-4c23-8aba-91e201aea5cc"
+    },
+    "spec": {
+        "progressDeadlineSeconds": 600,
+        "replicas": 1,
+        "revisionHistoryLimit": 10,
+        "selector": {
+            "matchLabels": {
+                "istio": "pilot"
+            }
+        },
+        "strategy": {
+            "rollingUpdate": {
+                "maxSurge": "100%",
+                "maxUnavailable": "25%"
+            },
+            "type": "RollingUpdate"
+        },
+        "template": {
+            "metadata": {
+                "annotations": {
+                    "prometheus.io/port": "15014",
+                    "prometheus.io/scrape": "true",
+                    "sidecar.istio.io/inject": "false"
+                },
+                "labels": {
+                    "app": "istiod",
+                    "app.kubernetes.io/instance": "istiod",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "istiod",
+                    "app.kubernetes.io/part-of": "istio",
+                    "app.kubernetes.io/version": "1.30.4",
+                    "helm.sh/chart": "istiod-1.30.4",
+                    "install.operator.istio.io/owning-resource": "unknown",
+                    "istio": "pilot",
+                    "istio.io/dataplane-mode": "none",
+                    "istio.io/rev": "default",
+                    "operator.istio.io/component": "Pilot",
+                    "sidecar.istio.io/inject": "false"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "args": [
+                            "discovery",
+                            "--monitoringAddr=:15014",
+                            "--log_output_level=default:info",
+                            "--domain",
+                            "cluster.local",
+                            "--keepaliveMaxServerConnectionAge",
+                            "30m"
+                        ],
+                        "env": [
+                            {
+                                "name": "REVISION",
+                                "value": "default"
+                            },
+                            {
+                                "name": "PILOT_CERT_PROVIDER",
+                                "value": "istiod"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "SERVICE_ACCOUNT",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.serviceAccountName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "KUBECONFIG",
+                                "value": "/var/run/secrets/remote/config"
+                            },
+                            {
+                                "name": "CA_TRUSTED_NODE_ACCOUNTS",
+                                "value": "istio-system/ztunnel"
+                            },
+                            {
+                                "name": "PILOT_TRACE_SAMPLING",
+                                "value": "1"
+                            },
+                            {
+                                "name": "PILOT_ENABLE_ANALYSIS",
+                                "value": "false"
+                            },
+                            {
+                                "name": "CLUSTER_ID",
+                                "value": "Kubernetes"
+                            },
+                            {
+                                "name": "GOMAXPROCS",
+                                "valueFrom": {
+                                    "resourceFieldRef": {
+                                        "divisor": "1",
+                                        "resource": "limits.cpu"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "PLATFORM"
+                            }
+                        ],
+                        "image": "registry.istio.io/release/pilot:1.30.4",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "discovery",
+                        "ports": [
+                            {
+                                "containerPort": 8080,
+                                "name": "http-debug",
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 15010,
+                                "name": "grpc-xds",
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 15012,
+                                "name": "tls-xds",
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 15017,
+                                "name": "https-webhooks",
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 15014,
+                                "name": "http-monitoring",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/ready",
+                                "port": 8080,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 1,
+                            "periodSeconds": 3,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 5
+                        },
+                        "resources": {
+                            "requests": {
+                                "cpu": "500m",
+                                "memory": "2Gi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "capabilities": {
+                                "drop": [
+                                    "ALL"
+                                ]
+                            },
+                            "readOnlyRootFilesystem": true,
+                            "runAsNonRoot": true
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/run/secrets/tokens",
+                                "name": "istio-token",
+                                "readOnly": true
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio-dns",
+                                "name": "local-certs"
+                            },
+                            {
+                                "mountPath": "/etc/cacerts",
+                                "name": "cacerts",
+                                "readOnly": true
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/remote",
+                                "name": "istio-kubeconfig",
+                                "readOnly": true
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istiod/tls",
+                                "name": "istio-csr-dns-cert",
+                                "readOnly": true
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istiod/ca",
+                                "name": "istio-csr-ca-configmap",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "istiod",
+                "serviceAccountName": "istiod",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "key": "cni.istio.io/not-ready",
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "emptyDir": {
+                            "medium": "Memory"
+                        },
+                        "name": "local-certs"
+                    },
+                    {
+                        "name": "istio-token",
+                        "projected": {
+                            "defaultMode": 420,
+                            "sources": [
+                                {
+                                    "serviceAccountToken": {
+                                        "audience": "istio-ca",
+                                        "expirationSeconds": 43200,
+                                        "path": "istio-token"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "cacerts",
+                        "secret": {
+                            "defaultMode": 420,
+                            "optional": true,
+                            "secretName": "cacerts"
+                        }
+                    },
+                    {
+                        "name": "istio-kubeconfig",
+                        "secret": {
+                            "defaultMode": 420,
+                            "optional": true,
+                            "secretName": "istio-kubeconfig"
+                        }
+                    },
+                    {
+                        "name": "istio-csr-dns-cert",
+                        "secret": {
+                            "defaultMode": 420,
+                            "optional": true,
+                            "secretName": "istiod-tls"
+                        }
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "istio-ca-root-cert",
+                            "optional": true
+                        },
+                        "name": "istio-csr-ca-configmap"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "availableReplicas": 1,
+        "conditions": [
+            {
+                "lastTransitionTime": "2026-08-31T08:28:12Z",
+                "lastUpdateTime": "2026-08-31T08:28:12Z",
+                "message": "Deployment has minimum availability.",
+                "reason": "MinimumReplicasAvailable",
+                "status": "True",
+                "type": "Available"
+            },
+            {
+                "lastTransitionTime": "2026-08-31T08:27:51Z",
+                "lastUpdateTime": "2026-08-31T08:28:12Z",
+                "message": "ReplicaSet \"istiod-5744fc4965\" has successfully progressed.",
+                "reason": "NewReplicaSetAvailable",
+                "status": "True",
+                "type": "Progressing"
+            }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+    }
+}

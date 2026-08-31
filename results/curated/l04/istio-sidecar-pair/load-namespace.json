@@ -1,0 +1,22 @@
+{
+    "apiVersion": "v1",
+    "kind": "Namespace",
+    "metadata": {
+        "creationTimestamp": "2026-08-31T08:28:14Z",
+        "labels": {
+            "istio-injection": "disabled",
+            "kubernetes.io/metadata.name": "capacity-cascade-l04-load"
+        },
+        "name": "capacity-cascade-l04-load",
+        "resourceVersion": "589",
+        "uid": "f18c05d1-d8df-4175-a35f-0ef08efbbd1b"
+    },
+    "spec": {
+        "finalizers": [
+            "kubernetes"
+        ]
+    },
+    "status": {
+        "phase": "Active"
+    }
+}

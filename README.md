@@ -59,10 +59,11 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Completed through L03 — next L04
+## Completed through L04 — next L05
 
-현재 완료된 구현 범위는 **L03 — k3d and Helm Baseline**까지다. L04는
-**Planned — next**이며, L00/L01/L02에서 만든 다음 기반은 의미를 바꾸지 않고 재사용한다.
+현재 완료된 구현 범위는 **L04 — Istio Sidecar and Proxy Metrics**까지다. L04는 L00/L01/L02의
+logical/physical/retry 의미와 L03 Kubernetes lifecycle을 바꾸지 않고, application과 inbound
+sidecar의 capacity boundary를 별도로 관찰한다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -72,24 +73,32 @@ flowchart LR
 - timestamp별 local evidence와 Prometheus application metrics
 - multi-stage, non-root, `scratch` Docker image
 
-L03는 기존 auth-sim image를 작은 local Kubernetes baseline으로 옮긴다. HAProxy,
-Toxiproxy, Envoy, Istio는 이 request path에 없다.
+L03 baseline 위에 pinned Istio 1.30.4 control plane을 Helm `istio-base` → `istiod` 순서로
+설치한다. Gateway, CNI, Ambient, HPA는 설치하지 않는다. 각 비교 namespace는 automatic
+injection을 사용하고, target Pod는 `auth-sim`과 자동 주입된 `istio-proxy`의 Ready 2개
+container를 가진다.
 
 ```mermaid
 flowchart LR
     B[Docker build] --> I[k3d image import]
-    I --> P[auth-sim Pod]
-    K[k6 on host] -->|loopback kubectl port-forward| S[ClusterIP Service :8080]
-    S -->|selector and targetPort| P
-    R[L03 runner] -->|separate loopback port-forward :9090| P
+    I --> P[auth-sim + istio-proxy Pod]
+    C[Istio base then istiod] --> W[automatic injection webhook]
+    W --> P
+    K[non-injected k6 Job] --> S[ClusterIP Service :8080]
+    S --> X[target inbound istio-proxy]
+    X --> A[auth-sim :8080]
+    R[L04 runner] -->|loopback-only admin port-forward :9090| A
+    R -->|kubectl exec pilot-agent| X
 ```
 
-Cluster는 server 1개, agent 0개와 pinned `rancher/k3s:v1.35.5-k3s1` image를 사용한다.
-Helm chart는 replica 1개의 Deployment와 public `ClusterIP` Service만 만든다. Admin token은
-runner가 임시 Secret으로 만들고 admin port는 Service에 노출하지 않는다. Public/admin
-port-forward와 Kubernetes API는 host loopback에만 bind한다. 이 topology, resource 값과
-access model은 모두 `LAB_IMPLEMENTATION`/local `lab target`이며 production ingress,
-GitHub Kubernetes topology 또는 production sizing을 뜻하지 않는다.
+Control/constrained는 fresh namespace와 fresh sidecar counter를 사용하되 같은 cluster, image,
+replica 1, latency 250 ms, error 0, application `max_in_flight=0`/unlimited, 20 ops/s·4 s,
+1 s timeout, seed, logical-ID namespace, sampling 0.5 s를 공유한다. 비교 변수는 public
+inbound port 8080의 Sidecar `http2MaxRequests` local target `100 → 1` 하나다. k6와 proxy
+retry는 모두 꺼져 있다. Selected proxy가 만든 inbound default retry를 실제 config에서 먼저
+확인했으므로, no-retry contract에는 exact `SIDECAR_INBOUND` virtual host를 교체하는
+version-specific `EnvoyFilter` fallback을 두 scenario에 동일하게 적용한다. 이 fallback은
+GitHub 설정이나 권장 production configuration이 아니다.
 
 ## L00 foundation architecture
 
@@ -101,8 +110,8 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L00/L01/L02/L03는 completed foundation이다. 상세 topology와 단계별 plane 경계는
-[architecture](docs/architecture.md)에 있다. Istio, HPA와 Azure resource는 아직 없다.
+L00–L04는 completed foundation이다. 상세 topology와 단계별 plane 경계는
+[architecture](docs/architecture.md)에 있다. HPA는 여전히 L05 범위다.
 
 ## Local quick start
 
@@ -141,6 +150,13 @@ make l03-check
 make l03-smoke
 make l03-verify
 make l03-clean
+make l04-doctor
+make l04-check
+make l04-smoke
+make l04-scenario SCENARIO=sidecar-control
+make l04-scenario SCENARIO=sidecar-constrained
+make l04-verify
+make l04-clean
 ```
 
 `make verify`는 format check, `go vet`, Go test/build, 모든 k6 script inspect, 짧은
@@ -176,6 +192,13 @@ rendered Secret 부재, pinned image, k6 inspect와 runner syntax를 확인한�
 clean bootstrap부터 image import, Helm deploy, Deployment-driven Pod replacement, Metrics API
 snapshot, 기존 L00 smoke, uninstall/delete cleanup까지 전체 lifecycle을 한 번만 실행한다.
 Raw evidence는 `results/k3d-helm-baseline/<UTC timestamp>/`에 append-only로 남는다.
+
+L04는 위 도구에 `jq`, `ruby`, `sha256sum`, `diff`, `cmp`를 추가로 사용한다. `make l04-check`는
+pinned Istio chart render, out-of-scope resource와 secret scan, Sidecar/EnvoyFilter manifest,
+actual target normalization, k6 inspect와 runner syntax를 검사한다. `make l04-smoke`는 control
+sidecar injection, verified ClusterIP data path와 cleanup을 1 ops/s·1 s로 실행한다.
+`make l04-verify`는 full control/constrained pair를 한 cluster lifecycle에서 한 번만 실행한다.
+Raw evidence는 `results/istio-sidecar/<UTC timestamp>/`에 append-only로 남는다.
 
 ### Docker
 
@@ -271,6 +294,17 @@ Deployment-driven Pod replacement다. `kubectl top` 값은 단일 local snapshot
 benchmark나 production sizing 근거가 아니다. Port-forward 경로는 ClusterIP/selector/backend
 연결을 확인하지만 production ingress, external network, TLS/mTLS를 검증하지 않는다.
 
+### L04
+
+L04는 non-injected k6 Job에서 ClusterIP Service FQDN으로 request를 보내 target Pod inbound
+`istio-proxy`를 통과하게 한다. Runner는 workload 전후 proxy counter delta로 이 traversal을
+증명하고, host loopback metrics port-forward는 proxy counter delta가 0인 direct observation
+path임을 별도로 확인한다. Control/constrained의 generated inbound cluster config, actual emitted
+stat name inventory, before/during/after sample, application metrics와 k6 summary를 함께 보존한다.
+Application admission rejection과 proxy overflow는 같은 503일 수 있어도 서로 다른 mechanism이다.
+L04의 fixed workload와 `100 → 1` 값은 모두 local `lab target`이며 GitHub production value,
+topology 또는 scaling policy를 뜻하지 않는다.
+
 ## Evidence structure
 
 각 wrapper 실행은 기존 경로를 덮어쓰지 않고 다음을 만든다.
@@ -301,6 +335,12 @@ version, Node capacity/allocatable, Deployment/ReplicaSet/Pod/Service, EndpointS
 requests/limits, `kubectl top`, Helm lifecycle, initial/replacement Pod와 `smoke/` evidence를
 남긴다. Kubeconfig 본문, Secret data, admin token과 개인 절대 경로는 저장하지 않는다.
 
+L04 pair는 root `metadata.json`/`contract.json`/`cleanup.json`/normalized config diff 아래에
+scenario별 injected Pod state, Sidecar/EnvoyFilter resource, target inbound cluster/route,
+actual proxy stats before/after와 mapping, application metrics, timestamped samples, k6 summary와
+container usage snapshot을 남긴다. Full config dump와 noisy lifecycle log는 raw notebook에만
+남기고 curated에는 target config와 판정에 필요한 원문만 byte-for-byte 복사한다.
+
 ## Application metrics
 
 `GET /metrics`는 다음 low-cardinality metric을 노출한다.
@@ -315,8 +355,8 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L03까지는 completed
-foundation이고 다음 단계는 **L04 — Istio Sidecar and Proxy Metrics** (`Planned — next`)다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L04까지는 completed
+foundation이고 다음 단계는 **L05 — HPA Blind Spot** (`Planned — next`)다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -355,6 +395,7 @@ preflight와 승인 경계를 거쳐 검증한다.
 - Completed foundation: L01 — HAProxy and Toxiproxy Fundamentals
 - Completed foundation: L02 — Envoy Fundamentals
 - Completed foundation: L03 — k3d and Helm Baseline (implementation verified; local exploratory evidence)
-- Next: L04 — Istio Sidecar and Proxy Metrics (`Planned — next`)
+- Completed foundation: L04 — Istio Sidecar and Proxy Metrics (implementation verified; local exploratory evidence)
+- Next: L05 — HPA Blind Spot (`Planned — next`)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

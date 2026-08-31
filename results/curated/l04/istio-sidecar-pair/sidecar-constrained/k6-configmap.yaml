@@ -1,0 +1,467 @@
+apiVersion: v1
+data:
+  config.js: |
+    import exec from 'k6/execution';
+
+    // Public workload와 admin control plane은 기본적으로 loopback에 분리한다.
+    export const BASE_URL = trimTrailingSlash(__ENV.BASE_URL || 'http://127.0.0.1:8080');
+    export const ADMIN_URL = trimTrailingSlash(__ENV.ADMIN_URL || 'http://127.0.0.1:9090');
+    export const REQUEST_TIMEOUT = envDuration('REQUEST_TIMEOUT', '2s');
+    export const DEFAULT_SEED = envInteger('FAULT_SEED', 17082026);
+
+    export function arrivalSettings(defaults = {}) {
+      // 모든 비교 scenario가 같은 logical rate, duration, VU 기준을 공유하되 환경 변수로 명시적 override할 수 있다.
+      const logicalRate = envInteger('LOGICAL_RATE', defaults.logicalRate || 5, 1, 1000000);
+      const preAllocatedVUs = envInteger('PRE_ALLOCATED_VUS', Math.max(10, logicalRate * 2), 1, 1000000);
+      const maxVUs = envInteger('MAX_VUS', Math.max(50, preAllocatedVUs * 2), preAllocatedVUs, 1000000);
+      return {
+        logicalRate,
+        duration: envDuration('DURATION', defaults.duration || '5s'),
+        preAllocatedVUs,
+        maxVUs,
+      };
+    }
+
+    export function arrivalOptions(settings, thresholds = {}) {
+      // Open-model executor를 사용해 server 응답이 느려져도 logical operation 시작 속도를 독립적으로 유지한다.
+      return {
+        scenarios: {
+          workload: {
+            executor: 'constant-arrival-rate',
+            rate: settings.logicalRate,
+            timeUnit: '1s',
+            duration: settings.duration,
+            preAllocatedVUs: settings.preAllocatedVUs,
+            maxVUs: settings.maxVUs,
+            gracefulStop: '2s',
+          },
+        },
+        thresholds,
+        summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
+      };
+    }
+
+    export function smokeOptions() {
+      // Smoke는 부하 생성이 아니라 단일 iteration의 strict contract 확인이 목적이다.
+      return {
+        scenarios: {
+          smoke: {
+            executor: 'shared-iterations',
+            vus: 1,
+            iterations: envInteger('SMOKE_ITERATIONS', 1, 1, 10),
+            maxDuration: '10s',
+          },
+        },
+        thresholds: {
+          checks: ['rate==1'],
+          logical_failures: ['rate==0'],
+        },
+        summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
+      };
+    }
+
+    export function faultSettings(defaults = {}) {
+      // Scenario 기본값 위에 FAULT_* 환경 변수를 적용해 코드 수정 없이 실험 조건을 바꾼다.
+      return {
+        latency_ms: envInteger('FAULT_LATENCY_MS', defaults.latency_ms || 0, 0, 60000),
+        error_rate: envNumber('FAULT_ERROR_RATE', defaults.error_rate || 0, 0, 1),
+        max_in_flight: envInteger('FAULT_MAX_IN_FLIGHT', defaults.max_in_flight || 0, 0, 1000000),
+        seed: DEFAULT_SEED,
+      };
+    }
+
+    export function logicalRequestID(profile) {
+      // Retry는 같은 ID를 공유하고 attempt header만 증가하므로 logical request와 physical attempt를 분리할 수 있다.
+      return `${profile}-${exec.scenario.iterationInTest}`;
+    }
+
+    export function envInteger(name, fallback, minimum = Number.MIN_SAFE_INTEGER, maximum = Number.MAX_SAFE_INTEGER) {
+      const raw = __ENV[name];
+      if (raw === undefined || raw === '') {
+        return fallback;
+      }
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) {
+        throw new Error(`${name} must be an integer between ${minimum} and ${maximum}`);
+      }
+      return parsed;
+    }
+
+    export function envNumber(name, fallback, minimum, maximum) {
+      const raw = __ENV[name];
+      if (raw === undefined || raw === '') {
+        return fallback;
+      }
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) {
+        throw new Error(`${name} must be a number between ${minimum} and ${maximum}`);
+      }
+      return parsed;
+    }
+
+    export function envDuration(name, fallback) {
+      const value = __ENV[name] || fallback;
+      if (!/^\d+(ms|s|m)$/.test(value)) {
+        throw new Error(`${name} must use a k6 duration such as 500ms, 5s, or 1m`);
+      }
+      return value;
+    }
+
+    export function assertRemoteFaultSafety() {
+      // Remote admin endpoint의 fault mutation은 실수 방지를 위해 추가 명시 승인이 없으면 중단한다.
+      const localPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+      if (!localPattern.test(ADMIN_URL) && __ENV.ALLOW_REMOTE_FAULTS !== '1') {
+        exec.test.abort('remote ADMIN_URL fault mutation requires ALLOW_REMOTE_FAULTS=1');
+      }
+    }
+
+    function trimTrailingSlash(value) {
+      return value.replace(/\/+$/, '');
+    }
+  l04.js: |
+    import { Counter } from 'k6/metrics';
+
+    import {
+      REQUEST_TIMEOUT,
+      arrivalOptions,
+      arrivalSettings,
+      envInteger,
+      logicalRequestID,
+    } from './lib/config.js';
+    import { executeLogicalRequest, noRetryPolicy } from './lib/retry.js';
+    import { createSummaryHandler } from './lib/summary.js';
+
+    const supportedScenarios = new Set(['sidecar-control', 'sidecar-constrained']);
+    const scenario = __ENV.L04_SCENARIO || 'sidecar-control';
+    if (!supportedScenarios.has(scenario)) {
+      throw new Error(`unsupported L04_SCENARIO: ${scenario}`);
+    }
+
+    // 두 scenario는 같은 logical ID namespace와 no-retry policy를 사용한다.
+    const logicalIDNamespace = __ENV.LOGICAL_ID_NAMESPACE || 'l04-sidecar-pair';
+    const policy = noRetryPolicy();
+    const settings = arrivalSettings({ logicalRate: 20, duration: '4s' });
+    const downstreamResponses200 = new Counter('downstream_responses_200');
+    const downstreamResponses503 = new Counter('downstream_responses_503');
+    const downstreamResponses504 = new Counter('downstream_responses_504');
+    const downstreamResponsesOther = new Counter('downstream_responses_other');
+
+    const applicationFault = {
+      latency_ms: envInteger('APPLICATION_LATENCY_MS', 250, 0, 60000),
+      error_rate: 0,
+      max_in_flight: 0,
+      seed: envInteger('FAULT_SEED', 17082026),
+    };
+
+    export const options = {
+      ...arrivalOptions(settings, scenario === 'sidecar-control' ? { logical_failures: ['rate==0'] } : {}),
+      // Downstream connection reuse를 끄고 두 scenario의 client behavior를 동일하게 고정한다.
+      noConnectionReuse: true,
+    };
+
+    export default function () {
+      const result = executeLogicalRequest(logicalRequestID(logicalIDNamespace), policy);
+      const status = result.response === null ? 0 : result.response.status;
+      if (status === 200) {
+        downstreamResponses200.add(1);
+      } else if (status === 503) {
+        downstreamResponses503.add(1);
+      } else if (status === 504) {
+        downstreamResponses504.add(1);
+      } else {
+        downstreamResponsesOther.add(1);
+      }
+    }
+
+    export const handleSummary = createSummaryHandler({
+      phase: 'L04',
+      scenario,
+      logicalRate: settings.logicalRate,
+      duration: settings.duration,
+      fault: applicationFault,
+      applicationFault,
+      logicalIdNamespace: logicalIDNamespace,
+      requestPath: __ENV.REQUEST_PATH || 'non-injected k6 Job -> ClusterIP Service -> istio-proxy -> auth-sim',
+      requestTimeout: REQUEST_TIMEOUT,
+      retryPolicy: policy.name,
+      maxAttempts: policy.maxAttempts,
+      proxyCapacity: {
+        mechanism: 'Sidecar ingress connectionPool http2MaxRequests',
+        target: envInteger('SIDECAR_ACTIVE_REQUEST_TARGET', 100, 1, 1000000),
+      },
+      imageTags: {
+        auth_sim: __ENV.AUTH_SIM_IMAGE || 'unknown',
+        k6: __ENV.K6_IMAGE || 'unknown',
+        istio_proxy: __ENV.ISTIO_PROXY_IMAGE || 'unknown',
+      },
+    });
+  retry.js: |
+    import http from 'k6/http';
+    import { Counter, Rate, Trend } from 'k6/metrics';
+    import { sleep } from 'k6';
+
+    import { BASE_URL, REQUEST_TIMEOUT } from './config.js';
+
+    // 사용자 의도(logical)와 실제 HTTP 호출(physical)을 별도 counter로 측정해 retry 증폭을 계산한다.
+    export const logicalRequests = new Counter('logical_requests');
+    export const physicalAttempts = new Counter('physical_attempts');
+    export const retryAttempts = new Counter('retry_attempts');
+    export const logicalFailures = new Rate('logical_failures');
+    export const logicalRequestDuration = new Trend('logical_request_duration', true);
+
+    const retryableStatuses = new Set([408, 429, 502, 503, 504]);
+
+    export function executeLogicalRequest(requestID, policy) {
+      // 이 함수 호출 하나가 사용자가 의도한 token operation 하나다.
+      logicalRequests.add(1);
+      retryAttempts.add(0);
+      const started = Date.now();
+      let response = null;
+      let success = false;
+      let attempts = 0;
+
+      for (let attempt = 1; attempt <= policy.maxAttempts; attempt += 1) {
+        // 최초 호출과 모든 retry를 포함한 실제 POST 하나를 각각 physical attempt로 세다.
+        attempts = attempt;
+        physicalAttempts.add(1);
+        if (attempt > 1) {
+          retryAttempts.add(1);
+        }
+
+        try {
+          // 같은 logical ID와 증가하는 attempt를 header로 보내 server가 재현 가능한 fault 결정을 하게 한다.
+          response = http.post(`${BASE_URL}/token`, '{}', {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Lab-Logical-Request-ID': requestID,
+              'X-Lab-Attempt': String(attempt),
+            },
+            tags: { name: 'POST /token', request_kind: 'workload' },
+            timeout: REQUEST_TIMEOUT,
+          });
+        } catch (_error) {
+          response = null;
+        }
+
+        success = response !== null && response.status >= 200 && response.status < 300;
+        // 성공, 시도 횟수 소진, retry 불가 응답 중 하나면 logical operation을 종료한다.
+        if (success || attempt === policy.maxAttempts || !policy.shouldRetry(response)) {
+          break;
+        }
+        // Policy가 제공한 backoff/jitter만큼 기다린 후 다음 physical attempt를 시작한다.
+        const delayMilliseconds = policy.delayMilliseconds(attempt);
+        if (delayMilliseconds > 0) {
+          sleep(delayMilliseconds / 1000);
+        }
+      }
+
+      logicalFailures.add(success ? 0 : 1);
+      logicalRequestDuration.add(Date.now() - started);
+      return { response, success, attempts };
+    }
+
+    export function noRetryPolicy() {
+      // Baseline/latency에서 fault와 retry의 영향을 분리하기 위한 1회 시도 정책이다.
+      return {
+        name: 'none',
+        maxAttempts: 1,
+        shouldRetry: () => false,
+        delayMilliseconds: () => 0,
+      };
+    }
+
+    export function badRetryPolicy(maxAttempts) {
+      // 실패 종류를 구분하지 않고 즉시 retry하는 공격적 비교군이다.
+      return {
+        name: 'bad-immediate-retry',
+        maxAttempts,
+        shouldRetry: () => true,
+        delayMilliseconds: () => 0,
+      };
+    }
+
+    export function goodRetryPolicy(maxAttempts, baseDelayMilliseconds, maxDelayMilliseconds) {
+      // 일시적으로 복구 가능한 상태만 retry하고, 지수 backoff에 full jitter를 적용해 동시 재시도를 피한다.
+      return {
+        name: 'good-bounded-backoff-jitter',
+        maxAttempts,
+        shouldRetry: (response) => response === null || response.status === 0 || retryableStatuses.has(response.status),
+        delayMilliseconds: (completedAttempt) => {
+          const exponential = baseDelayMilliseconds * (2 ** (completedAttempt - 1));
+          const bounded = Math.min(exponential, maxDelayMilliseconds);
+          // 0부터 bounded 사이의 random delay를 사용하는 full jitter다.
+          return Math.random() * bounded;
+        },
+      };
+    }
+  summary.js: |
+    import { BASE_URL, REQUEST_TIMEOUT } from './config.js';
+
+    export function createSummaryHandler(experiment) {
+      // k6 handleSummary를 scenario별로 재사용해 raw metric, 재현 metadata, 사람이 읽는 Markdown을 함께 남긴다.
+      return (data) => {
+        const resultDirectory = __ENV.RESULT_DIR;
+        if (!resultDirectory) {
+          throw new Error('RESULT_DIR is required; use scripts/run-local-scenario.sh');
+        }
+        const logicalCount = metricValue(data, 'logical_requests', 'count');
+        const physicalCount = metricValue(data, 'physical_attempts', 'count');
+        const retryCount = metricValue(data, 'retry_attempts', 'count') ?? 0;
+        // Retry amplification은 별도 gauge가 아니라 실행 종료 후 누적 counter로 계산한다.
+        const amplification = logicalCount > 0 ? physicalCount / logicalCount : null;
+        const logicalFailureRate = metricValue(data, 'logical_failures', 'rate');
+        const logicalP95 = metricValue(data, 'logical_request_duration', 'p(95)');
+        const httpP95 = metricValue(data, 'http_req_duration', 'p(95)');
+        const downstreamStatusCounts = {
+          200: metricValue(data, 'downstream_responses_200', 'count') ?? 0,
+          503: metricValue(data, 'downstream_responses_503', 'count') ?? 0,
+          504: metricValue(data, 'downstream_responses_504', 'count') ?? 0,
+          other: metricValue(data, 'downstream_responses_other', 'count') ?? 0,
+        };
+
+        // 비교에 필요한 조건만 저장하고 admin token이나 전체 environment는 기록하지 않는다.
+        const phase = experiment.phase || 'L00';
+        const metadata = {
+          project: 'GitHub Capacity Cascade Lab',
+          learning_unit: phase,
+          phase,
+          scenario: experiment.scenario,
+          started_at_utc: __ENV.STARTED_AT_UTC || 'unknown',
+          git_commit: __ENV.GIT_COMMIT || 'unknown',
+          git_dirty: __ENV.GIT_DIRTY === 'true',
+          go_version: __ENV.GO_VERSION || 'unknown',
+          k6_version: __ENV.K6_VERSION || 'unknown',
+          os: __ENV.LAB_OS || 'unknown',
+          architecture: __ENV.LAB_ARCH || 'unknown',
+          tool_versions: {
+            go: __ENV.GO_VERSION || 'unknown',
+            k6: __ENV.K6_VERSION || 'unknown',
+            docker: __ENV.DOCKER_VERSION || 'not-used',
+            docker_compose: __ENV.DOCKER_COMPOSE_VERSION || 'not-used',
+            haproxy_server: __ENV.HAPROXY_VERSION || 'not-used',
+            toxiproxy_server: __ENV.TOXIPROXY_VERSION || 'not-used',
+            envoy_server: __ENV.ENVOY_VERSION || 'not-used',
+          },
+          image_tags: experiment.imageTags || null,
+          base_url: safeOrigin(BASE_URL),
+          request_path: experiment.requestPath || 'k6 -> auth-sim',
+          logical_id_namespace: experiment.logicalIdNamespace || null,
+          logical_rate: experiment.logicalRate,
+          duration: experiment.duration,
+          request_timeout: experiment.requestTimeout || REQUEST_TIMEOUT,
+          fault: experiment.fault,
+          application_fault: experiment.applicationFault || experiment.fault,
+          proxy_capacity: experiment.proxyCapacity || null,
+          network_toxic: experiment.networkToxic || null,
+          envoy_proxy: experiment.envoyProxy || null,
+          retry_policy: experiment.retryPolicy,
+          max_attempts: experiment.maxAttempts,
+        };
+
+        // Local runner가 먼저 만든 고유 result directory에만 새 파일을 쓴다.
+        return {
+          [`${resultDirectory}/metadata.json`]: `${JSON.stringify(metadata, null, 2)}\n`,
+          [`${resultDirectory}/k6-summary.json`]: `${JSON.stringify(data, null, 2)}\n`,
+          [`${resultDirectory}/summary.md`]: renderMarkdown({
+            phase,
+            experiment,
+            logicalCount,
+            physicalCount,
+            retryCount,
+            amplification,
+            logicalFailureRate,
+            logicalP95,
+            httpP95,
+            downstreamStatusCounts,
+          }),
+          stdout: renderConsole(experiment.scenario, logicalCount, physicalCount, amplification),
+        };
+      };
+    }
+
+    function renderMarkdown(values) {
+      return `# ${values.experiment.scenario} summary
+
+    > 이 문서의 수치는 단일 머신에서 생성된 local exploratory result이며 portfolio final evidence가 아니다.
+
+    | Metric | Value |
+    | --- | ---: |
+    | Scenario | ${values.experiment.scenario} |
+    | Learning Unit | ${values.phase} |
+    | Logical Requests | ${formatCount(values.logicalCount)} |
+    | Physical Attempts | ${formatCount(values.physicalCount)} |
+    | Retry Attempts | ${formatCount(values.retryCount)} |
+    | Retry Amplification | ${formatRatio(values.amplification)} |
+    | Logical Failure Rate | ${formatPercent(values.logicalFailureRate)} |
+    | Logical Duration P95 | ${formatMilliseconds(values.logicalP95)} |
+    | HTTP Request Duration P95 | ${formatMilliseconds(values.httpP95)} |
+    ${renderDownstreamStatusRows(values)}
+
+    ## 실행 조건
+
+    - Request path: ${values.experiment.requestPath || 'k6 -> auth-sim'}
+    - Logical ID namespace: ${values.experiment.logicalIdNamespace || 'not specified'}
+    - Logical rate: ${values.experiment.logicalRate === null ? 'not applicable' : `${values.experiment.logicalRate} ops/s`}
+    - Duration: ${values.experiment.duration}
+    - Request timeout: ${values.experiment.requestTimeout || REQUEST_TIMEOUT}
+    - Fault: latency_ms=${values.experiment.fault.latency_ms}, error_rate=${values.experiment.fault.error_rate}, max_in_flight=${values.experiment.fault.max_in_flight}, seed=${values.experiment.fault.seed}
+    - Proxy capacity: ${formatObject(values.experiment.proxyCapacity)}
+    - Network toxic: ${formatObject(values.experiment.networkToxic)}
+    - Envoy proxy: ${formatObject(values.experiment.envoyProxy)}
+    - Retry policy: ${values.experiment.retryPolicy}
+    - Max attempts: ${values.experiment.maxAttempts}
+    `;
+    }
+
+    function renderDownstreamStatusRows(values) {
+      if (values.phase !== 'L02' && values.phase !== 'L04') {
+        return '';
+      }
+      const counts = values.downstreamStatusCounts;
+      return `| Downstream status 200 | ${formatCount(counts[200])} |
+    | Downstream status 503 | ${formatCount(counts[503])} |
+    | Downstream status 504 | ${formatCount(counts[504])} |
+    | Downstream status other/transport | ${formatCount(counts.other)} |`;
+    }
+
+    function formatObject(value) {
+      return value === null || value === undefined ? 'not applicable' : JSON.stringify(value);
+    }
+
+    function renderConsole(scenario, logicalCount, physicalCount, amplification) {
+      return `${scenario}: logical=${formatCount(logicalCount)} physical=${formatCount(physicalCount)} amplification=${formatRatio(amplification)}\n`;
+    }
+
+    function metricValue(data, metricName, valueName) {
+      const metric = data.metrics[metricName];
+      if (!metric || !metric.values || metric.values[valueName] === undefined) {
+        return null;
+      }
+      return metric.values[valueName];
+    }
+
+    function formatCount(value) {
+      return value === null ? 'n/a' : String(Math.round(value));
+    }
+
+    function formatRatio(value) {
+      return value === null ? 'n/a' : `${value.toFixed(3)}x`;
+    }
+
+    function formatPercent(value) {
+      return value === null ? 'n/a' : `${(value * 100).toFixed(2)}%`;
+    }
+
+    function formatMilliseconds(value) {
+      return value === null ? 'n/a' : `${value.toFixed(2)} ms`;
+    }
+
+    function safeOrigin(value) {
+      // URL에 credential이 포함되어도 metadata에는 scheme과 host/port만 남긴다.
+      const match = value.match(/^(https?:\/\/)(?:[^/@]+@)?([^/?#]+)/i);
+      return match ? `${match[1]}${match[2]}` : 'redacted-invalid-url';
+    }
+kind: ConfigMap
+metadata:
+  name: l04-k6-constrained
+  namespace: capacity-cascade-l04-load

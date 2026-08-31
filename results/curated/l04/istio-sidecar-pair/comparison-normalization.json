@@ -1,0 +1,9 @@
+{
+  "removed_comparison_field": "circuit_breakers.thresholds[].max_requests",
+  "normalized_isolation_identity_fields": [
+    "metadata.filter_metadata.istio.services[].host",
+    "metadata.filter_metadata.istio.services[].name",
+    "metadata.filter_metadata.istio.services[].namespace"
+  ],
+  "reason": "Separate namespace and release identities are required for fresh sidecar isolation; all other target cluster fields must remain equal."
+}

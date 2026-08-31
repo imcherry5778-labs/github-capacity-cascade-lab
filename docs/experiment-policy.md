@@ -152,6 +152,43 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
 - L00 smoke는 Kubernetes Service path에서도 logical request와 physical attempt가 같고 retry가
   0이어야 한다. 단일 clean run은 여전히 local exploratory evidence다.
 
+### L04 sidecar-control vs sidecar-constrained
+
+- 한 paired run은 하나의 fresh L04 k3d cluster와 한 Istio base/istiod installation을 사용하되,
+  control/constrained에는 별도 namespace, Helm release, Pod와 sidecar counters를 쓴다. 두
+  cumulative counter를 서로 빼지 않는다.
+- Source/image/K3s/Istio version, replica, application latency/error/max-in-flight, logical rate,
+  duration, timeout, seed/logical-ID namespace, client retry/max attempts, proxy retry, load path,
+  metric collection과 sampling interval을 고정한다. 비교 변수는 inbound port 8080의 Sidecar
+  `http2MaxRequests` local target `100 → 1` 하나다.
+- Selected CRD의 field server-side validation, actual generated inbound cluster threshold와
+  normalized control/constrained diff를 모두 확인한다. Fresh-isolation namespace/release metadata는
+  normalization에서 명시적으로 제외하되, `max_requests` 외 target cluster field가 다르면 pair는
+  통과하지 않는다.
+- k6 `logical_requests == physical_attempts`, `retry_attempts == 0`이고 actual route retry policy
+  count/budget 및 proxy retry delta가 모두 0이어야 한다. Client physical attempt는 proxy
+  downstream attempt이며, upstream attempt는 first forwarding과 proxy internal retry를 포함하는
+  별도 단위다.
+- `max_in_flight=0`/unlimited와 application deterministic error 0을 고정한다. Application
+  admission rejection delta가 0이어야 하며, constrained에서 proxy가 app 전에 거절하면 app token
+  delta와 upstream delta가 downstream/logical count보다 작을 수 있다.
+- Workload 전후 target proxy downstream counter delta가 양수일 때만 data path가 sidecar를
+  통과했다고 인정한다. Host metrics port-forward가 proxy counter를 늘리지 않으면 그것은 direct
+  observation path로만 쓰고 workload path로 쓰지 않는다.
+- Actual selected proxy stats inventory에서 metric 이름을 고르고 mapping을 저장한다. Control은
+  authoritative active-overflow delta 0, constrained는 그 delta > 0과 proxy-side downstream 5xx,
+  더 큰 logical failure를 보여야 한다. 이름을 추측하거나 다른 signal로 PASS를 만들지 않는다.
+- Workload 전 baseline, workload 중 여러 bounded sample, 종료 후 final sample을 UTC timestamp로
+  저장한다. Sample은 app in-flight/token/admission과 proxy downstream/upstream/active/overflow/retry
+  및 선택적 container usage를 포함한다. Usage는 Metrics API snapshot일 뿐 capacity authority가 아니다.
+- Selected proxy가 default inbound retry를 생성하면 raw config를 보존한다. No-retry contract를
+  위해 `EnvoyFilter` fallback을 쓸 때는 official Sidecar API가 signal을 만들지 못했다는 뜻이
+  아니라 generated route의 retry를 제거하기 위한 version-specific bounded patch임을 기록하고,
+  `SIDECAR_INBOUND`와 workload selector만 대상으로 한다. Upgrade 시 actual config를 재검토한다.
+- Exact workload/Sidecar resources, Istio Helm releases, namespaces, cluster, tracked processes와
+  temporary kubeconfig/Helm home을 모두 정리하고 cleanup failure를 run failure로 처리한다.
+  Failed/incomplete raw run도 새 timestamp로 보존한다.
+
 ## Reporting rules
 
 - 측정하지 않은 값은 결과로 작성하지 않는다.
