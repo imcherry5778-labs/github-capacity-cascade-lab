@@ -1,6 +1,8 @@
 # Facts and assumptions
 
-이 문서는 incident source와 lab design 사이의 경계를 유지한다.
+이 문서는 incident source와 lab design 사이의 경계를 유지한다. Source별 지원 범위와
+freshness는 [Source Register](source-register.md), 공개 event 순서는
+[Incident Timeline](incident-timeline.md)에 기록한다.
 
 [status]: https://www.githubstatus.com/incidents/zkxwbgr0cnmx
 [blog]: https://github.blog/news-insights/company-news/the-august-17-outage-and-the-work-ahead/
@@ -19,6 +21,11 @@
 | F10 | FACT | Gateway retry 축소, token 요청의 일시적 403 차단, site별 점진적 traffic ramp-up이 복구에 사용됐다. | [Status RCA][status] | 후속 mitigation 단계의 연구 방향이다. |
 | F11 | FACT | 후속 조치에는 sidecar-aware autoscaling, Istio limit 점검, gateway/client retry와 backoff 검토, VS Code retry 수정, load balancer monitoring과 regional failover 개선이 포함됐다. | [Status RCA][status] | L04–L09 roadmap 질문의 출처다. |
 | F12 | FACT | GitHub는 incident가 직전 code/configuration change로 시작된 것이 아니라 core capacity failure였다고 밝혔다. | [GitHub blog][blog] | Change-trigger reproduction이 아니라 capacity behavior에 초점을 둔다. |
+| F13 | FACT | Peak web/API error rate는 약 20%였고 archive와 raw-content download error rate는 약 50%였다. | [Status RCA][status] | 서로 다른 user-facing path의 impact를 하나의 error rate로 합치지 않는다. |
+| F14 | FACT | SAML/OIDC authentication, SCIM, Team Sync와 public GitHub.com의 workflow step definition에 의존하는 GHEC with Data Residency Actions workflow도 영향을 받았다. | [Status RCA][status] | Authentication과 cross-environment dependency impact를 기록하되 exact dependency topology는 추정하지 않는다. |
+| F15 | FACT | Most services는 16:36 UTC까지 회복됐지만 Actions는 약 18:03 UTC까지 degraded됐고 Copilot Token Service는 21:02 UTC에 fully recovered됐다. | [Status RCA][status] | Broad recovery와 service별 final recovery를 구분한다. |
+| F16 | FACT | Codeload endpoint를 향한 여러 scraping attack이 recovery를 방해하는 complicating factor였다. | [Status RCA][status] | Volume, source와 mitigation은 공개되지 않았으므로 추가 추정하지 않는다. |
+| F17 | FACT | Flow limit을 소진한 HAProxy node들을 동시에 pause한 뒤 immediate broad recovery가 나타났다고 RCA가 설명한다. | [Status RCA][status] | L01 local HAProxy action이나 topology와 동일시하지 않고 공개된 recovery effect로만 사용한다. |
 | I01 | INFERENCE | Capacity를 소진하는 component와 scaling metric의 관찰 대상이 다르면 host 지표가 여유로워 보여도 실효 capacity가 부족할 수 있다. | F04에 대한 lab 해석 | L05에서 observable blind spot을 검증할 가설이다. GitHub의 정확한 HPA 설정을 뜻하지 않는다. |
 | I02 | INFERENCE | Logical failure에 대한 retry가 physical load를 늘리면 capacity recovery가 지연될 수 있다. | F06, F08에 대한 lab 해석 | Counter 기반 amplification과 recovery 실험 설계의 가설이다. |
 | L00-01 | LAB_IMPLEMENTATION | Go `auth-sim`은 고정 placeholder를 반환하는 side-effect-free workload다. GitHub Token Service 복제가 아니다. | Repository L00 design | 실제 auth/JWT/data dependency 없이 request behavior만 통제한다. |
@@ -36,7 +43,7 @@
 | L02-03 | LAB_IMPLEMENTATION | k6 `physical_attempts`는 Envoy downstream client attempt이고 `cluster.<name>.upstream_rq_total` delta는 Envoy internal retry를 포함한 upstream attempt다. | [Envoy cluster stats](https://www.envoyproxy.io/docs/envoy/latest/configuration/upstream/cluster_manager/cluster_stats.html), Repository L02 runner | 기존 L00 metric 의미를 유지하면서 proxy 내부 증폭을 별도 계산한다. |
 | L02-04 | LAB_IMPLEMENTATION | Envoy v1.39.1의 `max_requests` 소진은 실제 local stats의 `upstream_rq_active_overflow`로 판정하고 pending/retry overflow도 함께 보존한다. | [Envoy circuit breaking](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking), Repository L02 evidence | 오래된 pending overflow 이름만 고정하지 않는다. |
 | L02-05 | LAB_IMPLEMENTATION | L02는 향후 Istio sidecar metric 학습을 위한 standalone 기초 단계다. | Repository roadmap | Istio나 GitHub sidecar implementation/config를 재현했다고 주장하지 않는다. |
-| L03-01 | LAB_IMPLEMENTATION | k3d v5.9.0에서 server 1개, agent 0개와 `rancher/k3s:v1.35.5-k3s1`을 사용하는 local cluster를 만든다. | [k3d](https://k3d.io/), [K3s release](https://github.com/k3s-io/k3s/releases/tag/v1.35.5%2Bk3s1), Repository L03 runner | 선택한 topology와 version은 local baseline이며 GitHub production Kubernetes 사실이 아니다. |
+| L03-01 | LAB_IMPLEMENTATION | k3d v5.9.0에서 server 1개, agent 0개와 `rancher/k3s:v1.35.5-k3s1`을 사용하는 local cluster를 만든다. | [k3d v5.9.0](https://k3d.io/v5.9.0/), [K3s release](https://github.com/k3s-io/k3s/releases/tag/v1.35.5%2Bk3s1), Repository L03 runner | 선택한 topology와 version은 local baseline이며 GitHub production Kubernetes 사실이 아니다. |
 | L03-02 | LAB_IMPLEMENTATION | Helm chart는 replica 1개의 auth-sim Deployment와 public `ClusterIP` Service만 만들고 admin `:9090`은 별도 loopback port-forward로 접근한다. | Repository L03 chart/runner | Port-forward는 production ingress/external network/TLS 경로를 검증하지 않는다. |
 | L03-03 | LAB_IMPLEMENTATION | CPU/memory request `25m`/`32Mi`, limit `250m`/`128Mi`와 `kubectl top` snapshot은 local smoke용 `lab target`/단일 관찰값이다. | Repository L03 chart/evidence | Production sizing, benchmark 또는 machine-independent conclusion으로 사용하지 않는다. |
 | L03-04 | LAB_IMPLEMENTATION | Admin credential은 runner가 ephemeral Secret으로 만들며 chart/rendered manifest/evidence에 Secret data를 넣지 않는다. | Repository L03 runner/chart | Public Service와 admin control plane을 분리하고 namespace/cluster cleanup으로 Secret을 제거한다. |
