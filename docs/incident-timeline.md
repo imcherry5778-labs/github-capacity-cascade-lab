@@ -17,7 +17,7 @@
 | UTC time | Publicly reported condition/event | External/user impact | Publicly reported mitigation or recovery action | Source | Classification |
 | --- | --- | --- | --- | --- | --- |
 | 13:28 | RCA가 정한 incident 시작 시각. 새로운 traffic peak에서 Central US load balancer network가 saturation에 도달했다. | GitHub.com의 여러 경험에서 error와 latency가 시작됐다. 개별 service의 exact 시작 시각은 공개되지 않았다. | 아직 공개된 조치 없음 | [RCA-01][rca-01] | `FACT`; per-service start `UNKNOWN` |
-| 13:40 | Status page가 impacted performance 조사를 공지했다. | Git Operations, Webhooks, API Requests, Issues, Pull Requests, Actions, Pages와 Copilot이 incident component로 표시됐다. | Investigation 시작을 공개했다. | [RCA-01][rca-01] | `FACT` |
+| 13:40 | Status page가 일부 GitHub service의 impacted performance 조사를 공지했다. | 이 update에서는 개별 affected service를 명시하지 않았다. Service별 영향은 이후 status update에서 순차적으로 공개됐다. | Investigation 시작을 공개했다. | [RCA-01][rca-01] | `FACT`; affected services at 13:40 `UNKNOWN` |
 | 13:45 | 여러 experience에서 약 20% error rate를 보고했다. | Pull Requests, Issues와 그 밖의 experience에서 실패가 관찰됐다. | Investigation 진행 중 | [RCA-01][rca-01] | `FACT` |
 | 14:04 | Web/API error rate 약 20%, archive와 raw repository content download error rate 약 50%를 보고했다. | Web/API 요청과 archive/raw-content download가 서로 다른 수준으로 저하됐다. | Root cause 조사와 mitigation 진행 중 | [RCA-01][rca-01] | `FACT` |
 | 14:24 | SAML/OIDC authentication, SCIM과 Team Sync 영향이 추가로 보고됐다. | Login/federation 및 identity synchronization 관련 기능이 영향을 받았다. | Investigation 계속 | [RCA-01][rca-01] | `FACT` |
