@@ -59,11 +59,12 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Completed through L04 — next L05
+## Completed through L05 — next L06
 
-현재 완료된 구현 범위는 **L04 — Istio Sidecar and Proxy Metrics**까지다. L04는 L00/L01/L02의
+현재 완료된 구현 범위는 **L05 — HPA Blind Spot**까지다. L04는 L00/L01/L02의
 logical/physical/retry 의미와 L03 Kubernetes lifecycle을 바꾸지 않고, application과 inbound
-sidecar의 capacity boundary를 별도로 관찰한다.
+sidecar의 capacity boundary를 별도로 관찰했다. L05는 그 local boundary를 다시 설계하지 않고,
+같은 constrained inbound sidecar 조건에서 HPA가 보는 대상만 바꿔 scaling decision을 비교한다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -74,9 +75,10 @@ sidecar의 capacity boundary를 별도로 관찰한다.
 - multi-stage, non-root, `scratch` Docker image
 
 L03 baseline 위에 pinned Istio 1.30.4 control plane을 Helm `istio-base` → `istiod` 순서로
-설치한다. Gateway, CNI, Ambient, HPA는 설치하지 않는다. 각 비교 namespace는 automatic
-injection을 사용하고, target Pod는 `auth-sim`과 자동 주입된 `istio-proxy`의 Ready 2개
-container를 가진다.
+설치한다. L04에는 HPA가 없고, L05에서만 `autoscaling/v2` HPA와 좁은 custom-metrics bridge를
+추가한다. 각 L05 workload namespace는 automatic injection을 사용하며 target Pod는 `auth-sim`,
+L05-only `proxy-metrics-exporter`, 자동 주입된 `istio-proxy`를 가진다. Exporter는 public
+Service에 노출하지 않는 Pod-local observer다.
 
 ```mermaid
 flowchart LR
@@ -87,7 +89,7 @@ flowchart LR
     K[non-injected k6 Job] --> S[ClusterIP Service :8080]
     S --> X[target inbound istio-proxy]
     X --> A[auth-sim :8080]
-    R[L04 runner] -->|loopback-only admin port-forward :9090| A
+    R[L04/L05 runner] -->|loopback-only admin port-forward :9090| A
     R -->|kubectl exec pilot-agent| X
 ```
 
@@ -100,6 +102,14 @@ retry는 모두 꺼져 있다. Selected proxy가 만든 inbound default retry를
 version-specific `EnvoyFilter` fallback을 두 scenario에 동일하게 적용한다. 이 fallback은
 GitHub 설정이나 권장 production configuration이 아니다.
 
+L05의 blind policy는 `auth-sim` container CPU만 보는 built-in `ContainerResource` HPA이고,
+capacity-aware policy는 selected sidecar active-request signal을 Pod custom metric으로 제공한다.
+동일 3/s·150 s no-retry workload와 local sidecar target `http2MaxRequests: 1`에서 blind HPA는
+1 replica에 머물고, aware HPA는 실제로 2 replica로 scale-up했다. 세 clean-source 반복의
+원문은 [L05 curated evidence](results/curated/l05/README.md)에 있다. 이 metric, threshold,
+adapter, topology와 결과는 모두 local `LAB_IMPLEMENTATION`/evidence이며 GitHub production
+configuration 또는 보편적인 tuning recommendation이 아니다.
+
 ## L00 foundation architecture
 
 ```mermaid
@@ -110,8 +120,8 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L00–L04는 completed foundation이다. 상세 topology와 단계별 plane 경계는
-[architecture](docs/architecture.md)에 있다. HPA는 여전히 L05 범위다.
+L00–L05는 completed foundation이다. 상세 topology와 단계별 plane 경계는
+[architecture](docs/architecture.md)에 있다. 다음 scaling/cascade 연결은 L06 범위다.
 
 ## Local quick start
 
@@ -157,6 +167,13 @@ make l04-scenario SCENARIO=sidecar-control
 make l04-scenario SCENARIO=sidecar-constrained
 make l04-verify
 make l04-clean
+make l05-doctor
+make l05-check
+make l05-smoke
+make l05-scenario SCENARIO=hpa-blind
+make l05-scenario SCENARIO=hpa-aware
+make l05-verify
+make l05-clean
 ```
 
 `make verify`는 format check, `go vet`, Go test/build, 모든 k6 script inspect, 짧은
@@ -199,6 +216,13 @@ actual target normalization, k6 inspect와 runner syntax를 검사한다. `make 
 sidecar injection, verified ClusterIP data path와 cleanup을 1 ops/s·1 s로 실행한다.
 `make l04-verify`는 full control/constrained pair를 한 cluster lifecycle에서 한 번만 실행한다.
 Raw evidence는 `results/istio-sidecar/<UTC timestamp>/`에 append-only로 남는다.
+
+L05는 `kubectl`, k3d, Helm, Istio, `jq`, Ruby와 기존 L04 도구를 사용한다. `make l05-check`는
+실제 `autoscaling/v2` HPA, minimal custom-metrics adapter/APIService, local-only exporter,
+no-retry and same-sidecar-policy contracts를 정적으로 검사한다. `make l05-smoke`는 bounded
+blind lifecycle과 cleanup을, `make l05-verify`는 150초 fixed workload에서 blind/aware pair를
+실행한다. Raw evidence는 `results/hpa-blind-spot/<UTC timestamp>/`에 append-only로 남으며,
+`make l05-clean`은 exact L05 cluster/process만 제거한다.
 
 ### Docker
 
@@ -305,6 +329,21 @@ Application admission rejection과 proxy overflow는 같은 503일 수 있어도
 L04의 fixed workload와 `100 → 1` 값은 모두 local `lab target`이며 GitHub production value,
 topology 또는 scaling policy를 뜻하지 않는다.
 
+### L05
+
+L05는 L04의 constrained inbound sidecar target `http2MaxRequests: 1` 하나를 고정하고, 3/s·150 s
+workload에서 actual HPA policy를 비교한다. Blind policy는 `auth-sim` container CPU
+`ContainerResource` average utilization `80%`만 본다. Capacity-aware policy는 selected proxy의
+active-request observation을 `sidecar_active_requests` Pods custom metric average value `500m`으로
+제공한다. 둘 다 min/max replicas `1/4`, no client/proxy retry, request timeout `2 s`, application
+latency `1000 ms`, application admission unlimited, one-second sample와 same HPA behavior를 공유한다.
+
+Custom metric을 HPA에 제공하려면 API aggregation endpoint가 필요하므로 Prometheus, Grafana,
+KEDA나 새 monitoring stack 대신 Pod-local exporter와 read-only namespaced Pod RBAC의 작은 adapter를
+선택했다. Adapter는 capacity-aware scenario에서만 `custom.metrics.k8s.io/v1beta2` APIService로
+등록되며, self-signed short-lived lab TLS를 위해 `insecureSkipTLSVerify: true`를 사용한다. 이는
+production security setting이나 GitHub implementation claim이 아니다.
+
 ## Evidence structure
 
 각 wrapper 실행은 기존 경로를 덮어쓰지 않고 다음을 만든다.
@@ -341,6 +380,13 @@ actual proxy stats before/after와 mapping, application metrics, timestamped sam
 container usage snapshot을 남긴다. Full config dump와 noisy lifecycle log는 raw notebook에만
 남기고 curated에는 target config와 판정에 필요한 원문만 byte-for-byte 복사한다.
 
+L05 pair는 `results/hpa-blind-spot/<UTC timestamp>/` 아래에 policy별 HPA initial/final state,
+conditions/events, one-second HPA/Pod/proxy/application samples, custom-metric response,
+selected inbound proxy config/mapping, k6 results, contracts와 cleanup을 남긴다. Blind는
+`auth-sim` CPU, aware는 `sidecar_active_requests`만 metric variable로 다르고 다른 workload/HPA
+behavior/sidecar target은 고정한다. Curated L05는 clean source 3회만 선별해 byte-for-byte
+복사하며 failed 또는 dirty-source raw run은 제외하고 보존한다.
+
 ## Application metrics
 
 `GET /metrics`는 다음 low-cardinality metric을 노출한다.
@@ -355,8 +401,8 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L04까지는 completed
-foundation이고 다음 단계는 **L05 — HPA Blind Spot** (`Planned — next`)다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L05까지는 completed
+foundation이고 다음 단계는 **L06 — Full Capacity Cascade** (`Planned — next`)다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -370,10 +416,12 @@ Retry Amplification = Physical Attempts / Logical Requests
 
 실제 비교는 동일 workload, duration, fault timing, seed, version을 고정한 뒤 수행한다.
 
-## Results — Planned
+## Results — Local evidence
 
-반복 가능한 portfolio comparison은 아직 `Planned`다. 첫 local run의 머신 종속 수치를
-README에 고정하지 않는다.
+L05는 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
+L05 implementation verification이며 portfolio final evidence, production benchmark 또는
+machine-independent performance conclusion은 아니다. 최종 portfolio comparison은 L10에서
+별도로 구성한다.
 
 ## Mitigations — Planned
 
@@ -396,6 +444,7 @@ preflight와 승인 경계를 거쳐 검증한다.
 - Completed foundation: L02 — Envoy Fundamentals
 - Completed foundation: L03 — k3d and Helm Baseline (implementation verified; local exploratory evidence)
 - Completed foundation: L04 — Istio Sidecar and Proxy Metrics (implementation verified; local exploratory evidence)
-- Next: L05 — HPA Blind Spot (`Planned — next`)
+- Completed foundation: L05 — HPA Blind Spot (implementation verified; 3 clean local repetitions)
+- Next: L06 — Full Capacity Cascade (`Planned — next`)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

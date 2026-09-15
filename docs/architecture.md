@@ -309,7 +309,52 @@ request/active/pending/overflow/retry/timeout이다. Stat spelling은 hard-code 
 run의 inventory와 mapping이 authoritative하다. Container CPU/memory는 Metrics API의 단일
 snapshot만 보조로 남기며 capacity authority, benchmark 또는 sizing으로 해석하지 않는다.
 
+## L05 HPA blind spot
+
+L05는 L04 actual selected inbound `cluster.inbound|8080||` active/overflow signal을 다시
+정의하지 않는다. 단일 local sidecar target `http2MaxRequests: 1`과 public request path를
+고정한 다음, HPA의 observed metric만 두 policy 사이에서 바꾼다. 모든 값, behavior와
+component는 `LAB_IMPLEMENTATION`이다.
+
+```mermaid
+flowchart LR
+    K[non-injected k6 Job] --> S[ClusterIP Service :8080]
+    S --> P[injected auth-sim Pod]
+    P --> X[inbound istio-proxy capacity target 1]
+    X --> A[auth-sim]
+    A --> C[auth-sim CPU]
+    C --> B[blind HPA: ContainerResource CPU]
+    B --> D[Deployment replicas]
+    X --> E[Pod-local proxy metrics exporter]
+    E --> M[read-only custom metrics adapter]
+    M --> H[aware HPA: Pods sidecar_active_requests]
+    H --> D
+    D --> P
+```
+
+Blind policy는 `auth-sim`에만 범위를 둔 actual `autoscaling/v2` `ContainerResource` CPU metric이며,
+sidecar active/overflow를 scaling input으로 쓰지 않는다. Capacity-aware policy는 actual
+`autoscaling/v2` Pods metric `sidecar_active_requests`다. 작은 adapter는 해당 scenario namespace의
+selected Ready Pod만 읽고 aware scenario가 실행되는 동안에만 `custom.metrics.k8s.io/v1beta2`를
+제공한다. RBAC는 namespace-scoped Pod `get`/`list`뿐이고 public workload Service 밖에 있으며,
+`insecureSkipTLSVerify: true`는 temporary self-signed local aggregation TLS에만 사용한다.
+
+두 HPA spec은 min/max `1/4`, 15초마다 최대 4 Pod인 scale-up `0 s` stabilization, 60초마다 최대
+1 Pod인 scale-down `300 s` stabilization을 공유한다. Application CPU average utilization `80%`와
+sidecar active-request average `500m`는 단위가 다르므로 같은 숫자로 맞출 의미가 없다. Runner는
+이 관계 전체를 1초마다 sample하고 HPA condition/event, metric status, last scale time, Pod
+readiness/endpoint count, selected proxy counter, application counter와 k6 result를 보존한다.
+CPU snapshot을 request-capacity authority로 해석하지 않는다.
+
+세 curated local repetition에서 blind는 desired/current replicas `1/1`을 유지하는 동안 selected
+proxy active-overflow가 `336`, `336`, `337`에 도달했다. Aware는 actual Pods-metric scale event를
+내고 `2/2`에 도달했으며 overflow는 `176`, `160`, `151`이었다. 이는 이 fixed lab condition에서
+observation scope가 scaling blind spot의 한 설명일 수 있다는 local inference만 지원한다. GitHub의
+metric, HPA behavior, sidecar mechanism/value, topology나 production tuning evidence는 아니다.
+
 ## Future architecture only
 
-L05에서 HPA observed metric과 sidecar capacity mismatch를 다룬다. L04에는 HPA object나 scaling
-decision이 없으며 L06+의 retry/cascade, Chaos Mesh와 AKS topology도 포함하지 않는다.
+L06+의 retry/cascade, Chaos Mesh와 AKS 질문은 별도 scope와 evidence 설계 뒤에만 연결한다.
+Gateway, Ambient/CNI, Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing과 production tuning은
+L05 범위가 아니다. 이 repetition set은 production benchmark나 GitHub topology reproduction이 아닌
+local exploratory evidence다.
