@@ -19,3 +19,16 @@ resources:
 
 service:
   port: 8080
+
+# L05 only: this non-public companion reads Pod-local observation endpoints.
+# It remains off for L03/L04 so their verified Pod contract does not change.
+sidecarMetricsExporter:
+  enabled: false
+  port: 18081
+  resources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi

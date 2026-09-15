@@ -117,7 +117,7 @@ ${renderDownstreamStatusRows(values)}
 }
 
 function renderDownstreamStatusRows(values) {
-  if (values.phase !== 'L02' && values.phase !== 'L04') {
+  if (values.phase !== 'L02' && values.phase !== 'L04' && values.phase !== 'L05') {
     return '';
   }
   const counts = values.downstreamStatusCounts;

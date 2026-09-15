@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1
+kind: Sidecar
+metadata:
+  name: auth-sim-inbound-capacity
+  namespace: capacity-cascade-l05-blind
+spec:
+  workloadSelector:
+    labels:
+      app.kubernetes.io/name: auth-sim
+      app.kubernetes.io/instance: auth-sim-blind
+  ingress:
+    - port:
+        number: 8080
+        protocol: HTTP
+        name: public
+      defaultEndpoint: 127.0.0.1:8080
+      connectionPool:
+        http:
+          # Local L05 target, not a GitHub production value.
+          http2MaxRequests: 1
