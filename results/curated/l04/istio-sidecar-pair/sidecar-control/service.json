@@ -1,0 +1,50 @@
+{
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+        "annotations": {
+            "meta.helm.sh/release-name": "auth-sim-control",
+            "meta.helm.sh/release-namespace": "capacity-cascade-l04-control"
+        },
+        "creationTimestamp": "2026-08-31T08:28:15Z",
+        "labels": {
+            "app.kubernetes.io/instance": "auth-sim-control",
+            "app.kubernetes.io/managed-by": "Helm",
+            "app.kubernetes.io/name": "auth-sim",
+            "app.kubernetes.io/version": "l03",
+            "helm.sh/chart": "auth-sim-0.1.0"
+        },
+        "name": "auth-sim-control",
+        "namespace": "capacity-cascade-l04-control",
+        "resourceVersion": "600",
+        "uid": "4a8c6669-898d-4bbd-aaaa-209fbf7f0e61"
+    },
+    "spec": {
+        "clusterIP": "10.43.217.85",
+        "clusterIPs": [
+            "10.43.217.85"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+            "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+            {
+                "name": "public",
+                "port": 8080,
+                "protocol": "TCP",
+                "targetPort": "public"
+            }
+        ],
+        "selector": {
+            "app.kubernetes.io/instance": "auth-sim-control",
+            "app.kubernetes.io/name": "auth-sim"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+    },
+    "status": {
+        "loadBalancer": {}
+    }
+}

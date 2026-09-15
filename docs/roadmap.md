@@ -59,15 +59,15 @@
 
 - **ID:** L04
 - **Title:** Istio Sidecar and Proxy Metrics
-- **Goal:** Host application과 sidecar proxy의 capacity/metric 경계를 직접 관찰한다.
-- **Learn:** Application metric만으로 보이지 않는 proxy concurrency와 request pressure를 이해한다.
-- **Build:** 최소 Istio sidecar lab와 필요한 bounded observability.
-- **Observe:** Application in-flight, sidecar request/concurrency/resource signal의 시간 관계.
-- **Done:** L00 application admission과 sidecar capacity가 다른 mechanism임을 evidence로 설명한다.
-- **Non-goals:** GitHub sidecar setting 복제, Ambient mode, ingress gateway 단정.
+- **Goal:** 같은 Pod의 auth-sim application과 inbound Istio sidecar proxy의 capacity/metric 경계를 직접 관찰한다.
+- **Learn:** Application metric만으로 proxy-side saturation을 판정할 수 없는 이유와 counter boundary를 구분한다.
+- **Build:** Pinned Istio Helm control plane, namespace automatic injection, Sidecar inbound connection-pool pair, bounded proxy/application observation.
+- **Observe:** Application in-flight/admission, proxy downstream/upstream/active/overflow/retry와 timestamped before/during/after 관계.
+- **Done:** Actual injected Pod 2/2, sidecar traversal counter delta, generated `100 → 1` inbound capacity diff, control overflow 0/constrained overflow > 0, application admission rejection 0, no-retry와 exact cleanup을 local evidence로 확인한다.
+- **Non-goals:** GitHub sidecar setting 복제, HPA/KEDA/autoscaling comparison, Ambient, CNI, gateway, Prometheus/Grafana, ingress gateway 또는 production tuning.
 - **Dependencies:** L03; L02 권장.
 - **Source prerequisite:** [Source Register](source-register.md)와 [August 17 timeline](incident-timeline.md)의 incident/context 경계를 유지한다.
-- **Status:** Planned — next.
+- **Status:** Complete — implementation verified; 생성 결과는 local exploratory evidence.
 
 ## L05 — HPA Blind Spot
 
@@ -80,7 +80,7 @@
 - **Done:** 동일 workload에서 blind policy와 capacity-aware policy의 차이를 반복 evidence로 제시한다.
 - **Non-goals:** GitHub의 정확한 HPA config 주장, production recommendation 일반화.
 - **Dependencies:** L03, L04.
-- **Status:** Planned.
+- **Status:** Planned — next.
 
 ## L06 — Full Capacity Cascade
 

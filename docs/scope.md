@@ -139,6 +139,30 @@ lifecycle cleanup을 한 baseline에서 검증한다.
 - Azure/AKS, Terraform/OpenTofu, GitHub Actions, Argo CD
 - production security/performance tuning 또는 단일 snapshot 기반 production sizing
 
+## L04 goal
+
+L03 baseline의 automatic Istio sidecar에서 auth-sim application과 proxy의 서로 다른 capacity
+boundary를 같은 workload로 관찰한다. HPA blind spot은 L05의 별도 질문으로 남긴다.
+
+## L04 in scope
+
+- pinned Istio Helm `istio-base`와 `istiod`, namespace-level automatic injection
+- auth-sim + injected istio-proxy Ready 2/2, proxy image/build/config/stats actual discovery
+- injection이 없는 k6 Job → ClusterIP Service → target inbound sidecar → auth-sim public 8080 path
+- control/constrained fresh namespace pair와 Sidecar `inboundConnectionPool` active-request target
+- no-client/no-proxy retry contract, application admission unlimited와 deterministic error 0
+- bounded before/during/after application/proxy samples, actual overflow/rejection mapping과 cleanup evidence
+- selected 1.30.4 generated inbound retry를 제거하기 위한 exact `SIDECAR_INBOUND` EnvoyFilter fallback
+
+## L04 out of scope
+
+- GitHub exact Istio/Kubernetes/topology/resource/concurrency/autoscaling configuration 추정
+- HPA, KEDA, autoscaling object/policy comparison 또는 sidecar-aware scale decision
+- Istio Gateway, Gateway API, Ingress, Ambient, ztunnel, Istio CNI, mTLS/security policy
+- Prometheus server, Grafana, Kiali, tracing, mesh-wide telemetry or production sizing
+- retry behavior experiment, full cascade, HAProxy coupling, Chaos Mesh, multi-node/cloud/AKS/CI
+- GitHub incident error/RPS/10x value를 local acceptance target으로 사용
+
 ## Core vs Optional Extension
 
 - **Core:** L00–L10. 최소 workload에서 시작해 proxy, sidecar metric, autoscaling blind

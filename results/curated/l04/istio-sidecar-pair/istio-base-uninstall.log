@@ -1,0 +1,18 @@
+These resources were kept due to the resource policy:
+[CustomResourceDefinition] trafficextensions.extensions.istio.io
+[CustomResourceDefinition] workloadentries.networking.istio.io
+[CustomResourceDefinition] workloadgroups.networking.istio.io
+[CustomResourceDefinition] authorizationpolicies.security.istio.io
+[CustomResourceDefinition] peerauthentications.security.istio.io
+[CustomResourceDefinition] requestauthentications.security.istio.io
+[CustomResourceDefinition] telemetries.telemetry.istio.io
+[CustomResourceDefinition] wasmplugins.extensions.istio.io
+[CustomResourceDefinition] destinationrules.networking.istio.io
+[CustomResourceDefinition] envoyfilters.networking.istio.io
+[CustomResourceDefinition] gateways.networking.istio.io
+[CustomResourceDefinition] proxyconfigs.networking.istio.io
+[CustomResourceDefinition] serviceentries.networking.istio.io
+[CustomResourceDefinition] sidecars.networking.istio.io
+[CustomResourceDefinition] virtualservices.networking.istio.io
+
+release "istio-base" uninstalled

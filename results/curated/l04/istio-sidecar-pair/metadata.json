@@ -1,0 +1,89 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L04",
+  "classification": "local exploratory evidence",
+  "scenario_mode": "pair",
+  "started_at_utc": "2026-08-31T08:27:18Z",
+  "git_commit": "5a5d1fc8623a6cd4681247678b233eaa96c155ab",
+  "git_dirty": false,
+  "tool_versions": {
+    "git": "2.55.0",
+    "go": "go1.26.7",
+    "local_k6": "v2.2.0",
+    "docker": "29.7.2",
+    "k3d": "v5.9.0",
+    "k3d_default_k3s": "v1.35.5-k3s1",
+    "kubectl_client": "v1.36.1",
+    "kubernetes_server": "v1.35.5+k3s1",
+    "helm": "v4.2.3"
+  },
+  "cluster": {
+    "name": "capacity-cascade-l04",
+    "servers": 1,
+    "agents": 0,
+    "k3s_image": "rancher/k3s:v1.35.5-k3s1",
+    "api_exposure": "dynamic loopback port",
+    "disabled_packaged_components": [
+      "traefik",
+      "servicelb",
+      "local-storage"
+    ]
+  },
+  "istio": {
+    "version": "1.30.4",
+    "install": "pinned Helm istio-base then istiod; no gateway or CNI",
+    "chart_sha256": {
+      "base": "d3532767f9f2042ad1a1f7ca060c2b734762c8d1bcd57fa0244482359146a5f1",
+      "istiod": "66ad8344e2ef16745aa425dc6609570b42536ecdf1ab5ca04a90abf1bc577344"
+    },
+    "istiod_image": "registry.istio.io/release/pilot:1.30.4",
+    "istiod_image_id": "registry.istio.io/release/pilot@sha256:c236c1df5cc127fe193e5a17d8ece9cdd0dc17c5d89b4e20baf01d464f029dce",
+    "proxy_image": "registry.istio.io/release/proxyv2:1.30.4",
+    "proxy_image_id": "registry.istio.io/release/proxyv2@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9",
+    "envoy_version": "ce177c56fe75661f16b654e2f164d4ab02058222/1.38.4-dev/Clean/RELEASE/BoringSSL",
+    "injection": "namespace label istio-injection=enabled",
+    "stats_matcher": "l04/istiod-values.yaml"
+  },
+  "images": {
+    "auth_sim": {
+      "name": "capacity-cascade/auth-sim:l04-5a5d1fc8623a",
+      "id": "sha256:7452764df392dd40ca502697bbca1c613f8169094e43b489e9bc776cd32f4729",
+      "pull_policy": "Never"
+    },
+    "k6": {
+      "name": "grafana/k6:2.2.0",
+      "id": "sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+      "digest": "grafana/k6@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+      "pull_policy": "IfNotPresent with immutable digest"
+    }
+  },
+  "comparison": {
+    "replicas": 1,
+    "application_fault": {
+      "latency_ms": 250,
+      "error_rate": 0,
+      "max_in_flight": 0,
+      "seed": 17082026
+    },
+    "logical_rate": 20,
+    "duration": "4s",
+    "request_timeout": "1s",
+    "logical_id_namespace": "l04-sidecar-pair",
+    "client_retry": "none",
+    "client_max_attempts": 1,
+    "proxy_retry": "none",
+    "load_path": "non-injected k6 Job -> ClusterIP Service:8080 -> istio-proxy -> auth-sim:8080",
+    "sampling_interval": "0.5s",
+    "only_comparison_variable": "Sidecar ingress port 8080 connectionPool.http.http2MaxRequests",
+    "targets": {
+      "control": 100,
+      "constrained": 1
+    }
+  },
+  "access": {
+    "admin": "runner -> loopback Pod port-forward -> auth-sim:9090",
+    "application_metrics": "runner -> verified direct Pod port-forward -> auth-sim:8080",
+    "proxy_observation": "kubectl exec istio-proxy -> pilot-agent request",
+    "original_context_state": "unset"
+  }
+}

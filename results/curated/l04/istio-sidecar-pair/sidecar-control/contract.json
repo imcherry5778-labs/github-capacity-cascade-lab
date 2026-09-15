@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "scenario": "sidecar-control",
+  "pod_ready_2_of_2": true,
+  "automatic_injection": true,
+  "application_metrics_proxy_bypass": true,
+  "generated_max_requests": 100,
+  "expected_max_requests": 100,
+  "k6": {
+    "logical_requests": 80,
+    "physical_attempts": 80,
+    "retry_attempts": 0,
+    "logical_failure_rate": 0,
+    "status": {
+      "200": 80,
+      "503": 0,
+      "504": 0
+    }
+  },
+  "proxy": {
+    "downstream_delta": 80,
+    "downstream_5xx_delta": 0,
+    "upstream_delta": 80,
+    "active_overflow_delta": 0,
+    "pending_overflow_delta": 0,
+    "retry_delta": 0,
+    "timeout_delta": 0,
+    "inbound_route_retry_policy_count": 0,
+    "inbound_route_retry_budget_max": 0,
+    "upstream_active_peak": 5
+  },
+  "application": {
+    "token_delta": 80,
+    "admission_rejection_delta": 0,
+    "max_in_flight": "0/unlimited",
+    "in_flight_peak": 5
+  },
+  "sampling": {
+    "total": 16,
+    "during": 14
+  }
+}

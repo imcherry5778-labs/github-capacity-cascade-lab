@@ -1,0 +1,24 @@
+--- results/istio-sidecar/20260831T082718Z/sidecar-control/target-inbound-cluster-normalized.json	2026-08-31 17:28:51.366523487 +0900
++++ results/istio-sidecar/20260831T082718Z/sidecar-constrained/target-inbound-cluster-normalized.json	2026-08-31 17:29:20.647889992 +0900
+@@ -6,7 +6,7 @@
+       {
+         "max_connections": 4294967295,
+         "max_pending_requests": 4294967295,
+-        "max_requests": 100,
++        "max_requests": 1,
+         "max_retries": 4294967295
+       }
+     ]
+@@ -37,9 +37,9 @@
+       "istio": {
+         "services": [
+           {
+-            "host": "auth-sim-control.capacity-cascade-l04-control.svc.cluster.local",
+-            "name": "auth-sim-control",
+-            "namespace": "capacity-cascade-l04-control"
++            "host": "auth-sim-constrained.capacity-cascade-l04-constrained.svc.cluster.local",
++            "name": "auth-sim-constrained",
++            "namespace": "capacity-cascade-l04-constrained"
+           }
+         ]
+       }

@@ -1,0 +1,15 @@
+{
+  "runner_exit_before_cleanup": 0,
+  "scenario_resources_removed": true,
+  "istiod_removed": true,
+  "istio_base_removed": true,
+  "namespaces_removed": true,
+  "cluster_removed": true,
+  "remaining_cluster_containers": 0,
+  "remaining_cluster_networks": 0,
+  "remaining_owned_processes": 0,
+  "temporary_kubeconfig_removed": true,
+  "temporary_helm_state_removed": true,
+  "original_context_unchanged": true,
+  "original_helm_config_unchanged": true
+}

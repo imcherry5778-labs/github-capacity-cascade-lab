@@ -10,7 +10,8 @@ evidence의 누적 index다. 각 learning unit은 source run, 설정, 측정 결
 | L01 — HAProxy and Toxiproxy Fundamentals | Proxy capacity와 network fault 분리 | Local exploratory evidence available | [L01](l01/README.md) |
 | L02 — Envoy Fundamentals | Timeout, internal retry, circuit-breaker 관찰 단위 분리 | Local exploratory evidence available | [L02](l02/README.md) |
 | L03 — k3d and Helm Baseline | Kubernetes workload lifecycle, resource snapshot와 cleanup | Local exploratory evidence available | [L03](l03/README.md) |
-| L04+ | 후속 learning unit | 아직 curated evidence 없음 | — |
+| L04 — Istio Sidecar and Proxy Metrics | Application/sidecar capacity boundary와 proxy overflow | Local exploratory evidence available | [L04](l04/README.md) |
+| L05+ | 후속 learning unit | 아직 curated evidence 없음 | — |
 
 Curated evidence도 단일 local run이면 portfolio final evidence나 production benchmark가
 아니다. Raw result는 기존 timestamp directory에 append-only로 남고, curated 파일은

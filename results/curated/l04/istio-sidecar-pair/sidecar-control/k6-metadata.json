@@ -1,0 +1,53 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L04",
+  "phase": "L04",
+  "scenario": "sidecar-control",
+  "started_at_utc": "2026-08-31T08:27:18Z",
+  "git_commit": "5a5d1fc8623a6cd4681247678b233eaa96c155ab",
+  "git_dirty": false,
+  "go_version": "not-used",
+  "k6_version": "grafana/k6:2.2.0",
+  "os": "linux-container",
+  "architecture": "amd64",
+  "tool_versions": {
+    "go": "not-used",
+    "k6": "grafana/k6:2.2.0",
+    "docker": "not-used",
+    "docker_compose": "not-used",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "not-used",
+    "envoy_server": "not-used"
+  },
+  "image_tags": {
+    "auth_sim": "capacity-cascade/auth-sim:l04-5a5d1fc8623a",
+    "k6": "grafana/k6:2.2.0",
+    "istio_proxy": "registry.istio.io/release/proxyv2:1.30.4"
+  },
+  "base_url": "http://auth-sim-control.capacity-cascade-l04-control.svc.cluster.local:8080",
+  "request_path": "non-injected k6 Job -> ClusterIP Service :8080 -> target Pod istio-proxy -> auth-sim",
+  "logical_id_namespace": "l04-sidecar-pair",
+  "logical_rate": 20,
+  "duration": "4s",
+  "request_timeout": "1s",
+  "fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "application_fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": {
+    "mechanism": "Sidecar ingress connectionPool http2MaxRequests",
+    "target": 100
+  },
+  "network_toxic": null,
+  "envoy_proxy": null,
+  "retry_policy": "none",
+  "max_attempts": 1
+}

@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: l04-k6-control
+  namespace: capacity-cascade-l04-load
+  labels:
+    capacity-cascade-lab/owner: l04
+    capacity-cascade-lab/scenario: sidecar-control
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 120
+  template:
+    metadata:
+      labels:
+        capacity-cascade-lab/owner: l04
+        capacity-cascade-lab/scenario: sidecar-control
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 12345
+      containers:
+        - name: k6
+          image: grafana/k6@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set +e
+              k6 version > /results/k6-version.txt
+              k6 run /scripts/l04.js
+              code=$?
+              printf '%s\n' "${code}" > /results/k6.exit
+              : > /results/k6.done
+              while [ ! -f /results/collected ]; do sleep 1; done
+              exit "${code}"
+          env:
+            - {name: BASE_URL, value: "http://auth-sim-control.capacity-cascade-l04-control.svc.cluster.local:8080"}
+            - {name: RESULT_DIR, value: "/results"}
+            - {name: STARTED_AT_UTC, value: "2026-08-31T08:27:18Z"}
+            - {name: GIT_COMMIT, value: "5a5d1fc8623a6cd4681247678b233eaa96c155ab"}
+            - {name: GIT_DIRTY, value: "false"}
+            - {name: GO_VERSION, value: "not-used"}
+            - {name: K6_VERSION, value: "grafana/k6:2.2.0"}
+            - {name: DOCKER_VERSION, value: "not-used"}
+            - {name: LAB_OS, value: "linux-container"}
+            - {name: LAB_ARCH, value: "amd64"}
+            - {name: L04_SCENARIO, value: "sidecar-control"}
+            - {name: LOGICAL_RATE, value: "20"}
+            - {name: DURATION, value: "4s"}
+            - {name: REQUEST_TIMEOUT, value: "1s"}
+            - {name: APPLICATION_LATENCY_MS, value: "250"}
+            - {name: FAULT_SEED, value: "17082026"}
+            - {name: LOGICAL_ID_NAMESPACE, value: "l04-sidecar-pair"}
+            - {name: SIDECAR_ACTIVE_REQUEST_TARGET, value: "100"}
+            - {name: REQUEST_PATH, value: "non-injected k6 Job -> ClusterIP Service :8080 -> target Pod istio-proxy -> auth-sim"}
+            - {name: AUTH_SIM_IMAGE, value: "capacity-cascade/auth-sim:l04-5a5d1fc8623a"}
+            - {name: K6_IMAGE, value: "grafana/k6:2.2.0"}
+            - {name: ISTIO_PROXY_IMAGE, value: "registry.istio.io/release/proxyv2:1.30.4"}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 12345
+            runAsGroup: 12345
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - {name: scripts, mountPath: /scripts/l04.js, subPath: l04.js, readOnly: true}
+            - {name: scripts, mountPath: /scripts/lib/config.js, subPath: config.js, readOnly: true}
+            - {name: scripts, mountPath: /scripts/lib/retry.js, subPath: retry.js, readOnly: true}
+            - {name: scripts, mountPath: /scripts/lib/summary.js, subPath: summary.js, readOnly: true}
+            - {name: results, mountPath: /results}
+      volumes:
+        - name: scripts
+          configMap:
+            name: l04-k6-control
+        - name: results
+          emptyDir: {}

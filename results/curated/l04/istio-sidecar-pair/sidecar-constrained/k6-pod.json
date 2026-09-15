@@ -1,0 +1,320 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "creationTimestamp": "2026-08-31T08:29:21Z",
+        "finalizers": [
+            "batch.kubernetes.io/job-tracking"
+        ],
+        "generateName": "l04-k6-constrained-",
+        "generation": 1,
+        "labels": {
+            "batch.kubernetes.io/controller-uid": "db88c424-ca3d-43d7-94b8-a56e60ea8ed5",
+            "batch.kubernetes.io/job-name": "l04-k6-constrained",
+            "capacity-cascade-lab/owner": "l04",
+            "capacity-cascade-lab/scenario": "sidecar-constrained",
+            "controller-uid": "db88c424-ca3d-43d7-94b8-a56e60ea8ed5",
+            "job-name": "l04-k6-constrained",
+            "sidecar.istio.io/inject": "false"
+        },
+        "name": "l04-k6-constrained-768gp",
+        "namespace": "capacity-cascade-l04-load",
+        "ownerReferences": [
+            {
+                "apiVersion": "batch/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "Job",
+                "name": "l04-k6-constrained",
+                "uid": "db88c424-ca3d-43d7-94b8-a56e60ea8ed5"
+            }
+        ],
+        "resourceVersion": "907",
+        "uid": "f113a471-2e05-4dc6-a690-6904e2f160fe"
+    },
+    "spec": {
+        "automountServiceAccountToken": false,
+        "containers": [
+            {
+                "args": [
+                    "set +e\nk6 version \u003e /results/k6-version.txt\nk6 run /scripts/l04.js\ncode=$?\nprintf '%s\\n' \"${code}\" \u003e /results/k6.exit\n: \u003e /results/k6.done\nwhile [ ! -f /results/collected ]; do sleep 1; done\nexit \"${code}\"\n"
+                ],
+                "command": [
+                    "/bin/sh",
+                    "-c"
+                ],
+                "env": [
+                    {
+                        "name": "BASE_URL",
+                        "value": "http://auth-sim-constrained.capacity-cascade-l04-constrained.svc.cluster.local:8080"
+                    },
+                    {
+                        "name": "RESULT_DIR",
+                        "value": "/results"
+                    },
+                    {
+                        "name": "STARTED_AT_UTC",
+                        "value": "2026-08-31T08:27:18Z"
+                    },
+                    {
+                        "name": "GIT_COMMIT",
+                        "value": "5a5d1fc8623a6cd4681247678b233eaa96c155ab"
+                    },
+                    {
+                        "name": "GIT_DIRTY",
+                        "value": "false"
+                    },
+                    {
+                        "name": "GO_VERSION",
+                        "value": "not-used"
+                    },
+                    {
+                        "name": "K6_VERSION",
+                        "value": "grafana/k6:2.2.0"
+                    },
+                    {
+                        "name": "DOCKER_VERSION",
+                        "value": "not-used"
+                    },
+                    {
+                        "name": "LAB_OS",
+                        "value": "linux-container"
+                    },
+                    {
+                        "name": "LAB_ARCH",
+                        "value": "amd64"
+                    },
+                    {
+                        "name": "L04_SCENARIO",
+                        "value": "sidecar-constrained"
+                    },
+                    {
+                        "name": "LOGICAL_RATE",
+                        "value": "20"
+                    },
+                    {
+                        "name": "DURATION",
+                        "value": "4s"
+                    },
+                    {
+                        "name": "REQUEST_TIMEOUT",
+                        "value": "1s"
+                    },
+                    {
+                        "name": "APPLICATION_LATENCY_MS",
+                        "value": "250"
+                    },
+                    {
+                        "name": "FAULT_SEED",
+                        "value": "17082026"
+                    },
+                    {
+                        "name": "LOGICAL_ID_NAMESPACE",
+                        "value": "l04-sidecar-pair"
+                    },
+                    {
+                        "name": "SIDECAR_ACTIVE_REQUEST_TARGET",
+                        "value": "1"
+                    },
+                    {
+                        "name": "REQUEST_PATH",
+                        "value": "non-injected k6 Job -\u003e ClusterIP Service :8080 -\u003e target Pod istio-proxy -\u003e auth-sim"
+                    },
+                    {
+                        "name": "AUTH_SIM_IMAGE",
+                        "value": "capacity-cascade/auth-sim:l04-5a5d1fc8623a"
+                    },
+                    {
+                        "name": "K6_IMAGE",
+                        "value": "grafana/k6:2.2.0"
+                    },
+                    {
+                        "name": "ISTIO_PROXY_IMAGE",
+                        "value": "registry.istio.io/release/proxyv2:1.30.4"
+                    }
+                ],
+                "image": "grafana/k6@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "k6",
+                "resources": {},
+                "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "runAsGroup": 12345,
+                    "runAsNonRoot": true,
+                    "runAsUser": 12345
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/scripts/l04.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "subPath": "l04.js"
+                    },
+                    {
+                        "mountPath": "/scripts/lib/config.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "subPath": "config.js"
+                    },
+                    {
+                        "mountPath": "/scripts/lib/retry.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "subPath": "retry.js"
+                    },
+                    {
+                        "mountPath": "/scripts/lib/summary.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "subPath": "summary.js"
+                    },
+                    {
+                        "mountPath": "/results",
+                        "name": "results"
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "k3d-capacity-cascade-l04-server-0",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+            "fsGroup": 12345
+        },
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "name": "l04-k6-constrained"
+                },
+                "name": "scripts"
+            },
+            {
+                "emptyDir": {},
+                "name": "results"
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-08-31T08:29:21Z",
+                "observedGeneration": 1,
+                "status": "False",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-08-31T08:29:21Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-08-31T08:29:21Z",
+                "message": "containers with unready status: [k6]",
+                "observedGeneration": 1,
+                "reason": "ContainersNotReady",
+                "status": "False",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-08-31T08:29:21Z",
+                "message": "containers with unready status: [k6]",
+                "observedGeneration": 1,
+                "reason": "ContainersNotReady",
+                "status": "False",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-08-31T08:29:21Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "image": "grafana/k6@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+                "imageID": "",
+                "lastState": {},
+                "name": "k6",
+                "ready": false,
+                "restartCount": 0,
+                "started": false,
+                "state": {
+                    "waiting": {
+                        "reason": "ContainerCreating"
+                    }
+                },
+                "volumeMounts": [
+                    {
+                        "mountPath": "/scripts/l04.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    },
+                    {
+                        "mountPath": "/scripts/lib/config.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    },
+                    {
+                        "mountPath": "/scripts/lib/retry.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    },
+                    {
+                        "mountPath": "/scripts/lib/summary.js",
+                        "name": "scripts",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    },
+                    {
+                        "mountPath": "/results",
+                        "name": "results"
+                    }
+                ]
+            }
+        ],
+        "hostIP": "172.19.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.19.0.2"
+            }
+        ],
+        "observedGeneration": 1,
+        "phase": "Pending",
+        "qosClass": "BestEffort",
+        "startTime": "2026-08-31T08:29:21Z"
+    }
+}

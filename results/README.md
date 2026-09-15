@@ -57,6 +57,23 @@ L03 evidence에는 kubeconfig 본문, Secret data, admin token, 전체 environme
 이름을 저장하지 않는다. Resource usage는 단일 local snapshot이며 performance benchmark나
 production sizing 근거가 아니다.
 
+L04는 `results/istio-sidecar/<UTC timestamp>/` 아래 하나의 paired parent와
+`sidecar-control`/`sidecar-constrained` scenario directory를 만든다. Root에는 Istio/chart/image
+identity, cluster/control-plane state, normalized target config diff, pair/root contract와 cleanup을
+남긴다. 각 scenario에는 다음을 추가한다.
+
+- injected Pod/Deployment/Service/EndpointSlice와 Sidecar/EnvoyFilter resource, target inbound
+  cluster/route와 actual proxy stat inventory/mapping
+- proxy/application before/after snapshot, UTC JSONL samples와 bounded container usage snapshot
+- non-injected k6 Job/ConfigMap identity, k6 summary/metadata, datapath probe와 application metric
+  observation-path proof
+- scenario `contract.json`과 Helm/namespace lifecycle evidence
+
+Full proxy config dump, raw command log와 failed run은 raw notebook에 남긴다. Curated copy에는
+target config, actual selected metric name, contract와 summary처럼 판정에 필요한 원문만
+byte-for-byte 복사한다. L04 EnvoyFilter는 no-retry contract를 위한 selected-version fallback이며
+GitHub production route/config evidence가 아니다.
+
 Scenario 도중 실패한 파일도 raw directory에 보존한다. Curated copy에는 해석에 필요한
 파일만 포함하며 전체 noisy log를 자동으로 복사하지 않는다. Admin token, 전체 environment,
 credential, 개인 절대 경로는 raw와 curated evidence 어디에도 저장하지 않는다. 측정값은

@@ -1,0 +1,38 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: auth-sim-inbound-retry-disabled
+  namespace: capacity-cascade-l04-control
+spec:
+  workloadSelector:
+    labels:
+      app.kubernetes.io/name: auth-sim
+      app.kubernetes.io/instance: auth-sim-control
+  configPatches:
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: SIDECAR_INBOUND
+        routeConfiguration:
+          name: inbound|8080||
+          vhost:
+            name: inbound|http|8080
+      patch:
+        # Istio 1.30.4 HTTP_ROUTE does not implement REPLACE. Replacing this exact
+        # inbound virtual host preserves its one route without retry_policy.
+        operation: REPLACE
+        value:
+          name: inbound|http|8080
+          domains:
+            - "*"
+          routes:
+            - name: default
+              match:
+                prefix: /
+              route:
+                cluster: inbound|8080||
+                timeout: 0s
+                max_stream_duration:
+                  max_stream_duration: 0s
+                  grpc_timeout_header_max: 0s
+              decorator:
+                operation: auth-sim-inbound-capacity.capacity-cascade-l04-control:8080/*

@@ -1,0 +1,12 @@
+# L04는 application/sidecar capacity 경계만 관찰하므로 istiod 자체 HPA를 사용하지 않는다.
+pilot:
+  autoscaleEnabled: false
+  replicaCount: 1
+
+meshConfig:
+  defaultConfig:
+    # Istio 기본 subset에 없을 수 있는 bounded request-pressure stats만 추가한다.
+    proxyStatsMatcher:
+      inclusionRegexps:
+        - ".*downstream_rq_(total|active|5xx)$"
+        - ".*upstream_rq_(total|active|pending_active|active_overflow|pending_overflow|retry|timeout)$"

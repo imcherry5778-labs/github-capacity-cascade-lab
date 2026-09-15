@@ -250,8 +250,66 @@ kubeconfig만 정리하고 raw evidence는 보존한다.
 Port-forward는 Service selector와 Pod backend가 연결됐음을 local에서 확인하는 방법이다.
 Ingress, external load balancer, production network path, TLS/mTLS를 검증하지 않는다.
 
-## Planned architecture only
+## L04 Istio sidecar data path
 
-후속 L04+에서 Istio sidecar metrics, HPA, Chaos Mesh와 AKS를 순차 검토한다. 현재
-architecture에는 이 구성요소가 없으며 구체 topology, resource, YAML, threshold와 cloud
-SKU는 아직 결정하지 않았다.
+```mermaid
+flowchart LR
+    B[local auth-sim image build] --> I[k3d image import]
+    H[Helm istio-base] --> D[Helm istiod]
+    D --> W[namespace injection webhook]
+    W --> P[auth-sim Pod: auth-sim + istio-proxy]
+    K[non-injected pinned k6 Job] --> S[ClusterIP Service FQDN :8080]
+    S --> X[istio-proxy inbound listener and cluster]
+    X --> A[auth-sim public :8080]
+    R[L04 runner] -->|loopback-only port-forward| C[auth-sim admin :9090]
+    R -->|kubectl exec, read only| X
+    A --> AM[application metrics]
+    X --> PM[actual proxy stats and config]
+```
+
+이는 `LAB_IMPLEMENTATION`이다. L04는 L03의 server 1/agent 0 K3s baseline과 imported auth-sim
+image를 재사용한다. Istio 1.30.4 chart를 pinned `istio-base` → `istiod` 순서로 설치하며,
+istiod autoscaling을 끄고 replica 1을 쓴다. Istio Gateway, Gateway API, Ambient, ztunnel,
+Istio CNI, HPA/KEDA, Prometheus/Grafana와 tracing은 설치하지 않는다.
+
+Workload namespace의 `istio-injection=enabled` label이 automatic injection을 요청한다.
+Deployment template에는 수동 `istio-proxy` container가 없고, actual PodSpec/status에서
+`auth-sim`과 native-sidecar form의 `istio-proxy`가 Ready 2/2인지 확인한다. Proxy image ID와
+actual Envoy build는 evidence에 기록한다. Admin credential은 기존 ephemeral Secret으로만
+전달하고 public Service에 9090을 추가하지 않는다.
+
+## L04 capacity, retry and observation boundary
+
+Control과 constrained는 같은 source/image/K3s/Istio version, replica 1, application latency
+250 ms, error rate 0, `max_in_flight=0`/unlimited, logical rate 20 ops/s, duration 4 s,
+request timeout 1 s, seed/logical-ID namespace, client retry none/max attempts 1, proxy retry
+none, data path와 0.5 s sampling interval을 공유한다. 별도 namespace/release는 fresh Pod와
+fresh sidecar counters를 보장한다. 의도한 비교 변수는 target public port 8080의
+`networking.istio.io/v1` Sidecar `ingress.connectionPool.http.http2MaxRequests` local target
+`100` 또는 `1`뿐이다.
+
+`ProxyConfig.concurrency`는 Envoy worker thread setting이므로 L04 active-request capacity로
+사용하지 않는다. Selected 1.30.4 generated inbound route에 default retry policy가 있음을
+actual config에서 발견했기 때문에, no-retry contract에는 workload selector와
+`SIDECAR_INBOUND`/`inbound|http|8080`로 범위를 고정한 `EnvoyFilter` virtual-host replacement를
+사용한다. Patch 전후 route와 fresh Pod를 저장하고 retry policy count/budget 및 actual
+`upstream_rq_retry` delta가 모두 0일 때만 통과한다. 이 fallback은 selected Istio/Envoy build에
+종속되며 future upgrade review point다.
+
+Workload traffic은 injection이 비활성화된 load namespace의 pinned k6 Job이
+`auth-sim.<scenario-namespace>.svc.cluster.local:8080`으로 보낸다. 이 경로의 target proxy
+downstream counter delta가 양수여야 sidecar traversal을 인정한다. Runner의 metrics
+port-forward는 direct application observation path이며, 그 request가 proxy counter를 늘리지
+않음을 별도로 보존한다. 이는 port-forward를 workload data path로 사용하지 않았다는 증명이다.
+
+Application metric은 `capacity_cascade_http_in_flight`, `/token` counter,
+`capacity_cascade_admission_rejections_total`이고, proxy metric은 selected binary가 actual
+stats에서 내보낸 inbound downstream request/active/5xx와 `cluster.inbound|8080||` upstream
+request/active/pending/overflow/retry/timeout이다. Stat spelling은 hard-code authority가 아니며
+run의 inventory와 mapping이 authoritative하다. Container CPU/memory는 Metrics API의 단일
+snapshot만 보조로 남기며 capacity authority, benchmark 또는 sizing으로 해석하지 않는다.
+
+## Future architecture only
+
+L05에서 HPA observed metric과 sidecar capacity mismatch를 다룬다. L04에는 HPA object나 scaling
+decision이 없으며 L06+의 retry/cascade, Chaos Mesh와 AKS topology도 포함하지 않는다.

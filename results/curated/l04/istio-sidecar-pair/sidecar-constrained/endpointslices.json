@@ -1,0 +1,71 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "addressType": "IPv4",
+            "apiVersion": "discovery.k8s.io/v1",
+            "endpoints": [
+                {
+                    "addresses": [
+                        "10.42.0.9"
+                    ],
+                    "conditions": {
+                        "ready": true,
+                        "serving": true,
+                        "terminating": false
+                    },
+                    "nodeName": "k3d-capacity-cascade-l04-server-0",
+                    "targetRef": {
+                        "kind": "Pod",
+                        "name": "auth-sim-constrained-69f65cd499-d62nx",
+                        "namespace": "capacity-cascade-l04-constrained",
+                        "uid": "afe9b48a-c475-4c84-a755-b4c7493d43e5"
+                    }
+                }
+            ],
+            "kind": "EndpointSlice",
+            "metadata": {
+                "annotations": {
+                    "endpoints.kubernetes.io/last-change-trigger-time": "2026-08-31T08:29:08Z"
+                },
+                "creationTimestamp": "2026-08-31T08:29:03Z",
+                "generateName": "auth-sim-constrained-",
+                "generation": 3,
+                "labels": {
+                    "app.kubernetes.io/instance": "auth-sim-constrained",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "auth-sim",
+                    "app.kubernetes.io/version": "l03",
+                    "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+                    "helm.sh/chart": "auth-sim-0.1.0",
+                    "kubernetes.io/service-name": "auth-sim-constrained"
+                },
+                "name": "auth-sim-constrained-c6zq6",
+                "namespace": "capacity-cascade-l04-constrained",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "Service",
+                        "name": "auth-sim-constrained",
+                        "uid": "1eeaa268-89fa-4791-9aca-3bfa0eee45ae"
+                    }
+                ],
+                "resourceVersion": "826",
+                "uid": "12663d32-a1f6-4f0f-a149-bb7072b4e891"
+            },
+            "ports": [
+                {
+                    "name": "public",
+                    "port": 8080,
+                    "protocol": "TCP"
+                }
+            ]
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

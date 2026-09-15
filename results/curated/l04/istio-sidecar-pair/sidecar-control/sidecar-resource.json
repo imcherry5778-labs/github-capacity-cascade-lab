@@ -1,0 +1,38 @@
+{
+    "apiVersion": "networking.istio.io/v1",
+    "kind": "Sidecar",
+    "metadata": {
+        "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"networking.istio.io/v1\",\"kind\":\"Sidecar\",\"metadata\":{\"annotations\":{},\"name\":\"auth-sim-inbound-capacity\",\"namespace\":\"capacity-cascade-l04-control\"},\"spec\":{\"ingress\":[{\"connectionPool\":{\"http\":{\"http2MaxRequests\":100}},\"defaultEndpoint\":\"127.0.0.1:8080\",\"port\":{\"name\":\"public\",\"number\":8080,\"protocol\":\"HTTP\"}}],\"workloadSelector\":{\"labels\":{\"app.kubernetes.io/instance\":\"auth-sim-control\",\"app.kubernetes.io/name\":\"auth-sim\"}}}}\n"
+        },
+        "creationTimestamp": "2026-08-31T08:28:14Z",
+        "generation": 1,
+        "name": "auth-sim-inbound-capacity",
+        "namespace": "capacity-cascade-l04-control",
+        "resourceVersion": "596",
+        "uid": "d0b68aee-97d2-45db-aa4e-1425f2a6e800"
+    },
+    "spec": {
+        "ingress": [
+            {
+                "connectionPool": {
+                    "http": {
+                        "http2MaxRequests": 100
+                    }
+                },
+                "defaultEndpoint": "127.0.0.1:8080",
+                "port": {
+                    "name": "public",
+                    "number": 8080,
+                    "protocol": "HTTP"
+                }
+            }
+        ],
+        "workloadSelector": {
+            "labels": {
+                "app.kubernetes.io/instance": "auth-sim-control",
+                "app.kubernetes.io/name": "auth-sim"
+            }
+        }
+    }
+}

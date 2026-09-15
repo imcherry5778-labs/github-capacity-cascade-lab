@@ -1,0 +1,65 @@
+{
+    "apiVersion": "networking.istio.io/v1alpha3",
+    "kind": "EnvoyFilter",
+    "metadata": {
+        "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"networking.istio.io/v1alpha3\",\"kind\":\"EnvoyFilter\",\"metadata\":{\"annotations\":{},\"name\":\"auth-sim-inbound-retry-disabled\",\"namespace\":\"capacity-cascade-l04-constrained\"},\"spec\":{\"configPatches\":[{\"applyTo\":\"VIRTUAL_HOST\",\"match\":{\"context\":\"SIDECAR_INBOUND\",\"routeConfiguration\":{\"name\":\"inbound|8080||\",\"vhost\":{\"name\":\"inbound|http|8080\"}}},\"patch\":{\"operation\":\"REPLACE\",\"value\":{\"domains\":[\"*\"],\"name\":\"inbound|http|8080\",\"routes\":[{\"decorator\":{\"operation\":\"auth-sim-inbound-capacity.capacity-cascade-l04-constrained:8080/*\"},\"match\":{\"prefix\":\"/\"},\"name\":\"default\",\"route\":{\"cluster\":\"inbound|8080||\",\"max_stream_duration\":{\"grpc_timeout_header_max\":\"0s\",\"max_stream_duration\":\"0s\"},\"timeout\":\"0s\"}}]}}}],\"workloadSelector\":{\"labels\":{\"app.kubernetes.io/instance\":\"auth-sim-constrained\",\"app.kubernetes.io/name\":\"auth-sim\"}}}}\n"
+        },
+        "creationTimestamp": "2026-08-31T08:29:10Z",
+        "generation": 1,
+        "name": "auth-sim-inbound-retry-disabled",
+        "namespace": "capacity-cascade-l04-constrained",
+        "resourceVersion": "831",
+        "uid": "54c79f1c-6e7b-4e3e-9159-a7961dba580e"
+    },
+    "spec": {
+        "configPatches": [
+            {
+                "applyTo": "VIRTUAL_HOST",
+                "match": {
+                    "context": "SIDECAR_INBOUND",
+                    "routeConfiguration": {
+                        "name": "inbound|8080||",
+                        "vhost": {
+                            "name": "inbound|http|8080"
+                        }
+                    }
+                },
+                "patch": {
+                    "operation": "REPLACE",
+                    "value": {
+                        "domains": [
+                            "*"
+                        ],
+                        "name": "inbound|http|8080",
+                        "routes": [
+                            {
+                                "decorator": {
+                                    "operation": "auth-sim-inbound-capacity.capacity-cascade-l04-constrained:8080/*"
+                                },
+                                "match": {
+                                    "prefix": "/"
+                                },
+                                "name": "default",
+                                "route": {
+                                    "cluster": "inbound|8080||",
+                                    "max_stream_duration": {
+                                        "grpc_timeout_header_max": "0s",
+                                        "max_stream_duration": "0s"
+                                    },
+                                    "timeout": "0s"
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        ],
+        "workloadSelector": {
+            "labels": {
+                "app.kubernetes.io/instance": "auth-sim-constrained",
+                "app.kubernetes.io/name": "auth-sim"
+            }
+        }
+    }
+}
