@@ -256,7 +256,7 @@ l04-clean: ## exact L04 cluster/process만 정리하고 evidence는 보존합니
 
 l05-doctor: ## L05 HPA lifecycle, custom metrics API와 evidence 도구를 확인합니다.
 	@missing=0; \
-	for tool in git go k6 docker kubectl k3d helm curl awk sed grep jq ruby tee wc tr mktemp sha256sum diff cmp sort find ps make; do \
+	for tool in git go k6 docker kubectl k3d helm curl awk sed grep rg jq ruby tee wc tr mktemp sha256sum diff cmp sort find ps make; do \
 		if ! command -v "$$tool" >/dev/null 2>&1; then printf '%-16s MISSING\n' "$$tool"; missing=1; else printf '%-16s OK\n' "$$tool"; fi; \
 	done; \
 	if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi; \
@@ -283,6 +283,16 @@ l05-check: l05-doctor ## L05 HPA/custom-metrics manifests, chart, k6와 runner�
 	sed -E '/namespace:/d; /app.kubernetes.io\/instance:/d; s/capacity-cascade-l05-(blind|aware)/capacity-cascade-l05-SCENARIO/g; s/auth-sim-(blind|aware)/auth-sim-SCENARIO/g' l05/sidecar-aware.yaml >"$$tmp/sidecar-aware.yaml"; \
 	cmp -s "$$tmp/sidecar-blind.yaml" "$$tmp/sidecar-aware.yaml"; \
 	ruby -e 'require "yaml"; ARGV.each { |f| d=YAML.safe_load_file(f, aliases: true); abort("invalid HPA: #{f}") unless d["apiVersion"]=="autoscaling/v2" && d["kind"]=="HorizontalPodAutoscaler" && d.dig("spec","minReplicas")==1 && d.dig("spec","maxReplicas")==4 }' l05/hpa-blind.yaml l05/hpa-aware.yaml; \
+	for repetition in results/curated/l05/repetition-1 results/curated/l05/repetition-2 results/curated/l05/repetition-3; do \
+		test -f "$$repetition/metadata.json"; test -f "$$repetition/contract.json"; test -f "$$repetition/cleanup.json"; \
+		jq -e '.git_dirty == false' "$$repetition/metadata.json" >/dev/null; \
+		jq -e '.passed == true and .blind.passed == true and .capacity_aware.passed == true' "$$repetition/contract.json" >/dev/null; \
+		jq -e '.runner_exit_code == 0 and .cluster_removed == true and .remaining_owned_containers == 0 and .remaining_owned_networks == 0 and .remaining_owned_port_forwards == 0 and .temporary_kubeconfig_removed == true and .temporary_helm_state_removed == true and .original_context_unchanged == true and .original_helm_repository_config_unchanged == true' "$$repetition/cleanup.json" >/dev/null; \
+		for scenario in hpa-blind hpa-aware; do test -f "$$repetition/$$scenario/samples.jsonl"; jq -e '.passed == true' "$$repetition/$$scenario/contract.json" >/dev/null; done; \
+	done; \
+	if rg -n -i '/home/|authorization:[[:space:]]*bearer|bearer[[:space:]]+l05-' results/curated/l05; then printf 'private path or credential-like content found in curated L05 evidence\n' >&2; exit 1; fi; \
+	awk '/^## L05 / { in_l05=1; next } /^## L06 / { in_l05=0 } in_l05 && /Complete — implementation verified/ { found=1 } END { exit(found ? 0 : 1) }' docs/roadmap.md; \
+	grep -q 'L06 — Full Capacity Cascade.*Planned — next' README.md; \
 	k6 inspect load/k6/l05.js >/dev/null; \
 	bash -n scripts/run-l05-hpa.sh
 

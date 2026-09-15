@@ -1,0 +1,50 @@
+{
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+        "annotations": {
+            "meta.helm.sh/release-name": "auth-sim-blind",
+            "meta.helm.sh/release-namespace": "capacity-cascade-l05-blind"
+        },
+        "creationTimestamp": "2026-09-15T15:44:21Z",
+        "labels": {
+            "app.kubernetes.io/instance": "auth-sim-blind",
+            "app.kubernetes.io/managed-by": "Helm",
+            "app.kubernetes.io/name": "auth-sim",
+            "app.kubernetes.io/version": "l03",
+            "helm.sh/chart": "auth-sim-0.1.0"
+        },
+        "name": "auth-sim-blind",
+        "namespace": "capacity-cascade-l05-blind",
+        "resourceVersion": "604",
+        "uid": "3de97332-5a55-4cd7-bdf4-13fcf7762140"
+    },
+    "spec": {
+        "clusterIP": "10.43.163.223",
+        "clusterIPs": [
+            "10.43.163.223"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+            "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+            {
+                "name": "public",
+                "port": 8080,
+                "protocol": "TCP",
+                "targetPort": "public"
+            }
+        ],
+        "selector": {
+            "app.kubernetes.io/instance": "auth-sim-blind",
+            "app.kubernetes.io/name": "auth-sim"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+    },
+    "status": {
+        "loadBalancer": {}
+    }
+}

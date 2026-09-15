@@ -1,0 +1,6 @@
+{
+  "cluster": "inbound|8080||",
+  "generated_max_requests": 1,
+  "inbound_route_retry_policy_count": 0,
+  "inbound_route_retry_budget_max": 0
+}

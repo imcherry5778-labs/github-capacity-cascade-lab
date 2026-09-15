@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "scenario": "hpa-aware",
+  "k6": {
+    "logical_requests": 451,
+    "physical_attempts": 451,
+    "retry_attempts": 0,
+    "logical_failure_rate": 0.35476718403547675,
+    "logical_p95_ms": 1002,
+    "status": {
+      "200": 291,
+      "503": 160,
+      "504": 0
+    }
+  },
+  "hpa": {
+    "desired_replicas_max": 2,
+    "current_replicas_max": 2,
+    "custom_metric_seen": true
+  },
+  "proxy": {
+    "active_overflow_delta": 160,
+    "downstream_delta": 451,
+    "upstream_delta": 291
+  },
+  "application": {
+    "token_delta": 291,
+    "admission_rejection_delta": 0
+  },
+  "sampling": {
+    "total": 120
+  }
+}

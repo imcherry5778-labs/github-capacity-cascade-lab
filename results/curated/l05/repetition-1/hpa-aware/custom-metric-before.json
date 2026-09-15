@@ -1,0 +1,1 @@
+{"apiVersion":"custom.metrics.k8s.io/v1beta2","items":[{"describedObject":{"apiVersion":"v1","kind":"Pod","name":"auth-sim-aware-7f645477d7-dxdpk","namespace":"capacity-cascade-l05-aware"},"metric":{"name":"sidecar_active_requests"},"timestamp":"2026-09-15T15:39:50.642698461Z","value":"0m"}],"kind":"MetricValueList","metadata":{}}

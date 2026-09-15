@@ -1,0 +1,73 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"capacity-cascade-lab/owner":"l05","capacity-cascade-lab/policy":"capacity-aware"},"name":"auth-sim-scaling","namespace":"capacity-cascade-l05-aware"},"spec":{"behavior":{"scaleDown":{"policies":[{"periodSeconds":60,"type":"Pods","value":1}],"selectPolicy":"Max","stabilizationWindowSeconds":300},"scaleUp":{"policies":[{"periodSeconds":15,"type":"Pods","value":4}],"selectPolicy":"Max","stabilizationWindowSeconds":0}},"maxReplicas":4,"metrics":[{"pods":{"metric":{"name":"sidecar_active_requests"},"target":{"averageValue":"500m","type":"AverageValue"}},"type":"Pods"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"auth-sim-aware"}}}
+  creationTimestamp: "2026-09-15T15:47:48Z"
+  labels:
+    capacity-cascade-lab/owner: l05
+    capacity-cascade-lab/policy: capacity-aware
+  name: auth-sim-scaling
+  namespace: capacity-cascade-l05-aware
+  resourceVersion: "1325"
+  uid: d918d14e-70a7-4e44-a66a-c64948790f6b
+spec:
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 1
+      selectPolicy: Max
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      policies:
+      - periodSeconds: 15
+        type: Pods
+        value: 4
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+  maxReplicas: 4
+  metrics:
+  - pods:
+      metric:
+        name: sidecar_active_requests
+      target:
+        averageValue: 500m
+        type: AverageValue
+    type: Pods
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: auth-sim-aware
+status:
+  conditions:
+  - lastTransitionTime: "2026-09-15T15:48:03Z"
+    message: recent recommendations were higher than current one, applying the highest
+      recent recommendation
+    reason: ScaleDownStabilized
+    status: "True"
+    type: AbleToScale
+  - lastTransitionTime: "2026-09-15T15:48:03Z"
+    message: the HPA was able to successfully calculate a replica count from pods
+      metric sidecar_active_requests
+    reason: ValidMetricFound
+    status: "True"
+    type: ScalingActive
+  - lastTransitionTime: "2026-09-15T15:48:03Z"
+    message: the desired count is within the acceptable range
+    reason: DesiredWithinRange
+    status: "False"
+    type: ScalingLimited
+  currentMetrics:
+  - pods:
+      current:
+        averageValue: "0"
+      metric:
+        name: sidecar_active_requests
+    type: Pods
+  currentReplicas: 2
+  desiredReplicas: 2
+  lastScaleTime: "2026-09-15T15:48:03Z"

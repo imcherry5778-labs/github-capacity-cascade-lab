@@ -1,0 +1,2427 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "annotations": {
+                    "deployment.kubernetes.io/revision": "2",
+                    "meta.helm.sh/release-name": "auth-sim-aware",
+                    "meta.helm.sh/release-namespace": "capacity-cascade-l05-aware"
+                },
+                "creationTimestamp": "2026-09-15T15:55:27Z",
+                "generation": 3,
+                "labels": {
+                    "app.kubernetes.io/instance": "auth-sim-aware",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "auth-sim",
+                    "app.kubernetes.io/version": "l03",
+                    "helm.sh/chart": "auth-sim-0.1.0"
+                },
+                "name": "auth-sim-aware",
+                "namespace": "capacity-cascade-l05-aware",
+                "resourceVersion": "1196",
+                "uid": "b26f5d0f-ac8f-4795-bb98-0d5bea1664c7"
+            },
+            "spec": {
+                "progressDeadlineSeconds": 600,
+                "replicas": 2,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "app.kubernetes.io/instance": "auth-sim-aware",
+                        "app.kubernetes.io/name": "auth-sim"
+                    }
+                },
+                "strategy": {
+                    "rollingUpdate": {
+                        "maxSurge": "25%",
+                        "maxUnavailable": "25%"
+                    },
+                    "type": "RollingUpdate"
+                },
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "kubectl.kubernetes.io/restartedAt": "2026-09-16T00:55:35+09:00"
+                        },
+                        "labels": {
+                            "app.kubernetes.io/instance": "auth-sim-aware",
+                            "app.kubernetes.io/name": "auth-sim"
+                        }
+                    },
+                    "spec": {
+                        "automountServiceAccountToken": false,
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "LAB_PUBLIC_ADDR",
+                                        "value": "0.0.0.0:8080"
+                                    },
+                                    {
+                                        "name": "LAB_ADMIN_ADDR",
+                                        "value": "0.0.0.0:9090"
+                                    },
+                                    {
+                                        "name": "LAB_ADMIN_TOKEN",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "token",
+                                                "name": "auth-sim-admin"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                                "imagePullPolicy": "Never",
+                                "livenessProbe": {
+                                    "failureThreshold": 3,
+                                    "httpGet": {
+                                        "path": "/healthz",
+                                        "port": "public",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 2,
+                                    "periodSeconds": 5,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "name": "auth-sim",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "name": "public",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 9090,
+                                        "name": "admin",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "failureThreshold": 15,
+                                    "httpGet": {
+                                        "path": "/readyz",
+                                        "port": "public",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 1,
+                                    "periodSeconds": 2,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "250m",
+                                        "memory": "128Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "25m",
+                                        "memory": "32Mi"
+                                    }
+                                },
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": false,
+                                    "runAsGroup": 65532,
+                                    "runAsNonRoot": true,
+                                    "runAsUser": 65532
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File"
+                            },
+                            {
+                                "command": [
+                                    "/proxy-metrics-exporter"
+                                ],
+                                "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                                "imagePullPolicy": "Never",
+                                "name": "proxy-metrics-exporter",
+                                "ports": [
+                                    {
+                                        "containerPort": 18081,
+                                        "name": "proxy-metrics",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "failureThreshold": 15,
+                                    "httpGet": {
+                                        "path": "/healthz",
+                                        "port": "proxy-metrics",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 1,
+                                    "periodSeconds": 2,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "50m",
+                                        "memory": "64Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "5m",
+                                        "memory": "16Mi"
+                                    }
+                                },
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": false,
+                                    "runAsGroup": 65532,
+                                    "runAsNonRoot": true,
+                                    "runAsUser": 65532
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File"
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {},
+                        "terminationGracePeriodSeconds": 30
+                    }
+                }
+            },
+            "status": {
+                "availableReplicas": 2,
+                "conditions": [
+                    {
+                        "lastTransitionTime": "2026-09-15T15:55:27Z",
+                        "lastUpdateTime": "2026-09-15T15:55:40Z",
+                        "message": "ReplicaSet \"auth-sim-aware-7966b95d9\" has successfully progressed.",
+                        "reason": "NewReplicaSetAvailable",
+                        "status": "True",
+                        "type": "Progressing"
+                    },
+                    {
+                        "lastTransitionTime": "2026-09-15T15:56:06Z",
+                        "lastUpdateTime": "2026-09-15T15:56:06Z",
+                        "message": "Deployment has minimum availability.",
+                        "reason": "MinimumReplicasAvailable",
+                        "status": "True",
+                        "type": "Available"
+                    }
+                ],
+                "observedGeneration": 3,
+                "readyReplicas": 2,
+                "replicas": 2,
+                "terminatingReplicas": 0,
+                "updatedReplicas": 2
+            }
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "annotations": {
+                    "deployment.kubernetes.io/revision": "1",
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"app.kubernetes.io/name\":\"l05-custom-metrics-adapter\",\"capacity-cascade-lab/owner\":\"l05\"},\"name\":\"l05-custom-metrics-adapter\",\"namespace\":\"capacity-cascade-l05-aware\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app.kubernetes.io/name\":\"l05-custom-metrics-adapter\"}},\"template\":{\"metadata\":{\"annotations\":{\"sidecar.istio.io/inject\":\"false\"},\"labels\":{\"app.kubernetes.io/name\":\"l05-custom-metrics-adapter\",\"capacity-cascade-lab/owner\":\"l05\",\"sidecar.istio.io/inject\":\"false\"}},\"spec\":{\"containers\":[{\"args\":[\"--target-namespace=capacity-cascade-l05-aware\",\"--pod-selector=app.kubernetes.io/name=auth-sim,app.kubernetes.io/instance=auth-sim-aware\"],\"command\":[\"/l05-custom-metrics-adapter\"],\"image\":\"capacity-cascade/auth-sim:l05-bc19711f5140\",\"imagePullPolicy\":\"Never\",\"name\":\"adapter\",\"ports\":[{\"containerPort\":8443,\"name\":\"https\",\"protocol\":\"TCP\"}],\"readinessProbe\":{\"failureThreshold\":15,\"httpGet\":{\"path\":\"/healthz\",\"port\":\"https\",\"scheme\":\"HTTPS\"},\"initialDelaySeconds\":1,\"periodSeconds\":2,\"timeoutSeconds\":1},\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"128Mi\"},\"requests\":{\"cpu\":\"10m\",\"memory\":\"32Mi\"}},\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true}}],\"securityContext\":{\"runAsGroup\":65532,\"runAsNonRoot\":true,\"runAsUser\":65532},\"serviceAccountName\":\"l05-custom-metrics-adapter\"}}}}\n"
+                },
+                "creationTimestamp": "2026-09-15T15:55:41Z",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/name": "l05-custom-metrics-adapter",
+                    "capacity-cascade-lab/owner": "l05"
+                },
+                "name": "l05-custom-metrics-adapter",
+                "namespace": "capacity-cascade-l05-aware",
+                "resourceVersion": "1117",
+                "uid": "c02bd0a2-b74a-4143-8935-c1c2e9800965"
+            },
+            "spec": {
+                "progressDeadlineSeconds": 600,
+                "replicas": 1,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "app.kubernetes.io/name": "l05-custom-metrics-adapter"
+                    }
+                },
+                "strategy": {
+                    "rollingUpdate": {
+                        "maxSurge": "25%",
+                        "maxUnavailable": "25%"
+                    },
+                    "type": "RollingUpdate"
+                },
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "sidecar.istio.io/inject": "false"
+                        },
+                        "labels": {
+                            "app.kubernetes.io/name": "l05-custom-metrics-adapter",
+                            "capacity-cascade-lab/owner": "l05",
+                            "sidecar.istio.io/inject": "false"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "args": [
+                                    "--target-namespace=capacity-cascade-l05-aware",
+                                    "--pod-selector=app.kubernetes.io/name=auth-sim,app.kubernetes.io/instance=auth-sim-aware"
+                                ],
+                                "command": [
+                                    "/l05-custom-metrics-adapter"
+                                ],
+                                "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                                "imagePullPolicy": "Never",
+                                "name": "adapter",
+                                "ports": [
+                                    {
+                                        "containerPort": 8443,
+                                        "name": "https",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "failureThreshold": 15,
+                                    "httpGet": {
+                                        "path": "/healthz",
+                                        "port": "https",
+                                        "scheme": "HTTPS"
+                                    },
+                                    "initialDelaySeconds": 1,
+                                    "periodSeconds": 2,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "100m",
+                                        "memory": "128Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "10m",
+                                        "memory": "32Mi"
+                                    }
+                                },
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": false,
+                                    "capabilities": {
+                                        "drop": [
+                                            "ALL"
+                                        ]
+                                    },
+                                    "readOnlyRootFilesystem": true
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File"
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {
+                            "runAsGroup": 65532,
+                            "runAsNonRoot": true,
+                            "runAsUser": 65532
+                        },
+                        "serviceAccount": "l05-custom-metrics-adapter",
+                        "serviceAccountName": "l05-custom-metrics-adapter",
+                        "terminationGracePeriodSeconds": 30
+                    }
+                }
+            },
+            "status": {
+                "availableReplicas": 1,
+                "conditions": [
+                    {
+                        "lastTransitionTime": "2026-09-15T15:55:44Z",
+                        "lastUpdateTime": "2026-09-15T15:55:44Z",
+                        "message": "Deployment has minimum availability.",
+                        "reason": "MinimumReplicasAvailable",
+                        "status": "True",
+                        "type": "Available"
+                    },
+                    {
+                        "lastTransitionTime": "2026-09-15T15:55:41Z",
+                        "lastUpdateTime": "2026-09-15T15:55:44Z",
+                        "message": "ReplicaSet \"l05-custom-metrics-adapter-d947f9f99\" has successfully progressed.",
+                        "reason": "NewReplicaSetAvailable",
+                        "status": "True",
+                        "type": "Progressing"
+                    }
+                ],
+                "observedGeneration": 1,
+                "readyReplicas": 1,
+                "replicas": 1,
+                "terminatingReplicas": 0,
+                "updatedReplicas": 1
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "istio.io/rev": "default",
+                    "kubectl.kubernetes.io/default-container": "auth-sim",
+                    "kubectl.kubernetes.io/default-logs-container": "auth-sim",
+                    "kubectl.kubernetes.io/restartedAt": "2026-09-16T00:55:35+09:00",
+                    "prometheus.io/path": "/stats/prometheus",
+                    "prometheus.io/port": "15020",
+                    "prometheus.io/scrape": "true",
+                    "sidecar.istio.io/status": "{\"initContainers\":[\"istio-init\",\"istio-proxy\"],\"containers\":null,\"volumes\":[\"workload-socket\",\"credential-socket\",\"workload-certs\",\"istio-envoy\",\"istio-data\",\"istio-podinfo\",\"istio-token\",\"istiod-ca-cert\",\"istio-ca-crl\"],\"imagePullSecrets\":null,\"revision\":\"default\"}"
+                },
+                "creationTimestamp": "2026-09-15T15:55:35Z",
+                "generateName": "auth-sim-aware-7966b95d9-",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/instance": "auth-sim-aware",
+                    "app.kubernetes.io/name": "auth-sim",
+                    "pod-template-hash": "7966b95d9",
+                    "security.istio.io/tlsMode": "istio",
+                    "service.istio.io/canonical-name": "auth-sim",
+                    "service.istio.io/canonical-revision": "latest"
+                },
+                "name": "auth-sim-aware-7966b95d9-rg54d",
+                "namespace": "capacity-cascade-l05-aware",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ReplicaSet",
+                        "name": "auth-sim-aware-7966b95d9",
+                        "uid": "0cecdefe-5bb8-4b18-b7d3-a770593e3aba"
+                    }
+                ],
+                "resourceVersion": "1055",
+                "uid": "43c26018-918f-4150-8f86-19628af90200"
+            },
+            "spec": {
+                "automountServiceAccountToken": false,
+                "containers": [
+                    {
+                        "env": [
+                            {
+                                "name": "LAB_PUBLIC_ADDR",
+                                "value": "0.0.0.0:8080"
+                            },
+                            {
+                                "name": "LAB_ADMIN_ADDR",
+                                "value": "0.0.0.0:9090"
+                            },
+                            {
+                                "name": "LAB_ADMIN_TOKEN",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "key": "token",
+                                        "name": "auth-sim-admin"
+                                    }
+                                }
+                            }
+                        ],
+                        "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imagePullPolicy": "Never",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/app-health/auth-sim/livez",
+                                "port": 15020,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 2,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "auth-sim",
+                        "ports": [
+                            {
+                                "containerPort": 8080,
+                                "name": "public",
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 9090,
+                                "name": "admin",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 15,
+                            "httpGet": {
+                                "path": "/app-health/auth-sim/readyz",
+                                "port": 15020,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 1,
+                            "periodSeconds": 2,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "250m",
+                                "memory": "128Mi"
+                            },
+                            "requests": {
+                                "cpu": "25m",
+                                "memory": "32Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "runAsGroup": 65532,
+                            "runAsNonRoot": true,
+                            "runAsUser": 65532
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File"
+                    },
+                    {
+                        "command": [
+                            "/proxy-metrics-exporter"
+                        ],
+                        "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imagePullPolicy": "Never",
+                        "name": "proxy-metrics-exporter",
+                        "ports": [
+                            {
+                                "containerPort": 18081,
+                                "name": "proxy-metrics",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 15,
+                            "httpGet": {
+                                "path": "/app-health/proxy-metrics-exporter/readyz",
+                                "port": 15020,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 1,
+                            "periodSeconds": 2,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "50m",
+                                "memory": "64Mi"
+                            },
+                            "requests": {
+                                "cpu": "5m",
+                                "memory": "16Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "runAsGroup": 65532,
+                            "runAsNonRoot": true,
+                            "runAsUser": 65532
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File"
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "initContainers": [
+                    {
+                        "args": [
+                            "istio-iptables",
+                            "-p",
+                            "15001",
+                            "-z",
+                            "15006",
+                            "-u",
+                            "1337",
+                            "-m",
+                            "REDIRECT",
+                            "-i",
+                            "*",
+                            "-x",
+                            "",
+                            "-b",
+                            "*",
+                            "-d",
+                            "15090,15021,15020",
+                            "--log_output_level=default:info"
+                        ],
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "istio-init",
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "capabilities": {
+                                "add": [
+                                    "NET_ADMIN",
+                                    "NET_RAW"
+                                ],
+                                "drop": [
+                                    "ALL"
+                                ]
+                            },
+                            "privileged": false,
+                            "readOnlyRootFilesystem": false,
+                            "runAsGroup": 0,
+                            "runAsNonRoot": false,
+                            "runAsUser": 0
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File"
+                    },
+                    {
+                        "args": [
+                            "proxy",
+                            "sidecar",
+                            "--domain",
+                            "$(POD_NAMESPACE).svc.cluster.local",
+                            "--proxyLogLevel=warning",
+                            "--proxyComponentLogLevel=misc:error",
+                            "--log_output_level=default:info"
+                        ],
+                        "env": [
+                            {
+                                "name": "PILOT_CERT_PROVIDER",
+                                "value": "istiod"
+                            },
+                            {
+                                "name": "CA_ADDR",
+                                "value": "istiod.istio-system.svc:15012"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "INSTANCE_IP",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "status.podIP"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "SERVICE_ACCOUNT",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.serviceAccountName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "HOST_IP",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "status.hostIP"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ISTIO_CPU_LIMIT",
+                                "valueFrom": {
+                                    "resourceFieldRef": {
+                                        "divisor": "1",
+                                        "resource": "limits.cpu"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "PROXY_CONFIG",
+                                "value": "{\"proxyStatsMatcher\":{\"inclusionRegexps\":[\".*downstream_rq_(total|active|5xx)$\",\".*upstream_rq_(total|active|pending_active|active_overflow|pending_overflow|retry|timeout)$\"]}}\n"
+                            },
+                            {
+                                "name": "ISTIO_META_POD_PORTS",
+                                "value": "[\n    {\"name\":\"public\",\"containerPort\":8080,\"protocol\":\"TCP\"}\n    ,{\"name\":\"admin\",\"containerPort\":9090,\"protocol\":\"TCP\"}\n    ,{\"name\":\"proxy-metrics\",\"containerPort\":18081,\"protocol\":\"TCP\"}\n]"
+                            },
+                            {
+                                "name": "ISTIO_META_APP_CONTAINERS",
+                                "value": "auth-sim,proxy-metrics-exporter"
+                            },
+                            {
+                                "name": "GOMEMLIMIT",
+                                "valueFrom": {
+                                    "resourceFieldRef": {
+                                        "divisor": "1",
+                                        "resource": "limits.memory"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "GOMAXPROCS",
+                                "valueFrom": {
+                                    "resourceFieldRef": {
+                                        "divisor": "1",
+                                        "resource": "limits.cpu"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ISTIO_META_CLUSTER_ID",
+                                "value": "Kubernetes"
+                            },
+                            {
+                                "name": "ISTIO_META_NODE_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.nodeName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ISTIO_META_INTERCEPTION_MODE",
+                                "value": "REDIRECT"
+                            },
+                            {
+                                "name": "ISTIO_META_WORKLOAD_NAME",
+                                "value": "auth-sim-aware"
+                            },
+                            {
+                                "name": "ISTIO_META_OWNER",
+                                "value": "kubernetes://apis/apps/v1/namespaces/capacity-cascade-l05-aware/deployments/auth-sim-aware"
+                            },
+                            {
+                                "name": "ISTIO_META_MESH_ID",
+                                "value": "cluster.local"
+                            },
+                            {
+                                "name": "TRUST_DOMAIN",
+                                "value": "cluster.local"
+                            },
+                            {
+                                "name": "ISTIO_KUBE_APP_PROBERS",
+                                "value": "{\"/app-health/auth-sim/livez\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":8080,\"scheme\":\"HTTP\"},\"timeoutSeconds\":1},\"/app-health/auth-sim/readyz\":{\"httpGet\":{\"path\":\"/readyz\",\"port\":8080,\"scheme\":\"HTTP\"},\"timeoutSeconds\":1},\"/app-health/proxy-metrics-exporter/readyz\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":18081,\"scheme\":\"HTTP\"},\"timeoutSeconds\":1}}"
+                            }
+                        ],
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imagePullPolicy": "IfNotPresent",
+                        "lifecycle": {
+                            "preStop": {
+                                "exec": {
+                                    "command": [
+                                        "pilot-agent",
+                                        "request",
+                                        "--debug-port=15020",
+                                        "POST",
+                                        "drain"
+                                    ]
+                                }
+                            }
+                        },
+                        "name": "istio-proxy",
+                        "ports": [
+                            {
+                                "containerPort": 15090,
+                                "name": "http-envoy-prom",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 4,
+                            "httpGet": {
+                                "path": "/healthz/ready",
+                                "port": 15021,
+                                "scheme": "HTTP"
+                            },
+                            "periodSeconds": 15,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 3
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "restartPolicy": "Always",
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "capabilities": {
+                                "drop": [
+                                    "ALL"
+                                ]
+                            },
+                            "privileged": false,
+                            "readOnlyRootFilesystem": true,
+                            "runAsGroup": 1337,
+                            "runAsNonRoot": true,
+                            "runAsUser": 1337
+                        },
+                        "startupProbe": {
+                            "failureThreshold": 600,
+                            "httpGet": {
+                                "path": "/healthz/ready",
+                                "port": 15021,
+                                "scheme": "HTTP"
+                            },
+                            "periodSeconds": 1,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 3
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-uds",
+                                "name": "workload-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/credential-uds",
+                                "name": "credential-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-credentials",
+                                "name": "workload-certs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio",
+                                "name": "istiod-ca-cert"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio/crl",
+                                "name": "istio-ca-crl"
+                            },
+                            {
+                                "mountPath": "/var/lib/istio/data",
+                                "name": "istio-data"
+                            },
+                            {
+                                "mountPath": "/etc/istio/proxy",
+                                "name": "istio-envoy"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/tokens",
+                                "name": "istio-token"
+                            },
+                            {
+                                "mountPath": "/etc/istio/pod",
+                                "name": "istio-podinfo"
+                            }
+                        ]
+                    }
+                ],
+                "nodeName": "k3d-capacity-cascade-l05-server-0",
+                "preemptionPolicy": "PreemptLowerPriority",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "emptyDir": {},
+                        "name": "workload-socket"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "credential-socket"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "workload-certs"
+                    },
+                    {
+                        "emptyDir": {
+                            "medium": "Memory"
+                        },
+                        "name": "istio-envoy"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "istio-data"
+                    },
+                    {
+                        "downwardAPI": {
+                            "defaultMode": 420,
+                            "items": [
+                                {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.labels"
+                                    },
+                                    "path": "labels"
+                                },
+                                {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.annotations"
+                                    },
+                                    "path": "annotations"
+                                }
+                            ]
+                        },
+                        "name": "istio-podinfo"
+                    },
+                    {
+                        "name": "istio-token",
+                        "projected": {
+                            "defaultMode": 420,
+                            "sources": [
+                                {
+                                    "serviceAccountToken": {
+                                        "audience": "istio-ca",
+                                        "expirationSeconds": 43200,
+                                        "path": "istio-token"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "istio-ca-root-cert"
+                        },
+                        "name": "istiod-ca-cert"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "istio-ca-crl",
+                            "optional": true
+                        },
+                        "name": "istio-ca-crl"
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:36Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "PodReadyToStartContainers"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:38Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:40Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:40Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:35Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "allocatedResources": {
+                            "cpu": "25m",
+                            "memory": "32Mi"
+                        },
+                        "containerID": "containerd://ebfecbc4dd49ebe60f00ad8227dbd1a541601d4b2440083d3beec3014030602e",
+                        "image": "docker.io/capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imageID": "sha256:d506126b9cc76ea35e968478d234d26e1154a1b6615600dfef4f4e6e8f4d8fdd",
+                        "lastState": {},
+                        "name": "auth-sim",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "250m",
+                                "memory": "128Mi"
+                            },
+                            "requests": {
+                                "cpu": "25m",
+                                "memory": "32Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": true,
+                        "state": {
+                            "running": {
+                                "startedAt": "2026-09-15T15:55:38Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 65532,
+                                "supplementalGroups": [
+                                    65532
+                                ],
+                                "uid": 65532
+                            }
+                        }
+                    },
+                    {
+                        "allocatedResources": {
+                            "cpu": "5m",
+                            "memory": "16Mi"
+                        },
+                        "containerID": "containerd://8f3cc8d5b03c8af2869b6fa1a3a9494549eaf34641d4ac9446c50db94ccb769e",
+                        "image": "docker.io/capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imageID": "sha256:d506126b9cc76ea35e968478d234d26e1154a1b6615600dfef4f4e6e8f4d8fdd",
+                        "lastState": {},
+                        "name": "proxy-metrics-exporter",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "50m",
+                                "memory": "64Mi"
+                            },
+                            "requests": {
+                                "cpu": "5m",
+                                "memory": "16Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": true,
+                        "state": {
+                            "running": {
+                                "startedAt": "2026-09-15T15:55:38Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 65532,
+                                "supplementalGroups": [
+                                    65532
+                                ],
+                                "uid": 65532
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "172.19.0.2",
+                "hostIPs": [
+                    {
+                        "ip": "172.19.0.2"
+                    }
+                ],
+                "initContainerStatuses": [
+                    {
+                        "allocatedResources": {
+                            "cpu": "100m",
+                            "memory": "128Mi"
+                        },
+                        "containerID": "containerd://d7b85ad09960caec885ed2f3e811537899f1e1bdc29cc5ab8063f24fc42000a0",
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imageID": "docker.io/istio/proxyv2@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9",
+                        "lastState": {},
+                        "name": "istio-init",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": false,
+                        "state": {
+                            "terminated": {
+                                "containerID": "containerd://d7b85ad09960caec885ed2f3e811537899f1e1bdc29cc5ab8063f24fc42000a0",
+                                "exitCode": 0,
+                                "finishedAt": "2026-09-15T15:55:36Z",
+                                "reason": "Completed",
+                                "startedAt": "2026-09-15T15:55:36Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 0,
+                                "supplementalGroups": [
+                                    0
+                                ],
+                                "uid": 0
+                            }
+                        }
+                    },
+                    {
+                        "allocatedResources": {
+                            "cpu": "100m",
+                            "memory": "128Mi"
+                        },
+                        "containerID": "containerd://87913de01d8118be4db21cffc80b0a2eb7a07e5a537d1db3f36c064277b8752b",
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imageID": "docker.io/istio/proxyv2@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9",
+                        "lastState": {},
+                        "name": "istio-proxy",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": true,
+                        "state": {
+                            "running": {
+                                "startedAt": "2026-09-15T15:55:36Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 1337,
+                                "supplementalGroups": [
+                                    1337
+                                ],
+                                "uid": 1337
+                            }
+                        },
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-uds",
+                                "name": "workload-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/credential-uds",
+                                "name": "credential-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-credentials",
+                                "name": "workload-certs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio",
+                                "name": "istiod-ca-cert"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio/crl",
+                                "name": "istio-ca-crl"
+                            },
+                            {
+                                "mountPath": "/var/lib/istio/data",
+                                "name": "istio-data"
+                            },
+                            {
+                                "mountPath": "/etc/istio/proxy",
+                                "name": "istio-envoy"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/tokens",
+                                "name": "istio-token"
+                            },
+                            {
+                                "mountPath": "/etc/istio/pod",
+                                "name": "istio-podinfo"
+                            }
+                        ]
+                    }
+                ],
+                "observedGeneration": 1,
+                "phase": "Running",
+                "podIP": "10.42.0.10",
+                "podIPs": [
+                    {
+                        "ip": "10.42.0.10"
+                    }
+                ],
+                "qosClass": "Burstable",
+                "startTime": "2026-09-15T15:55:35Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "istio.io/rev": "default",
+                    "kubectl.kubernetes.io/default-container": "auth-sim",
+                    "kubectl.kubernetes.io/default-logs-container": "auth-sim",
+                    "kubectl.kubernetes.io/restartedAt": "2026-09-16T00:55:35+09:00",
+                    "prometheus.io/path": "/stats/prometheus",
+                    "prometheus.io/port": "15020",
+                    "prometheus.io/scrape": "true",
+                    "sidecar.istio.io/status": "{\"initContainers\":[\"istio-init\",\"istio-proxy\"],\"containers\":null,\"volumes\":[\"workload-socket\",\"credential-socket\",\"workload-certs\",\"istio-envoy\",\"istio-data\",\"istio-podinfo\",\"istio-token\",\"istiod-ca-cert\",\"istio-ca-crl\"],\"imagePullSecrets\":null,\"revision\":\"default\"}"
+                },
+                "creationTimestamp": "2026-09-15T15:56:01Z",
+                "generateName": "auth-sim-aware-7966b95d9-",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/instance": "auth-sim-aware",
+                    "app.kubernetes.io/name": "auth-sim",
+                    "pod-template-hash": "7966b95d9",
+                    "security.istio.io/tlsMode": "istio",
+                    "service.istio.io/canonical-name": "auth-sim",
+                    "service.istio.io/canonical-revision": "latest"
+                },
+                "name": "auth-sim-aware-7966b95d9-t64q4",
+                "namespace": "capacity-cascade-l05-aware",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ReplicaSet",
+                        "name": "auth-sim-aware-7966b95d9",
+                        "uid": "0cecdefe-5bb8-4b18-b7d3-a770593e3aba"
+                    }
+                ],
+                "resourceVersion": "1192",
+                "uid": "2ed4ee34-7daf-4f81-ad5b-af060e2810c7"
+            },
+            "spec": {
+                "automountServiceAccountToken": false,
+                "containers": [
+                    {
+                        "env": [
+                            {
+                                "name": "LAB_PUBLIC_ADDR",
+                                "value": "0.0.0.0:8080"
+                            },
+                            {
+                                "name": "LAB_ADMIN_ADDR",
+                                "value": "0.0.0.0:9090"
+                            },
+                            {
+                                "name": "LAB_ADMIN_TOKEN",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "key": "token",
+                                        "name": "auth-sim-admin"
+                                    }
+                                }
+                            }
+                        ],
+                        "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imagePullPolicy": "Never",
+                        "livenessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/app-health/auth-sim/livez",
+                                "port": 15020,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 2,
+                            "periodSeconds": 5,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "auth-sim",
+                        "ports": [
+                            {
+                                "containerPort": 8080,
+                                "name": "public",
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 9090,
+                                "name": "admin",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 15,
+                            "httpGet": {
+                                "path": "/app-health/auth-sim/readyz",
+                                "port": 15020,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 1,
+                            "periodSeconds": 2,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "250m",
+                                "memory": "128Mi"
+                            },
+                            "requests": {
+                                "cpu": "25m",
+                                "memory": "32Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "runAsGroup": 65532,
+                            "runAsNonRoot": true,
+                            "runAsUser": 65532
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File"
+                    },
+                    {
+                        "command": [
+                            "/proxy-metrics-exporter"
+                        ],
+                        "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imagePullPolicy": "Never",
+                        "name": "proxy-metrics-exporter",
+                        "ports": [
+                            {
+                                "containerPort": 18081,
+                                "name": "proxy-metrics",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 15,
+                            "httpGet": {
+                                "path": "/app-health/proxy-metrics-exporter/readyz",
+                                "port": 15020,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 1,
+                            "periodSeconds": 2,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "50m",
+                                "memory": "64Mi"
+                            },
+                            "requests": {
+                                "cpu": "5m",
+                                "memory": "16Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "runAsGroup": 65532,
+                            "runAsNonRoot": true,
+                            "runAsUser": 65532
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File"
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "initContainers": [
+                    {
+                        "args": [
+                            "istio-iptables",
+                            "-p",
+                            "15001",
+                            "-z",
+                            "15006",
+                            "-u",
+                            "1337",
+                            "-m",
+                            "REDIRECT",
+                            "-i",
+                            "*",
+                            "-x",
+                            "",
+                            "-b",
+                            "*",
+                            "-d",
+                            "15090,15021,15020",
+                            "--log_output_level=default:info"
+                        ],
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "istio-init",
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "capabilities": {
+                                "add": [
+                                    "NET_ADMIN",
+                                    "NET_RAW"
+                                ],
+                                "drop": [
+                                    "ALL"
+                                ]
+                            },
+                            "privileged": false,
+                            "readOnlyRootFilesystem": false,
+                            "runAsGroup": 0,
+                            "runAsNonRoot": false,
+                            "runAsUser": 0
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File"
+                    },
+                    {
+                        "args": [
+                            "proxy",
+                            "sidecar",
+                            "--domain",
+                            "$(POD_NAMESPACE).svc.cluster.local",
+                            "--proxyLogLevel=warning",
+                            "--proxyComponentLogLevel=misc:error",
+                            "--log_output_level=default:info"
+                        ],
+                        "env": [
+                            {
+                                "name": "PILOT_CERT_PROVIDER",
+                                "value": "istiod"
+                            },
+                            {
+                                "name": "CA_ADDR",
+                                "value": "istiod.istio-system.svc:15012"
+                            },
+                            {
+                                "name": "POD_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.name"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "POD_NAMESPACE",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.namespace"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "INSTANCE_IP",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "status.podIP"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "SERVICE_ACCOUNT",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.serviceAccountName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "HOST_IP",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "status.hostIP"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ISTIO_CPU_LIMIT",
+                                "valueFrom": {
+                                    "resourceFieldRef": {
+                                        "divisor": "1",
+                                        "resource": "limits.cpu"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "PROXY_CONFIG",
+                                "value": "{\"proxyStatsMatcher\":{\"inclusionRegexps\":[\".*downstream_rq_(total|active|5xx)$\",\".*upstream_rq_(total|active|pending_active|active_overflow|pending_overflow|retry|timeout)$\"]}}\n"
+                            },
+                            {
+                                "name": "ISTIO_META_POD_PORTS",
+                                "value": "[\n    {\"name\":\"public\",\"containerPort\":8080,\"protocol\":\"TCP\"}\n    ,{\"name\":\"admin\",\"containerPort\":9090,\"protocol\":\"TCP\"}\n    ,{\"name\":\"proxy-metrics\",\"containerPort\":18081,\"protocol\":\"TCP\"}\n]"
+                            },
+                            {
+                                "name": "ISTIO_META_APP_CONTAINERS",
+                                "value": "auth-sim,proxy-metrics-exporter"
+                            },
+                            {
+                                "name": "GOMEMLIMIT",
+                                "valueFrom": {
+                                    "resourceFieldRef": {
+                                        "divisor": "1",
+                                        "resource": "limits.memory"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "GOMAXPROCS",
+                                "valueFrom": {
+                                    "resourceFieldRef": {
+                                        "divisor": "1",
+                                        "resource": "limits.cpu"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ISTIO_META_CLUSTER_ID",
+                                "value": "Kubernetes"
+                            },
+                            {
+                                "name": "ISTIO_META_NODE_NAME",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.nodeName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ISTIO_META_INTERCEPTION_MODE",
+                                "value": "REDIRECT"
+                            },
+                            {
+                                "name": "ISTIO_META_WORKLOAD_NAME",
+                                "value": "auth-sim-aware"
+                            },
+                            {
+                                "name": "ISTIO_META_OWNER",
+                                "value": "kubernetes://apis/apps/v1/namespaces/capacity-cascade-l05-aware/deployments/auth-sim-aware"
+                            },
+                            {
+                                "name": "ISTIO_META_MESH_ID",
+                                "value": "cluster.local"
+                            },
+                            {
+                                "name": "TRUST_DOMAIN",
+                                "value": "cluster.local"
+                            },
+                            {
+                                "name": "ISTIO_KUBE_APP_PROBERS",
+                                "value": "{\"/app-health/auth-sim/livez\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":8080,\"scheme\":\"HTTP\"},\"timeoutSeconds\":1},\"/app-health/auth-sim/readyz\":{\"httpGet\":{\"path\":\"/readyz\",\"port\":8080,\"scheme\":\"HTTP\"},\"timeoutSeconds\":1},\"/app-health/proxy-metrics-exporter/readyz\":{\"httpGet\":{\"path\":\"/healthz\",\"port\":18081,\"scheme\":\"HTTP\"},\"timeoutSeconds\":1}}"
+                            }
+                        ],
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imagePullPolicy": "IfNotPresent",
+                        "lifecycle": {
+                            "preStop": {
+                                "exec": {
+                                    "command": [
+                                        "pilot-agent",
+                                        "request",
+                                        "--debug-port=15020",
+                                        "POST",
+                                        "drain"
+                                    ]
+                                }
+                            }
+                        },
+                        "name": "istio-proxy",
+                        "ports": [
+                            {
+                                "containerPort": 15090,
+                                "name": "http-envoy-prom",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 4,
+                            "httpGet": {
+                                "path": "/healthz/ready",
+                                "port": 15021,
+                                "scheme": "HTTP"
+                            },
+                            "periodSeconds": 15,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 3
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "restartPolicy": "Always",
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "capabilities": {
+                                "drop": [
+                                    "ALL"
+                                ]
+                            },
+                            "privileged": false,
+                            "readOnlyRootFilesystem": true,
+                            "runAsGroup": 1337,
+                            "runAsNonRoot": true,
+                            "runAsUser": 1337
+                        },
+                        "startupProbe": {
+                            "failureThreshold": 600,
+                            "httpGet": {
+                                "path": "/healthz/ready",
+                                "port": 15021,
+                                "scheme": "HTTP"
+                            },
+                            "periodSeconds": 1,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 3
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-uds",
+                                "name": "workload-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/credential-uds",
+                                "name": "credential-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-credentials",
+                                "name": "workload-certs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio",
+                                "name": "istiod-ca-cert"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio/crl",
+                                "name": "istio-ca-crl"
+                            },
+                            {
+                                "mountPath": "/var/lib/istio/data",
+                                "name": "istio-data"
+                            },
+                            {
+                                "mountPath": "/etc/istio/proxy",
+                                "name": "istio-envoy"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/tokens",
+                                "name": "istio-token"
+                            },
+                            {
+                                "mountPath": "/etc/istio/pod",
+                                "name": "istio-podinfo"
+                            }
+                        ]
+                    }
+                ],
+                "nodeName": "k3d-capacity-cascade-l05-server-0",
+                "preemptionPolicy": "PreemptLowerPriority",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "emptyDir": {},
+                        "name": "workload-socket"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "credential-socket"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "workload-certs"
+                    },
+                    {
+                        "emptyDir": {
+                            "medium": "Memory"
+                        },
+                        "name": "istio-envoy"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "istio-data"
+                    },
+                    {
+                        "downwardAPI": {
+                            "defaultMode": 420,
+                            "items": [
+                                {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.labels"
+                                    },
+                                    "path": "labels"
+                                },
+                                {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "metadata.annotations"
+                                    },
+                                    "path": "annotations"
+                                }
+                            ]
+                        },
+                        "name": "istio-podinfo"
+                    },
+                    {
+                        "name": "istio-token",
+                        "projected": {
+                            "defaultMode": 420,
+                            "sources": [
+                                {
+                                    "serviceAccountToken": {
+                                        "audience": "istio-ca",
+                                        "expirationSeconds": 43200,
+                                        "path": "istio-token"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "istio-ca-root-cert"
+                        },
+                        "name": "istiod-ca-cert"
+                    },
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "istio-ca-crl",
+                            "optional": true
+                        },
+                        "name": "istio-ca-crl"
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:56:02Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "PodReadyToStartContainers"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:56:04Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:56:06Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:56:06Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:56:01Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "allocatedResources": {
+                            "cpu": "25m",
+                            "memory": "32Mi"
+                        },
+                        "containerID": "containerd://6f04ae509cce051a9a5483de31be3484ba39513ef0f8cb31f4275a3d9e2c0179",
+                        "image": "docker.io/capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imageID": "sha256:d506126b9cc76ea35e968478d234d26e1154a1b6615600dfef4f4e6e8f4d8fdd",
+                        "lastState": {},
+                        "name": "auth-sim",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "250m",
+                                "memory": "128Mi"
+                            },
+                            "requests": {
+                                "cpu": "25m",
+                                "memory": "32Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": true,
+                        "state": {
+                            "running": {
+                                "startedAt": "2026-09-15T15:56:04Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 65532,
+                                "supplementalGroups": [
+                                    65532
+                                ],
+                                "uid": 65532
+                            }
+                        }
+                    },
+                    {
+                        "allocatedResources": {
+                            "cpu": "5m",
+                            "memory": "16Mi"
+                        },
+                        "containerID": "containerd://976a82afc3a12ff6796977630029c3ea6ad3e75cff335382cba4cea36574939f",
+                        "image": "docker.io/capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imageID": "sha256:d506126b9cc76ea35e968478d234d26e1154a1b6615600dfef4f4e6e8f4d8fdd",
+                        "lastState": {},
+                        "name": "proxy-metrics-exporter",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "50m",
+                                "memory": "64Mi"
+                            },
+                            "requests": {
+                                "cpu": "5m",
+                                "memory": "16Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": true,
+                        "state": {
+                            "running": {
+                                "startedAt": "2026-09-15T15:56:04Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 65532,
+                                "supplementalGroups": [
+                                    65532
+                                ],
+                                "uid": 65532
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "172.19.0.2",
+                "hostIPs": [
+                    {
+                        "ip": "172.19.0.2"
+                    }
+                ],
+                "initContainerStatuses": [
+                    {
+                        "allocatedResources": {
+                            "cpu": "100m",
+                            "memory": "128Mi"
+                        },
+                        "containerID": "containerd://e5884db420df47ce49f2dd832073f2969c3132b40678c03c1d0325156266fa1a",
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imageID": "docker.io/istio/proxyv2@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9",
+                        "lastState": {},
+                        "name": "istio-init",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": false,
+                        "state": {
+                            "terminated": {
+                                "containerID": "containerd://e5884db420df47ce49f2dd832073f2969c3132b40678c03c1d0325156266fa1a",
+                                "exitCode": 0,
+                                "finishedAt": "2026-09-15T15:56:02Z",
+                                "reason": "Completed",
+                                "startedAt": "2026-09-15T15:56:02Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 0,
+                                "supplementalGroups": [
+                                    0
+                                ],
+                                "uid": 0
+                            }
+                        }
+                    },
+                    {
+                        "allocatedResources": {
+                            "cpu": "100m",
+                            "memory": "128Mi"
+                        },
+                        "containerID": "containerd://3953a95c8f1cdd20e5a444add5d826815ae7962cacf610b57740a3afdbf09200",
+                        "image": "docker.io/istio/proxyv2:1.30.4",
+                        "imageID": "docker.io/istio/proxyv2@sha256:43b6aeab7428470d3d0ea6b6f0bc217e5b36df2b279bba337643df48590226d9",
+                        "lastState": {},
+                        "name": "istio-proxy",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "1Gi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": true,
+                        "state": {
+                            "running": {
+                                "startedAt": "2026-09-15T15:56:02Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 1337,
+                                "supplementalGroups": [
+                                    1337
+                                ],
+                                "uid": 1337
+                            }
+                        },
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-uds",
+                                "name": "workload-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/credential-uds",
+                                "name": "credential-socket"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/workload-spiffe-credentials",
+                                "name": "workload-certs"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio",
+                                "name": "istiod-ca-cert"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/istio/crl",
+                                "name": "istio-ca-crl"
+                            },
+                            {
+                                "mountPath": "/var/lib/istio/data",
+                                "name": "istio-data"
+                            },
+                            {
+                                "mountPath": "/etc/istio/proxy",
+                                "name": "istio-envoy"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/tokens",
+                                "name": "istio-token"
+                            },
+                            {
+                                "mountPath": "/etc/istio/pod",
+                                "name": "istio-podinfo"
+                            }
+                        ]
+                    }
+                ],
+                "observedGeneration": 1,
+                "phase": "Running",
+                "podIP": "10.42.0.13",
+                "podIPs": [
+                    {
+                        "ip": "10.42.0.13"
+                    }
+                ],
+                "qosClass": "Burstable",
+                "startTime": "2026-09-15T15:56:01Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "sidecar.istio.io/inject": "false"
+                },
+                "creationTimestamp": "2026-09-15T15:55:41Z",
+                "generateName": "l05-custom-metrics-adapter-d947f9f99-",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/name": "l05-custom-metrics-adapter",
+                    "capacity-cascade-lab/owner": "l05",
+                    "pod-template-hash": "d947f9f99",
+                    "sidecar.istio.io/inject": "false"
+                },
+                "name": "l05-custom-metrics-adapter-d947f9f99-lmszc",
+                "namespace": "capacity-cascade-l05-aware",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ReplicaSet",
+                        "name": "l05-custom-metrics-adapter-d947f9f99",
+                        "uid": "08c0ce20-58cb-41f0-8659-9d0702357535"
+                    }
+                ],
+                "resourceVersion": "1113",
+                "uid": "10b95d3e-5f56-45e0-b73e-ecbf2963258c"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "args": [
+                            "--target-namespace=capacity-cascade-l05-aware",
+                            "--pod-selector=app.kubernetes.io/name=auth-sim,app.kubernetes.io/instance=auth-sim-aware"
+                        ],
+                        "command": [
+                            "/l05-custom-metrics-adapter"
+                        ],
+                        "image": "capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imagePullPolicy": "Never",
+                        "name": "adapter",
+                        "ports": [
+                            {
+                                "containerPort": 8443,
+                                "name": "https",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "readinessProbe": {
+                            "failureThreshold": 15,
+                            "httpGet": {
+                                "path": "/healthz",
+                                "port": "https",
+                                "scheme": "HTTPS"
+                            },
+                            "initialDelaySeconds": 1,
+                            "periodSeconds": 2,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            },
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "32Mi"
+                            }
+                        },
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "capabilities": {
+                                "drop": [
+                                    "ALL"
+                                ]
+                            },
+                            "readOnlyRootFilesystem": true
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "kube-api-access-sv7hf",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "nodeName": "k3d-capacity-cascade-l05-server-0",
+                "preemptionPolicy": "PreemptLowerPriority",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {
+                    "runAsGroup": 65532,
+                    "runAsNonRoot": true,
+                    "runAsUser": 65532
+                },
+                "serviceAccount": "l05-custom-metrics-adapter",
+                "serviceAccountName": "l05-custom-metrics-adapter",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "name": "kube-api-access-sv7hf",
+                        "projected": {
+                            "defaultMode": 420,
+                            "sources": [
+                                {
+                                    "serviceAccountToken": {
+                                        "expirationSeconds": 3607,
+                                        "path": "token"
+                                    }
+                                },
+                                {
+                                    "configMap": {
+                                        "items": [
+                                            {
+                                                "key": "ca.crt",
+                                                "path": "ca.crt"
+                                            }
+                                        ],
+                                        "name": "kube-root-ca.crt"
+                                    }
+                                },
+                                {
+                                    "downwardAPI": {
+                                        "items": [
+                                            {
+                                                "fieldRef": {
+                                                    "apiVersion": "v1",
+                                                    "fieldPath": "metadata.namespace"
+                                                },
+                                                "path": "namespace"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:42Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "PodReadyToStartContainers"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:41Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:44Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:44Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2026-09-15T15:55:41Z",
+                        "observedGeneration": 1,
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "allocatedResources": {
+                            "cpu": "10m",
+                            "memory": "32Mi"
+                        },
+                        "containerID": "containerd://8f77da28a9c26b73f19ac759d29854b432e3a767f40c2d40e980288dbdad2618",
+                        "image": "docker.io/capacity-cascade/auth-sim:l05-bc19711f5140",
+                        "imageID": "sha256:d506126b9cc76ea35e968478d234d26e1154a1b6615600dfef4f4e6e8f4d8fdd",
+                        "lastState": {},
+                        "name": "adapter",
+                        "ready": true,
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "128Mi"
+                            },
+                            "requests": {
+                                "cpu": "10m",
+                                "memory": "32Mi"
+                            }
+                        },
+                        "restartCount": 0,
+                        "started": true,
+                        "state": {
+                            "running": {
+                                "startedAt": "2026-09-15T15:55:42Z"
+                            }
+                        },
+                        "user": {
+                            "linux": {
+                                "gid": 65532,
+                                "supplementalGroups": [
+                                    65532
+                                ],
+                                "uid": 65532
+                            }
+                        },
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "kube-api-access-sv7hf",
+                                "readOnly": true,
+                                "recursiveReadOnly": "Disabled"
+                            }
+                        ]
+                    }
+                ],
+                "hostIP": "172.19.0.2",
+                "hostIPs": [
+                    {
+                        "ip": "172.19.0.2"
+                    }
+                ],
+                "observedGeneration": 1,
+                "phase": "Running",
+                "podIP": "10.42.0.11",
+                "podIPs": [
+                    {
+                        "ip": "10.42.0.11"
+                    }
+                ],
+                "qosClass": "Burstable",
+                "startTime": "2026-09-15T15:55:41Z"
+            }
+        },
+        {
+            "addressType": "IPv4",
+            "apiVersion": "discovery.k8s.io/v1",
+            "endpoints": [
+                {
+                    "addresses": [
+                        "10.42.0.10"
+                    ],
+                    "conditions": {
+                        "ready": true,
+                        "serving": true,
+                        "terminating": false
+                    },
+                    "nodeName": "k3d-capacity-cascade-l05-server-0",
+                    "targetRef": {
+                        "kind": "Pod",
+                        "name": "auth-sim-aware-7966b95d9-rg54d",
+                        "namespace": "capacity-cascade-l05-aware",
+                        "uid": "43c26018-918f-4150-8f86-19628af90200"
+                    }
+                },
+                {
+                    "addresses": [
+                        "10.42.0.13"
+                    ],
+                    "conditions": {
+                        "ready": true,
+                        "serving": true,
+                        "terminating": false
+                    },
+                    "nodeName": "k3d-capacity-cascade-l05-server-0",
+                    "targetRef": {
+                        "kind": "Pod",
+                        "name": "auth-sim-aware-7966b95d9-t64q4",
+                        "namespace": "capacity-cascade-l05-aware",
+                        "uid": "2ed4ee34-7daf-4f81-ad5b-af060e2810c7"
+                    }
+                }
+            ],
+            "kind": "EndpointSlice",
+            "metadata": {
+                "annotations": {
+                    "endpoints.kubernetes.io/last-change-trigger-time": "2026-09-15T15:56:06Z"
+                },
+                "creationTimestamp": "2026-09-15T15:55:27Z",
+                "generateName": "auth-sim-aware-",
+                "generation": 9,
+                "labels": {
+                    "app.kubernetes.io/instance": "auth-sim-aware",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "auth-sim",
+                    "app.kubernetes.io/version": "l03",
+                    "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+                    "helm.sh/chart": "auth-sim-0.1.0",
+                    "kubernetes.io/service-name": "auth-sim-aware"
+                },
+                "name": "auth-sim-aware-wq6fc",
+                "namespace": "capacity-cascade-l05-aware",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "Service",
+                        "name": "auth-sim-aware",
+                        "uid": "97f9fe93-b6b9-4694-8dc6-d08f562b8ff6"
+                    }
+                ],
+                "resourceVersion": "1194",
+                "uid": "79976891-7026-4dbe-b671-83b5349fe8f2"
+            },
+            "ports": [
+                {
+                    "name": "public",
+                    "port": 8080,
+                    "protocol": "TCP"
+                }
+            ]
+        },
+        {
+            "addressType": "IPv4",
+            "apiVersion": "discovery.k8s.io/v1",
+            "endpoints": [
+                {
+                    "addresses": [
+                        "10.42.0.11"
+                    ],
+                    "conditions": {
+                        "ready": true,
+                        "serving": true,
+                        "terminating": false
+                    },
+                    "nodeName": "k3d-capacity-cascade-l05-server-0",
+                    "targetRef": {
+                        "kind": "Pod",
+                        "name": "l05-custom-metrics-adapter-d947f9f99-lmszc",
+                        "namespace": "capacity-cascade-l05-aware",
+                        "uid": "10b95d3e-5f56-45e0-b73e-ecbf2963258c"
+                    }
+                }
+            ],
+            "kind": "EndpointSlice",
+            "metadata": {
+                "annotations": {
+                    "endpoints.kubernetes.io/last-change-trigger-time": "2026-09-15T15:55:44Z"
+                },
+                "creationTimestamp": "2026-09-15T15:55:41Z",
+                "generateName": "l05-custom-metrics-adapter-",
+                "generation": 3,
+                "labels": {
+                    "capacity-cascade-lab/owner": "l05",
+                    "endpointslice.kubernetes.io/managed-by": "endpointslice-controller.k8s.io",
+                    "kubernetes.io/service-name": "l05-custom-metrics-adapter"
+                },
+                "name": "l05-custom-metrics-adapter-z4v84",
+                "namespace": "capacity-cascade-l05-aware",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "Service",
+                        "name": "l05-custom-metrics-adapter",
+                        "uid": "bfeaf605-4630-47e7-b9a1-f15d5a7291e4"
+                    }
+                ],
+                "resourceVersion": "1116",
+                "uid": "2de2a67e-c713-492d-8ce5-b9ada8a84eb9"
+            },
+            "ports": [
+                {
+                    "name": "https",
+                    "port": 8443,
+                    "protocol": "TCP"
+                }
+            ]
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}
