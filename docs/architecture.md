@@ -356,7 +356,10 @@ metric, HPA behavior, sidecar mechanism/value, topology나 production tuning evi
 
 L06는 L05 blind HPA를 유지하되, 이를 GitHub topology라고 주장하지 않는 최소 local path 앞에
 HAProxy와 non-injected k6 Job을 둔다. HAProxy와 selected inbound proxy retry를 모두 끈 뒤
-client retry policy만 바꾼다. 모든 component/version/target은 `LAB_IMPLEMENTATION`이다.
+client retry policy만 바꾼다. HAProxy backend `maxconn 100`은 local process bound이며
+intentionally constrained component가 아니다. HAProxy stats는 통과 traffic의 backend session
+volume과 전달된 5xx를 관찰할 뿐 local HAProxy saturation을 판정하지 않는다. 모든
+component/version/target은 `LAB_IMPLEMENTATION`이다.
 
 ```mermaid
 flowchart LR
@@ -370,15 +373,18 @@ flowchart LR
     K -. only variable: max attempts 1 or 3 .-> H
 ```
 
-The fixed workload is stable `1/s · 20 s`, peak `4/s · 60 s`, then recovery
-`1/s · 20 s`. The runner samples k6, HAProxy, selected sidecar, application, HPA, Pod and
-endpoint state once per second, and accepts recovery only after the final sample returns
-selected sidecar active requests plus HAProxy queue/sessions to zero. Metrics port-forward is
-an observation path, not the workload path; its recorded selected-proxy downstream delta is zero.
+The `ramping-arrival-rate` workload holds stable `1/s` for `20 s`, linearly ramps from
+`1/s` to peak target `4/s` over `60 s`, then linearly ramps from `4/s` to recovery target
+`1/s` over `20 s`. The runner samples k6, HAProxy, selected sidecar, application, HPA, Pod
+and endpoint state once per second, and accepts recovery only after the final sample returns
+selected sidecar active requests plus HAProxy queue/sessions to zero. This is a final-idle
+criterion, not a measured comparison of retry recovery time. Metrics port-forward is an
+observation path, not the workload path; its recorded selected-proxy downstream delta is zero.
 
 Three clean-source pairs show 219–220 no-retry physical attempts versus 508–513 bounded-immediate
 retry physical attempts, with selected sidecar active-overflow 143–144 versus 430–434. This is
-a local fixed-condition mechanism observation only. It does not prove GitHub's HAProxy/Istio/
+a local fixed-condition mechanism observation only. HAProxy-observed backend session/5xx deltas
+describe propagated traffic, not HAProxy saturation. It does not prove GitHub's HAProxy/Istio/
 ClusterIP topology, retry algorithm, HPA policy, production capacity, or a general retry policy.
 The raw-selection details and individual timestamped files are in
 [L06 curated evidence](../results/curated/l06/README.md).

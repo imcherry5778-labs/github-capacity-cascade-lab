@@ -66,7 +66,8 @@ logical/physical/retry 의미와 L03 Kubernetes lifecycle을 바꾸지 않고, a
 sidecar의 capacity boundary를 별도로 관찰했다. L05는 그 local boundary를 다시 설계하지 않고,
 같은 constrained inbound sidecar 조건에서 HPA가 보는 대상만 바꿔 scaling decision을 비교했다.
 L06는 L05 blind HPA를 고정한 채 HAProxy와 non-injected k6를 앞에 연결하고, client retry만
-바꿔 physical attempt와 downstream pressure의 차이를 관찰한다.
+바꿔 physical attempt, selected sidecar overflow, HAProxy가 관찰한 backend session/전달된 5xx
+volume의 차이를 관찰한다. L06의 HAProxy는 의도적으로 constrained component가 아니다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -115,12 +116,16 @@ configuration 또는 보편적인 tuning recommendation이 아니다.
 L06의 local path는 non-injected k6 Job → HAProxy → ClusterIP Service → injected inbound
 `istio-proxy` → `auth-sim`이다. HAProxy/selected proxy retry는 모두 끄고,
 `cascade-no-retry`(max attempts 1)와 `cascade-retry`(bounded immediate max attempts 3)만
-비교한다. stable `1/s·20 s` → peak `4/s·60 s` → recovery `1/s·20 s`의 세 clean-source
-pair에서 retry scenario는 508–513 physical attempts와 430–434 selected sidecar active
-overflow를, no-retry scenario는 219–220 physical attempts와 143–144 overflow를 기록했다.
-원문과 측정 경계는 [L06 curated evidence](results/curated/l06/README.md)에 있다. 이는
-fixed-condition local mechanism evidence이며 GitHub topology, retry algorithm, production capacity
-또는 일반 retry policy를 뜻하지 않는다.
+비교한다. `ramping-arrival-rate` schedule은 stable `1/s` hold `20 s` → peak target
+`4/s`까지 `60 s` 선형 ramp → recovery target `1/s`까지 `20 s` 선형 ramp다. 세
+clean-source pair에서 retry scenario는 508–513 physical attempts와 430–434 selected sidecar
+active overflow를, no-retry scenario는 219–220 physical attempts와 143–144 overflow를 기록했다.
+HAProxy backend `maxconn 100`은 local process bound일 뿐 constrained target이 아니며, HAProxy
+stats는 통과한 backend session volume과 전달된 5xx를 기록한다. 원문과 측정 경계는
+[L06 curated evidence](results/curated/l06/README.md)에 있다. 이는 fixed-condition local
+mechanism evidence이며 GitHub topology, retry algorithm, production capacity, HAProxy saturation
+또는 일반 retry policy를 뜻하지 않는다. Timestamped recovery path와 final idle만 관찰했으며,
+retry별 recovery time을 비교·측정하지 않았다.
 
 ## L00 foundation architecture
 

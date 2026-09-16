@@ -27,21 +27,27 @@ Istio is `1.30.4`, HAProxy is `3.2.23-alpine`, k6 is `2.2.0`, application latenc
 retry policy is disabled in both scenarios. The HPA path is recorded as an observation/state
 signal; it is not used as causal proof for a GitHub production policy.
 
-The fixed schedule is stable `1/s · 20 s`, peak `4/s · 60 s`, then recovery
-`1/s · 20 s`, with one-second samples. The only comparison variable is the client policy:
+HAProxy backend `maxconn 100` is a local process bound, not the constrained component. Its
+stats record propagated backend session volume and 5xx; they are not evidence of local HAProxy
+flow-limit or queue saturation.
+
+The `ramping-arrival-rate` schedule holds stable `1/s` for `20 s`, linearly ramps from
+`1/s` to peak target `4/s` over `60 s`, then linearly ramps from `4/s` to recovery target
+`1/s` over `20 s`, with one-second samples. The only comparison variable is the client policy:
 
 | scenario | client retry policy | maximum attempts |
 | --- | --- | --- |
 | `cascade-no-retry` | none | 1 |
 | `cascade-retry` | bounded immediate retry | 3 |
 
-Recovery passes only if the final timestamped sample after peak shows selected sidecar active
-requests and HAProxy current queue/sessions back at zero. All six scenario contracts record
-every phase (`baseline`, `stable`, `peak`, `recovery`, `after`) and `recovery_idle: true`.
+Recovery passes only if the final timestamped `after` sample following the recovery ramp shows
+selected sidecar active requests and HAProxy current queue/sessions back at zero. All six scenario
+contracts record every phase (`baseline`, `stable`, `peak`, `recovery`, `after`) and
+`recovery_idle: true`. This is not a retry-to-retry recovery-duration comparison.
 
 ## Measured local comparison
 
-| repetition | no-retry logical / physical / retry | no-retry sidecar overflow / HAProxy sessions / 5xx | retry logical / physical / retry / amplification | retry sidecar overflow / HAProxy sessions / 5xx |
+| repetition | no-retry logical / physical / retry | no-retry sidecar overflow / HAProxy-observed sessions / 5xx | retry logical / physical / retry / amplification | retry sidecar overflow / HAProxy-observed sessions / 5xx |
 | --- | --- | --- | --- |
 | 1 | 219 / 219 / 0 | 143 / 219 / 143 | 220 / 513 / 293 / 2.332x | 434 / 513 / 434 |
 | 2 | 220 / 220 / 0 | 144 / 220 / 144 | 219 / 508 / 289 / 2.320x | 430 / 508 / 430 |
@@ -50,9 +56,9 @@ every phase (`baseline`, `stable`, `peak`, `recovery`, `after`) and `recovery_id
 Each scenario recorded a maximum desired/current HPA replica count of `1/1`, no dropped k6
 iterations, and zero application admission rejections. This supports a narrow local
 interpretation: under this fixed workload and capacity target, immediate bounded client retry
-increased physical attempts and the selected sidecar/HAProxy pressure counters. It does not
-establish GitHub's topology, retry algorithm, exact settings, causality, production capacity,
-or a general retry recommendation.
+increased physical attempts, selected sidecar overflow, and HAProxy-observed backend session/
+propagated-5xx volume. It does not establish local HAProxy saturation, GitHub's topology, retry
+algorithm, exact settings, causality, production capacity, or a general retry recommendation.
 
 ## Selected original files
 

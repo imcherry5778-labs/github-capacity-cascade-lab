@@ -225,21 +225,24 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
 - Source/image/K3s/Istio version, non-injected k6 → HAProxy → ClusterIP → injected sidecar →
   auth-sim data path, selected inbound `http2MaxRequests: 1`, blind `ContainerResource`
   `auth-sim` CPU HPA, HAProxy `retries 0`/no redispatch, selected proxy no-retry, application
-  latency `1000 ms`, timeout `2 s`, stable `1/s·20 s` → peak `4/s·60 s` → recovery
-  `1/s·20 s`, one-second sampling과 cleanup contract를 고정한다.
+  latency `1000 ms`, timeout `2 s`, stable `1/s` hold `20 s` → peak target `4/s`까지
+  `60 s` linear ramp → recovery target `1/s`까지 `20 s` linear ramp, one-second sampling과
+  cleanup contract를 고정한다. HAProxy backend `maxconn 100`은 local process bound이고
+  constrained target이 아니므로, HAProxy 관찰값으로 local saturation을 주장하지 않는다.
 - 비교 변수는 client retry 하나뿐이다. `cascade-no-retry`는 max attempts `1`이고
   `cascade-retry`는 bounded immediate max attempts `3`이다. HAProxy/proxy retry를 켜거나
   HPA target, component, logical schedule을 같이 바꾸면 이 pair의 결론으로 취급하지 않는다.
-- 각 scenario는 k6 logical/physical/retry/status/p95, HAProxy queue/session/5xx, selected sidecar
-  downstream/upstream/active/overflow, application token/admission, HPA condition/desired/current,
-  Ready Pod/endpoint를 `baseline`, `stable`, `peak`, `recovery`, `after` phase timestamp와
-  함께 남긴다. Application metrics scrape는 direct observation path이며 proxy downstream delta가
-  zero인 bypass proof를 별도로 기록한다.
+- 각 scenario는 k6 logical/physical/retry/status/p95, HAProxy-observed queue/session/5xx, selected
+  sidecar downstream/upstream/active/overflow, application token/admission, HPA
+  condition/desired/current, Ready Pod/endpoint를 `baseline`, `stable`, `peak`, `recovery`,
+  `after` phase timestamp와 함께 남긴다. Application metrics scrape는 direct observation path이며
+  proxy downstream delta가 zero인 bypass proof를 별도로 기록한다.
 - no-retry는 physical=logical, retry attempts=0, selected sidecar overflow와 503, HPA maximum
   desired/current `1/1`, application admission rejection=0, dropped iterations=0, 모든 phase와
   final idle recovery를 만족해야 한다. retry는 그 조건과 함께 physical attempts, selected sidecar
-  overflow, HAProxy sessions/5xx가 no-retry보다 커야 한다. 하나라도 누락되거나 cleanup이 실패하면
-  PASS가 아니다.
+  overflow, HAProxy-observed backend session/전달된 5xx가 no-retry보다 커야 한다. 이는 traffic
+  propagation contract이며 HAProxy saturation 또는 retry별 recovery time을 판정하지 않는다.
+  하나라도 누락되거나 cleanup이 실패하면 PASS가 아니다.
 - Curated L06에는 `git_dirty=false` clean-source pair 세 개 중 root metadata/contract/cleanup과
   timestamped samples, k6 summary, HAProxy before/after stats, selected proxy target/mapping,
   application observation-path proof, HPA final/event처럼 판정에 필요한 original file만

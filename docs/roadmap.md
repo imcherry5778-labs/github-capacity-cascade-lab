@@ -87,17 +87,19 @@
 - **ID:** L06
 - **Title:** Full Capacity Cascade
 - **Goal:** 앞 단계의 mechanism을 연결해 failure가 추가 traffic을 만드는 cascade를 관찰한다.
-- **Learn:** Saturation, rejection/timeout, retry amplification, downstream pressure의 피드백 순환을 이해한다.
+- **Learn:** Selected sidecar saturation, rejection/timeout, retry amplification, downstream traffic propagation의 피드백 순환을 이해한다.
 - **Build:** non-injected k6 Job → HAProxy → ClusterIP Service → injected inbound sidecar → auth-sim의
   최소 local path와 L05 blind `ContainerResource` HPA를 연결한다. HAProxy/selected proxy retry는
   끄고 client retry만 one-variable로 비교한다.
-- **Observe:** Logical rate 대비 physical rate, HAProxy sessions/5xx, selected sidecar
-  downstream/overflow, application counter, HPA/Pod/endpoint state와 final idle recovery를
-  timestamped sample로 연결한다.
-- **Done:** fixed stable→peak→recovery schedule에서 no-retry/max attempts 1과 bounded immediate
-  client retry/max attempts 3을 clean source로 세 pair 실행한다. 모든 root/scenario/cleanup
-  contract가 PASS이고 physical-attempt/selected sidecar overflow/HAProxy pressure 차이, direct
-  application observation bypass 및 final idle recovery가 local evidence에 있어야 한다.
+- **Observe:** Logical rate 대비 physical rate, HAProxy-observed backend session/전달된 5xx,
+  selected sidecar downstream/overflow, application counter, HPA/Pod/endpoint state와 final idle
+  recovery를 timestamped sample로 연결한다.
+- **Done:** stable `1/s` hold `20 s` → peak target `4/s`까지 `60 s` linear ramp → recovery
+  target `1/s`까지 `20 s` linear ramp에서 no-retry/max attempts 1과 bounded immediate client
+  retry/max attempts 3을 clean source로 세 pair 실행한다. 모든 root/scenario/cleanup contract가
+  PASS이고 physical-attempt/selected sidecar overflow/HAProxy-observed backend session·전달된 5xx
+  차이, direct application observation bypass 및 final idle recovery가 local evidence에 있어야 한다.
+  HAProxy saturation이나 retry별 recovery time은 이 completion contract가 아니다.
 - **Non-goals:** GitHub incident 전체 또는 private topology 재현, 임의의 10x 목표 맞추기.
 - **Dependencies:** L01–L05.
 - **Status:** Complete — implementation verified; 3 clean local repetitions are curated as local exploratory evidence.
