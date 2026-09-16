@@ -217,6 +217,38 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
   `500m`, behavior와 temporary aggregation TLS setting은 local `LAB_IMPLEMENTATION`이며 GitHub metric,
   threshold, scaling behavior 또는 production security policy가 아니다.
 
+### L06 full capacity cascade
+
+- 한 L06 pair는 fresh k3d cluster, Istio base/istiod installation, HAProxy workload Deployment와
+  두 fresh scenario namespace를 사용한다. no-retry와 retry, repetition 사이의 cumulative counter를
+  서로 빼지 않으며 각 scenario의 fresh before/after delta만 해석한다.
+- Source/image/K3s/Istio version, non-injected k6 → HAProxy → ClusterIP → injected sidecar →
+  auth-sim data path, selected inbound `http2MaxRequests: 1`, blind `ContainerResource`
+  `auth-sim` CPU HPA, HAProxy `retries 0`/no redispatch, selected proxy no-retry, application
+  latency `1000 ms`, timeout `2 s`, stable `1/s·20 s` → peak `4/s·60 s` → recovery
+  `1/s·20 s`, one-second sampling과 cleanup contract를 고정한다.
+- 비교 변수는 client retry 하나뿐이다. `cascade-no-retry`는 max attempts `1`이고
+  `cascade-retry`는 bounded immediate max attempts `3`이다. HAProxy/proxy retry를 켜거나
+  HPA target, component, logical schedule을 같이 바꾸면 이 pair의 결론으로 취급하지 않는다.
+- 각 scenario는 k6 logical/physical/retry/status/p95, HAProxy queue/session/5xx, selected sidecar
+  downstream/upstream/active/overflow, application token/admission, HPA condition/desired/current,
+  Ready Pod/endpoint를 `baseline`, `stable`, `peak`, `recovery`, `after` phase timestamp와
+  함께 남긴다. Application metrics scrape는 direct observation path이며 proxy downstream delta가
+  zero인 bypass proof를 별도로 기록한다.
+- no-retry는 physical=logical, retry attempts=0, selected sidecar overflow와 503, HPA maximum
+  desired/current `1/1`, application admission rejection=0, dropped iterations=0, 모든 phase와
+  final idle recovery를 만족해야 한다. retry는 그 조건과 함께 physical attempts, selected sidecar
+  overflow, HAProxy sessions/5xx가 no-retry보다 커야 한다. 하나라도 누락되거나 cleanup이 실패하면
+  PASS가 아니다.
+- Curated L06에는 `git_dirty=false` clean-source pair 세 개 중 root metadata/contract/cleanup과
+  timestamped samples, k6 summary, HAProxy before/after stats, selected proxy target/mapping,
+  application observation-path proof, HPA final/event처럼 판정에 필요한 original file만
+  byte-for-byte로 복사한다. Failed 또는 dirty exploratory raw run은 append-only로 보존하고 curate하지
+  않는다.
+- L06 numerical result는 fixed local condition의 mechanism evidence다. GitHub exact topology,
+  proxy/retry/HPA implementation, incident RPS/10x, production capacity 또는 universal retry
+  tuning recommendation으로 확장하지 않는다.
+
 ## Reporting rules
 
 - 측정하지 않은 값은 결과로 작성하지 않는다.

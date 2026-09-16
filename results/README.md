@@ -89,6 +89,20 @@ rendered manifest, Secret/port-forward command log, temporary file과 failed/dir
 raw-only로 남긴다. Local exporter/adapter, threshold와 short-lived aggregation TLS는 GitHub
 production evidence가 아닌 `LAB_IMPLEMENTATION`이다.
 
+L06는 `results/full-capacity-cascade/<UTC timestamp>/` 아래 하나의 pair parent와
+`cascade-no-retry`/`cascade-retry` scenario directory를 만든다. Root에는 source cleanliness,
+local k3d/K3s/Istio/image identity, fixed comparison, pair contract와 cleanup을 둔다. 각 scenario에는
+k6 identity/summary, HAProxy before/after stats, selected inbound proxy target/mapping,
+application observation-path proof, HPA final/event, one-second
+k6/HAProxy/proxy/application/HPA/Pod/endpoint sample과 scenario contract를 둔다.
+
+L06 curated evidence는 clean-source fixed-condition pair 세 개만 포함한다. 각 selected file은 raw와
+byte-for-byte 동일하며, root metadata/contract/cleanup, timestamped samples, k6 summary, HAProxy
+stats, selected proxy target/mapping, application bypass proof와 HPA final/event만 포함한다. Full
+config dump, rendered manifest, lifecycle log, temporary file과 failed/dirty-source run은 raw-only로
+남긴다. L06 values와 topology는 GitHub production evidence가 아닌 local
+`LAB_IMPLEMENTATION`/exploratory evidence다.
+
 Scenario 도중 실패한 파일도 raw directory에 보존한다. Curated copy에는 해석에 필요한
 파일만 포함하며 전체 noisy log를 자동으로 복사하지 않는다. Admin token, 전체 environment,
 credential, 개인 절대 경로는 raw와 curated evidence 어디에도 저장하지 않는다. 측정값은

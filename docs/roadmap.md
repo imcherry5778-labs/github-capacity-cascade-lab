@@ -88,12 +88,19 @@
 - **Title:** Full Capacity Cascade
 - **Goal:** 앞 단계의 mechanism을 연결해 failure가 추가 traffic을 만드는 cascade를 관찰한다.
 - **Learn:** Saturation, rejection/timeout, retry amplification, downstream pressure의 피드백 순환을 이해한다.
-- **Build:** 최소 components만 연결한 end-to-end lab scenario.
-- **Observe:** Logical rate 대비 physical rate, component별 capacity, failure propagation과 recovery time.
-- **Done:** Cascade 시작·확산·회복이 timestamped evidence와 제한사항으로 설명된다.
+- **Build:** non-injected k6 Job → HAProxy → ClusterIP Service → injected inbound sidecar → auth-sim의
+  최소 local path와 L05 blind `ContainerResource` HPA를 연결한다. HAProxy/selected proxy retry는
+  끄고 client retry만 one-variable로 비교한다.
+- **Observe:** Logical rate 대비 physical rate, HAProxy sessions/5xx, selected sidecar
+  downstream/overflow, application counter, HPA/Pod/endpoint state와 final idle recovery를
+  timestamped sample로 연결한다.
+- **Done:** fixed stable→peak→recovery schedule에서 no-retry/max attempts 1과 bounded immediate
+  client retry/max attempts 3을 clean source로 세 pair 실행한다. 모든 root/scenario/cleanup
+  contract가 PASS이고 physical-attempt/selected sidecar overflow/HAProxy pressure 차이, direct
+  application observation bypass 및 final idle recovery가 local evidence에 있어야 한다.
 - **Non-goals:** GitHub incident 전체 또는 private topology 재현, 임의의 10x 목표 맞추기.
 - **Dependencies:** L01–L05.
-- **Status:** Planned — next.
+- **Status:** Complete — implementation verified; 3 clean local repetitions are curated as local exploratory evidence.
 
 ## L07 — RCA Mitigations
 

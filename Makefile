@@ -295,7 +295,7 @@ l05-check: l05-doctor ## L05 HPA/custom-metrics manifests, chart, k6와 runner�
 	done; \
 	if rg -n -i '/home/|authorization:[[:space:]]*bearer|bearer[[:space:]]+l05-' results/curated/l05; then printf 'private path or credential-like content found in curated L05 evidence\n' >&2; exit 1; fi; \
 	awk '/^## L05 / { in_l05=1; next } /^## L06 / { in_l05=0 } in_l05 && /Complete — implementation verified/ { found=1 } END { exit(found ? 0 : 1) }' docs/roadmap.md; \
-	grep -q 'L06 — Full Capacity Cascade.*Planned — next' README.md; \
+	grep -q 'L06 — Full Capacity Cascade' README.md; \
 	k6 inspect load/k6/l05.js >/dev/null; \
 	bash -n scripts/run-l05-hpa.sh
 
@@ -335,6 +335,20 @@ l06-check: l06-doctor ## L06 manifests, HAProxy no-retry contract, k6 및 runner
 	grep -q 'no option redispatch' l06/haproxy.yaml; \
 	grep -q 'http2MaxRequests: 1' l06/sidecar.yaml; \
 	grep -q 'ContainerResource' l06/hpa-blind.yaml; \
+	for repetition in results/curated/l06/repetition-1 results/curated/l06/repetition-2 results/curated/l06/repetition-3; do \
+		test -f "$$repetition/metadata.json"; test -f "$$repetition/contract.json"; test -f "$$repetition/cleanup.json"; \
+		jq -e '.git_dirty == false and .scenario_mode == "pair"' "$$repetition/metadata.json" >/dev/null; \
+		jq -e '.passed == true and .no_retry.passed == true and .retry.passed == true' "$$repetition/contract.json" >/dev/null; \
+		jq -e '.runner_exit_code == 0 and .cluster_removed == true and .remaining_owned_containers == 0 and .remaining_owned_networks == 0 and .remaining_owned_port_forwards == 0 and .temporary_kubeconfig_removed == true and .temporary_helm_state_removed == true and .original_context_unchanged == true and .original_helm_repository_config_unchanged == true' "$$repetition/cleanup.json" >/dev/null; \
+		for scenario in cascade-no-retry cascade-retry; do \
+			for file in contract.json k6-metadata.json k6-summary.json k6-summary.md haproxy-stats-before.csv haproxy-stats-after.csv proxy-metric-mapping.json application-observation-path.json hpa-final.yaml hpa-events.json target-inbound-cluster.json target-inbound-http-config.json samples.jsonl; do test -f "$$repetition/$$scenario/$$file"; done; \
+			jq -e '.passed == true and .sampling.recovery_idle == true' "$$repetition/$$scenario/contract.json" >/dev/null; \
+			jq -e . "$$repetition/$$scenario/samples.jsonl" >/dev/null; \
+		done; \
+	done; \
+	if rg -n -i '/home/|authorization:[[:space:]]*bearer|bearer[[:space:]]+l06-' results/curated/l06; then printf 'private path or credential-like content found in curated L06 evidence\n' >&2; exit 1; fi; \
+	awk '/^## L06 / { in_l06=1; next } /^## L07 / { in_l06=0 } in_l06 && /Complete — implementation verified/ { found=1 } END { exit(found ? 0 : 1) }' docs/roadmap.md; \
+	grep -q 'Completed foundation: L06 — Full Capacity Cascade' README.md; \
 	sed -e 's/AUTH_SIM_SERVICE_FQDN/auth-sim.capacity-cascade-l06-target.svc.cluster.local/g' -e 's/HAPROXY_IMAGE/$(L06_HAPROXY_IMAGE)/g' l06/haproxy.yaml >"$$tmp/haproxy.yaml"; \
 	ruby -e 'require "yaml"; d=YAML.load_stream(File.read(ARGV[0])).find { |x| x["kind"]=="ConfigMap" }; File.write(ARGV[1], d.dig("data", "haproxy.cfg"))' "$$tmp/haproxy.yaml" "$$tmp/haproxy.cfg"; \
 	docker run --rm --entrypoint haproxy --volume "$$tmp/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" "$(L06_HAPROXY_IMAGE)" -c -f /usr/local/etc/haproxy/haproxy.cfg; \

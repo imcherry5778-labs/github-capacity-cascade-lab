@@ -59,12 +59,14 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Completed through L05 — next L06
+## Completed through L06 — next L07
 
-현재 완료된 구현 범위는 **L05 — HPA Blind Spot**까지다. L04는 L00/L01/L02의
+현재 완료된 구현 범위는 **L06 — Full Capacity Cascade**까지다. L04는 L00/L01/L02의
 logical/physical/retry 의미와 L03 Kubernetes lifecycle을 바꾸지 않고, application과 inbound
 sidecar의 capacity boundary를 별도로 관찰했다. L05는 그 local boundary를 다시 설계하지 않고,
-같은 constrained inbound sidecar 조건에서 HPA가 보는 대상만 바꿔 scaling decision을 비교한다.
+같은 constrained inbound sidecar 조건에서 HPA가 보는 대상만 바꿔 scaling decision을 비교했다.
+L06는 L05 blind HPA를 고정한 채 HAProxy와 non-injected k6를 앞에 연결하고, client retry만
+바꿔 physical attempt와 downstream pressure의 차이를 관찰한다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -110,6 +112,16 @@ capacity-aware policy는 selected sidecar active-request signal을 Pod custom me
 adapter, topology와 결과는 모두 local `LAB_IMPLEMENTATION`/evidence이며 GitHub production
 configuration 또는 보편적인 tuning recommendation이 아니다.
 
+L06의 local path는 non-injected k6 Job → HAProxy → ClusterIP Service → injected inbound
+`istio-proxy` → `auth-sim`이다. HAProxy/selected proxy retry는 모두 끄고,
+`cascade-no-retry`(max attempts 1)와 `cascade-retry`(bounded immediate max attempts 3)만
+비교한다. stable `1/s·20 s` → peak `4/s·60 s` → recovery `1/s·20 s`의 세 clean-source
+pair에서 retry scenario는 508–513 physical attempts와 430–434 selected sidecar active
+overflow를, no-retry scenario는 219–220 physical attempts와 143–144 overflow를 기록했다.
+원문과 측정 경계는 [L06 curated evidence](results/curated/l06/README.md)에 있다. 이는
+fixed-condition local mechanism evidence이며 GitHub topology, retry algorithm, production capacity
+또는 일반 retry policy를 뜻하지 않는다.
+
 ## L00 foundation architecture
 
 ```mermaid
@@ -120,8 +132,8 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L00–L05는 completed foundation이다. 상세 topology와 단계별 plane 경계는
-[architecture](docs/architecture.md)에 있다. 다음 scaling/cascade 연결은 L06 범위다.
+L00–L06는 completed foundation이다. 상세 topology와 단계별 plane 경계는
+[architecture](docs/architecture.md)에 있다. 다음 mitigation comparison은 L07 범위다.
 
 ## Local quick start
 
@@ -223,6 +235,13 @@ no-retry and same-sidecar-policy contracts를 정적으로 검사한다. `make l
 blind lifecycle과 cleanup을, `make l05-verify`는 150초 fixed workload에서 blind/aware pair를
 실행한다. Raw evidence는 `results/hpa-blind-spot/<UTC timestamp>/`에 append-only로 남으며,
 `make l05-clean`은 exact L05 cluster/process만 제거한다.
+
+L06는 L05 도구와 HAProxy image를 사용한다. `make l06-check`는 pinned manifest/image,
+HAProxy와 selected proxy no-retry contract, k6 scenario, curated clean-source evidence와 runner
+syntax를 검사한다. `make l06-smoke`는 짧은 stable→peak→recovery datapath와 cleanup을,
+`make l06-verify`는 fixed no-retry/retry pair를 fresh cluster에서 실행한다. Raw evidence는
+`results/full-capacity-cascade/<UTC timestamp>/`에 append-only로 남고,
+`make l06-clean`은 exact L06 cluster/process만 정리한다.
 
 ### Docker
 
@@ -387,6 +406,13 @@ selected inbound proxy config/mapping, k6 results, contracts와 cleanup을 남�
 behavior/sidecar target은 고정한다. Curated L05는 clean source 3회만 선별해 byte-for-byte
 복사하며 failed 또는 dirty-source raw run은 제외하고 보존한다.
 
+L06 pair는 `results/full-capacity-cascade/<UTC timestamp>/` 아래 root metadata/contract/cleanup과
+scenario별 k6 logical/physical/retry summary, HAProxy before/after stats, selected inbound proxy
+mapping/config, direct application-observation-path proof, HPA final/event 및 timestamped
+k6/HAProxy/proxy/application/HPA/Pod/endpoint samples를 남긴다. 현재
+[L06 curated evidence](results/curated/l06/README.md)는 clean-source fixed-condition pair 세
+개에서 판정에 필요한 원문만 byte-for-byte로 선별한다.
+
 ## Application metrics
 
 `GET /metrics`는 다음 low-cardinality metric을 노출한다.
@@ -401,8 +427,8 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L05까지는 completed
-foundation이고 다음 단계는 **L06 — Full Capacity Cascade** (`Planned — next`)다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L06까지는 completed
+foundation이고 다음 단계는 **L07 — RCA Mitigations** (`Planned`)다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -418,8 +444,8 @@ Retry Amplification = Physical Attempts / Logical Requests
 
 ## Results — Local evidence
 
-L05는 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
-L05 implementation verification이며 portfolio final evidence, production benchmark 또는
+L05와 L06는 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
+implementation verification이며 portfolio final evidence, production benchmark 또는
 machine-independent performance conclusion은 아니다. 최종 portfolio comparison은 L10에서
 별도로 구성한다.
 
@@ -445,6 +471,7 @@ preflight와 승인 경계를 거쳐 검증한다.
 - Completed foundation: L03 — k3d and Helm Baseline (implementation verified; local exploratory evidence)
 - Completed foundation: L04 — Istio Sidecar and Proxy Metrics (implementation verified; local exploratory evidence)
 - Completed foundation: L05 — HPA Blind Spot (implementation verified; 3 clean local repetitions)
-- Next: L06 — Full Capacity Cascade (`Planned — next`)
+- Completed foundation: L06 — Full Capacity Cascade (implementation verified; 3 clean local repetitions)
+- Next: L07 — RCA Mitigations (`Planned`)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님
