@@ -6,26 +6,28 @@ freshness는 [Source Register](source-register.md), 공개 event 순서는
 
 [status]: https://www.githubstatus.com/incidents/zkxwbgr0cnmx
 [blog]: https://github.blog/news-insights/company-news/the-august-17-outage-and-the-work-ahead/
+[report]: https://github.blog/news-insights/company-news/github-availability-report-august-2026/
 
 | ID | Classification | Statement | Source | Impact on lab |
 | --- | --- | --- | --- | --- |
 | F01 | FACT | 장애는 2026-08-17 13:28–21:15 UTC, 총 7시간 47분 지속됐다. | [Status RCA][status] | Incident context의 시간 범위로만 사용한다. |
-| F02 | FACT | GitHub.com, API, Issues, Pull Requests, Actions, Copilot, authentication과 여러 서비스에 오류와 지연이 발생했다. | [Status RCA][status], [GitHub blog][blog] | 단일 component capacity failure가 넓은 사용자 영향으로 번질 수 있다는 연구 배경이다. |
+| F02 | FACT | GitHub.com, API, Issues, Pull Requests, Actions, Copilot, authentication과 여러 서비스에 오류와 지연이 발생했다. | [Status RCA][status], [GitHub blog][blog], [August report][report] | 단일 component capacity failure가 넓은 사용자 영향으로 번질 수 있다는 연구 배경이다. |
 | F03 | FACT | 새로운 traffic peak에서 Central US load balancer network가 saturation에 도달했다. | [Status RCA][status] | L00는 peak 자체가 아니라 load-amplifying effect를 측정한다. |
-| F04 | FACT | 최초 문제는 Istio sidecar pod의 concurrency limit 도달과 host service만 관찰하고 sidecar capacity를 충분히 반영하지 못한 autoscaling policy로 설명됐다. | [Status RCA][status] | 후속 L04–L05의 sidecar metric과 scaling blind spot 학습 근거다. |
-| F05 | FACT | Failure가 연쇄 확산되어 네 HAProxy node가 flow limit을 소진했고 gateway authentication path가 저하됐다. | [Status RCA][status] | 후속 proxy/cascade 단계의 학습 질문을 정의한다. 정확한 topology는 추정하지 않는다. |
-| F06 | FACT | Optimistic retry logic가 internal load balancer 부하를 악화시켰다. | [Status RCA][status] | Logical request와 physical attempt를 분리 측정하는 직접 동기다. |
+| F04 | FACT | 최초 문제는 Istio sidecar pod의 concurrency limit 도달과 host service만 관찰하고 sidecar capacity를 충분히 반영하지 못한 autoscaling policy로 설명됐다. August report도 service-mesh sidecar가 concurrency limit에 도달해 scale-up하지 못했다고 독립적으로 설명한다. | [Status RCA][status], [August report][report] | 후속 L04–L05의 sidecar metric과 scaling blind spot 학습 근거다. Host-service observation detail은 Status RCA 범위다. |
+| F05 | FACT | Failure가 연쇄 확산됐다. Status RCA는 네 HAProxy node의 flow limit 소진을, August report는 여러 load-balancer node의 network flow limit 소진과 shared gateway authentication path 저하를 각각 설명한다. | [Status RCA][status], [August report][report] | 후속 proxy/cascade 단계의 학습 질문을 정의한다. August report는 node를 HAProxy라고 식별하지 않으므로 정확한 topology는 추정하지 않는다. |
+| F06 | FACT | Status RCA는 optimistic retry logic가 internal load balancer 부하를 악화시켰다고, August report는 latent client retry bug가 internal authentication endpoint traffic을 크게 증폭했다고 각각 설명한다. | [Status RCA][status], [August report][report] | Logical request와 physical attempt를 분리 측정하는 직접 동기다. |
 | F07 | FACT | 일부 실패 traffic은 Central US에서 Northern Virginia로 이동해 처리됐다. | [Status RCA][status] | 향후 regional recovery를 검토하되 구체 infrastructure는 추정하지 않는다. |
 | F08 | FACT | 복구 중 VS Code의 잠재된 retry behavior가 Copilot Token Service traffic을 약 10배 증폭시켰다. | [Status RCA][status] | Retry amplification을 핵심 관찰값으로 삼는다. 10x를 L00 acceptance로 사용하지 않는다. |
 | F09 | FACT | Copilot Token Service traffic은 정상 약 7–9K RPS에서 약 70–100K RPS로 증가했다. | [Status RCA][status] | Official incident 수치이며 local result와 직접 비교하지 않는다. |
-| F10 | FACT | Gateway retry 축소, token 요청의 일시적 403 차단, site별 점진적 traffic ramp-up이 복구에 사용됐다. | [Status RCA][status] | 후속 mitigation 단계의 연구 방향이다. |
-| F11 | FACT | 후속 조치에는 sidecar-aware autoscaling, Istio limit 점검, gateway/client retry와 backoff 검토, VS Code retry 수정, load balancer monitoring과 regional failover 개선이 포함됐다. | [Status RCA][status] | L04–L09 roadmap 질문의 출처다. |
+| F10 | FACT | Gateway retry 축소, token 요청의 일시적 403 차단, site별 점진적 traffic ramp-up이 복구에 사용됐다. | [Status RCA][status], [August report][report] | 후속 mitigation 단계의 연구 방향이다. |
+| F11 | FACT | 후속 조치에는 sidecar-aware autoscaling, Istio limit 점검, gateway/client retry와 backoff 검토, VS Code retry 수정, load balancer monitoring과 regional failover 개선이 포함됐다. | [Status RCA][status], [August report][report] | L04–L09 roadmap 질문의 출처다. |
 | F12 | FACT | GitHub는 incident가 직전 code/configuration change로 시작된 것이 아니라 core capacity failure였다고 밝혔다. | [GitHub blog][blog] | Change-trigger reproduction이 아니라 capacity behavior에 초점을 둔다. |
 | F13 | FACT | Peak web/API error rate는 약 20%였고 archive와 raw-content download error rate는 약 50%였다. | [Status RCA][status] | 서로 다른 user-facing path의 impact를 하나의 error rate로 합치지 않는다. |
 | F14 | FACT | SAML/OIDC authentication, SCIM, Team Sync와 public GitHub.com의 workflow step definition에 의존하는 GHEC with Data Residency Actions workflow도 영향을 받았다. | [Status RCA][status] | Authentication과 cross-environment dependency impact를 기록하되 exact dependency topology는 추정하지 않는다. |
 | F15 | FACT | Most services는 16:36 UTC까지 회복됐지만 Actions는 약 18:03 UTC까지 degraded됐고 Copilot Token Service는 21:02 UTC에 fully recovered됐다. | [Status RCA][status] | Broad recovery와 service별 final recovery를 구분한다. |
 | F16 | FACT | Codeload endpoint를 향한 여러 scraping attack이 recovery를 방해하는 complicating factor였다. | [Status RCA][status] | Volume, source와 mitigation은 공개되지 않았으므로 추가 추정하지 않는다. |
 | F17 | FACT | Flow limit을 소진한 HAProxy node들을 동시에 pause한 뒤 immediate broad recovery가 나타났다고 RCA가 설명한다. | [Status RCA][status] | L01 local HAProxy action이나 topology와 동일시하지 않고 공개된 recovery effect로만 사용한다. |
+| F18 | FACT | August report는 peak에서 affected services의 front-door request 중 56.07%가 edge에서 실패하거나 느렸고, 약 29K organizations에서 적어도 한 번의 failed-or-slow request와 총 약 4.8M failed-or-slow requests가 있었으며 data loss는 없었다고 보고한다. | [August report][report] | Official incident impact context로만 사용한다. Local acceptance의 error rate, request count, RPS 또는 amplification target이 아니다. |
 | I01 | INFERENCE | Capacity를 소진하는 component와 scaling metric의 관찰 대상이 다르면 host 지표가 여유로워 보여도 실효 capacity가 부족할 수 있다. | F04에 대한 lab 해석 | L05에서 observable blind spot을 검증할 가설이다. GitHub의 정확한 HPA 설정을 뜻하지 않는다. |
 | I03 | INFERENCE | 같은 fixed workload에서 application-container CPU HPA가 1 replica에 머물고 sidecar overflow/503가 발생한 반면, selected sidecar active-request metric HPA가 2 replica로 늘어 overflow/503가 줄었다면, 이 lab 조건에서는 metric scope mismatch가 scaling blind spot의 한 설명이다. | L05 curated local evidence | Metric target, adapter, sidecar setting과 three local repetitions에 한정된 해석이며 GitHub production causality 또는 일반 tuning rule이 아니다. |
 | I02 | INFERENCE | Logical failure에 대한 retry가 physical load를 늘리면 capacity recovery가 지연될 수 있다. | F06, F08에 대한 lab 해석 | Counter 기반 amplification과 recovery 실험 설계의 가설이다. |

@@ -2,7 +2,7 @@
 
 ## Scope and source boundary
 
-- 이 문서는 [RCA-01][rca-01]과 [RCA-02][rca-02]만으로 2026-08-17 incident를
+- 이 문서는 [RCA-01][rca-01], [RCA-02][rca-02], [RCA-03][rca-03]으로 2026-08-17 incident를
   정리한다. Source classification과 freshness 기록은 [Source Register](source-register.md)에
   있다.
 - 이 timeline은 공개된 condition, user impact, mitigation과 recovery sequence이며 GitHub의
@@ -11,6 +11,9 @@
   시각은 `UNKNOWN`으로 남긴다.
 - Service별 impact 시작과 내부 조치의 exact execution time이 공개되지 않은 경우 incident
   시작 시각이나 status update 시각으로 대신 추정하지 않는다.
+- `RCA-03`은 August 17 section heading에 13:40 UTC 및 7시간 35분을, impact summary에 약
+  6시간 44분을 표시한다. `RCA-01`의 13:28–21:15 UTC와 범위를 임의로 통합하지 않으며,
+  이 표의 precise UTC row는 각 row가 명시한 source에만 귀속한다.
 
 ## Timeline
 
@@ -21,14 +24,14 @@
 | 13:45 | 여러 experience에서 약 20% error rate를 보고했다. | Pull Requests, Issues와 그 밖의 experience에서 실패가 관찰됐다. | Investigation 진행 중 | [RCA-01][rca-01] | `FACT` |
 | 14:04 | Web/API error rate 약 20%, archive와 raw repository content download error rate 약 50%를 보고했다. | Web/API 요청과 archive/raw-content download가 서로 다른 수준으로 저하됐다. | Root cause 조사와 mitigation 진행 중 | [RCA-01][rca-01] | `FACT` |
 | 14:24 | SAML/OIDC authentication, SCIM과 Team Sync 영향이 추가로 보고됐다. | Login/federation 및 identity synchronization 관련 기능이 영향을 받았다. | Investigation 계속 | [RCA-01][rca-01] | `FACT` |
-| Exact time not published | Istio sidecar pod가 concurrency limit에 도달했고 host service는 보지만 sidecar limit은 반영하지 못한 scaling policy가 제대로 scale하지 못했다고 RCA가 설명한다. Failure가 연쇄 확산되어 네 HAProxy node가 flow limit을 소진했고 gateway auth path가 저하됐다. | Authentication latency와 failure가 여러 서비스로 확산됐다. | 일부 failing traffic을 Central US에서 Northern Virginia로 옮겼고, 해당 HAProxy node를 동시에 pause한 뒤 broad recovery가 나타났다고 보고했다. | [RCA-01][rca-01] | Event/cause `FACT`; exact time `UNKNOWN` |
+| Exact time not published | `RCA-01`은 Istio sidecar pod가 concurrency limit에 도달했고 host service는 보지만 sidecar limit은 반영하지 못한 scaling policy가 제대로 scale하지 못했다고 설명한다. `RCA-03`도 service-mesh sidecar concurrency limit과 failed scale-up을 독립적으로 설명한다. `RCA-01`의 네 HAProxy node flow-limit exhaustion과 `RCA-03`의 여러 load-balancer node network-flow exhaustion은 모두 shared gateway authentication degradation으로 이어졌다고 보고된다. | Authentication latency와 failure가 여러 서비스로 확산됐다. | 일부 failing traffic을 Central US에서 Northern Virginia로 옮겼고, 해당 HAProxy node를 동시에 pause한 뒤 broad recovery가 나타났다고 보고했다. | [RCA-01][rca-01], [RCA-03][rca-03] | Event/cause `FACT`; exact time `UNKNOWN`; `RCA-03`은 node를 HAProxy라고 식별하지 않음 |
 | 16:36 | Problematic component에 corrective action을 적용한 뒤 strong recovery signal을 보고했다. Resolved summary는 이 시각까지 most services가 recovered됐다고 정리한다. | 대부분의 service가 회복했지만 error rate가 조금 남았고 Actions/Copilot의 최종 회복은 뒤에 이어졌다. | Recovery를 계속 관찰하고 잔여 영향을 복구했다. | [RCA-01][rca-01] | `FACT` |
 | ~18:03 | Actions degradation이 이 시각까지 지속됐다고 resolved summary가 정리한다. | Actions 사용자는 broad recovery보다 긴 영향을 받았다. | Actions recovery 완료; exact internal action/time은 공개되지 않았다. | [RCA-01][rca-01] | `FACT`; time approximate |
 | 18:11 | Problematic component 조치 후에도 sporadic authentication failure가 남았다고 보고했다. | 일부 authentication request가 계속 실패했다. | 추가 mitigation과 investigation을 계속했다. | [RCA-01][rca-01] | `FACT` |
 | 18:23 | Git Operations degradation이 mitigated됐다고 보고했다. | Git Operations의 재발성 degradation이 회복됐다. | Stability monitoring을 시작했다. | [RCA-01][rca-01] | `FACT` |
 | 19:01 | API Requests가 정상 동작한다고 보고했다. | API degradation이 회복됐다. | 정상 상태 monitoring | [RCA-01][rca-01] | `FACT` |
 | 19:13 | Authentication token retry를 부분적으로 disable한 뒤 개선을 관찰했다. | Sporadic authentication failure가 줄었지만 Copilot recovery는 완료되지 않았다. | Mitigation을 전체 적용하기 전 impact를 monitoring했다. | [RCA-01][rca-01] | `FACT` |
-| Exact time not published | Northern Virginia의 retry storm과 residual Copilot authentication failure를 복구하는 동안 gateway retry를 PR로 일시 축소하고, load balancer에서 inbound Copilot Token Service token request를 403으로 차단한 뒤 site별 traffic을 점진적으로 올렸다. | 실패한 token operation의 client retry loop가 traffic을 약 10배 늘렸고, Token Service traffic은 정상 약 7–9K RPS에서 약 70–100K RPS로 증가했다. | 공개된 실행 순서는 gateway retry 축소 → token request 차단 → site별 gradual ramp-up이다. | [RCA-01][rca-01] | Sequence/values `FACT`; exact times `UNKNOWN` |
+| Exact time not published | Northern Virginia의 retry storm과 residual Copilot authentication failure를 복구하는 동안 gateway retry를 PR로 일시 축소하고, load balancer에서 inbound Copilot Token Service token request를 403으로 차단한 뒤 site별 traffic을 점진적으로 올렸다. `RCA-03`도 latent client retry bug가 internal authentication endpoint traffic을 증폭시켜 Copilot Token Service recovery를 늦췄다고 설명한다. | 실패한 token operation의 client retry loop가 traffic을 약 10배 늘렸고, Token Service traffic은 정상 약 7–9K RPS에서 약 70–100K RPS로 증가했다. | 공개된 실행 순서는 gateway retry 축소 → token request 차단 → site별 gradual ramp-up이다. `RCA-03`은 retry pressure reduction 후 saturated node process를 중단하고 gradual ramp-up으로 안정화한 sequence를 독립적으로 설명한다. | [RCA-01][rca-01], [RCA-03][rca-03] | Sequence/values `FACT`; exact times `UNKNOWN`; 10x/RPS values는 `RCA-01` 범위 |
 | Exact time not published | Codeload endpoint를 향한 여러 scraping attack이 recovery를 방해하는 complicating factor였다고 RCA가 설명한다. | Recovery 여유를 줄인 외부 부하였지만 개별 impact 수치와 시각은 공개되지 않았다. | 구체적인 codeload mitigation은 공개되지 않았다. | [RCA-01][rca-01] | Factor `FACT`; details `UNKNOWN` |
 | 20:22 | Issues가 정상 동작한다고 보고했다. | Issues의 residual/recurrent degradation이 회복됐다. | 정상 상태 monitoring | [RCA-01][rca-01] | `FACT` |
 | 21:02 | Copilot Token Service가 fully recovered된 시각으로 resolved summary에 기록됐다. | Broad service recovery보다 Copilot authentication 영향이 더 오래 지속됐다. | Retry-triggering response를 차단하고 gateway authentication retry를 줄여 Token Service를 안정화했다. | [RCA-01][rca-01] | `FACT` |
@@ -63,3 +66,4 @@ recovery 뒤에도 VS Code retry loop가 Copilot Token Service traffic을 증폭
 
 [rca-01]: https://www.githubstatus.com/incidents/zkxwbgr0cnmx
 [rca-02]: https://github.blog/news-insights/company-news/the-august-17-outage-and-the-work-ahead/
+[rca-03]: https://github.blog/news-insights/company-news/github-availability-report-august-2026/

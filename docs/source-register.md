@@ -2,7 +2,7 @@
 
 이 register는 2026-08-17 incident FACT, 2026 reliability context, historical GitHub
 architecture, component documentation과 별도 incident를 분리한다. Freshness audit 기준일은
-**2026-08-31**이다.
+**2026-09-17**이다.
 
 ## Source policy
 
@@ -18,23 +18,29 @@ architecture, component documentation과 별도 incident를 분리한다. Freshn
   지원한다. GitHub가 2026년에 같은 component나 설정을 사용했다는 증거가 아니다.
 - 다른 incident의 비슷한 capacity, retry 또는 recovery pattern은 August 17 Core FACT에
   합치지 않는다.
+- Primary incident source가 서로 다른 incident window 또는 duration을 표시하면 각 source의
+  범위를 보존하고 하나의 시간값으로 합치지 않는다.
 
 ### Freshness record
 
 - `RCA-01`의 [Status API metadata](https://www.githubstatus.com/api/v2/incidents.json)에서
   resolved update는 2026-08-17 21:15 UTC에
   게시됐고 2026-08-18 19:21 UTC에 마지막으로 수정됐다. 현재 원문과 metadata를
-  2026-08-31에 다시 확인했다.
+  2026-09-17에 다시 확인했다.
 - `RCA-02` page metadata는 2026-08-20 18:36 UTC 발행, 19:32 UTC 수정을 표시한다.
-  현재 원문을 2026-08-31에 다시 확인했다.
+  현재 원문을 2026-09-17에 다시 확인했다.
+- `RCA-03` [GitHub availability report: August 2026](https://github.blog/news-insights/company-news/github-availability-report-august-2026/)은
+  2026-09-09에 발행됐으며, August 17의 sidecar concurrency/scale-up, load-balancer flow
+  pressure, shared authentication path, retry amplification, recovery sequence와 quantitative
+  impact를 독립적으로 설명한다. 원문을 2026-09-17에 확인했다.
+- `RCA-03`의 August 17 section heading은 13:40 UTC 및 7시간 35분을, 그 impact summary는
+  약 6시간 44분을 표시한다. 이는 `RCA-01`의 13:28–21:15 UTC window와 일치시켜 해석하지
+  않으며, source별 시간 범위를 각각 보존한다.
 - 공식 GitHub Status, GitHub Blog와
   [GitHub Availability Report archive](https://github.blog/tag/github-availability-report/)를
-  확인했지만
-  August 17을 직접 다루는 추가 RCA/addendum는 확인되지 않았다.
-- **GitHub availability report: August 2026**은 2026-08-31 현재 발행되지 않았다. Archive의
-  최신 월간 보고서는 July 2026이다.
+  다시 확인했다. `RCA-03` 외에 August 17을 직접 다루는 추가 RCA/addendum는 확인되지 않았다.
 - August 26 Actions incident 자료는 새 공식 자료지만 August 17과 별개의
-  `RELATED_INCIDENT`다. `RCA-01`/`RCA-02`와 충돌하거나 이를 보완하는 August 17 source로
+  `RELATED_INCIDENT`다. `RCA-01`/`RCA-02`/`RCA-03`와 충돌하거나 이를 보완하는 August 17 source로
   승격하지 않는다.
 
 ## Primary incident sources
@@ -43,6 +49,7 @@ architecture, component documentation과 별도 incident를 분리한다. Freshn
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | RCA-01 | Incident: 2026-08-17; resolved update edited 2026-08-18 19:21 UTC | [GitHub Status — Incident with GitHub.com](https://www.githubstatus.com/incidents/zkxwbgr0cnmx) | `PRIMARY_INCIDENT_SOURCE` | Incident window, user impact, error rates, service-specific recovery, Central US saturation, sidecar/scaling issue, HAProxy flow exhaustion, retry amplification, recovery actions, codeload complication과 follow-up actions | Exact private topology, exact HPA/Istio/HAProxy values, gateway type, retry algorithm과 Central US의 Azure resource mapping | L00–L07 failure questions; L09 boundary; L10 source integrity | VERIFIED 2026-08-31 |
 | RCA-02 | Published 2026-08-20 18:36 UTC; modified 19:32 UTC | [The August 17 outage, and the work ahead](https://github.blog/news-insights/company-news/the-august-17-outage-and-the-work-ahead/) | `PRIMARY_INCIDENT_SOURCE` | Broad impact, traffic peak와 capacity failure framing, staged recovery, client retry loop, code/config change가 trigger가 아니었다는 설명과 August 6/17 이후 reliability commitments | Status RCA의 세부 timeline을 대체하지 않으며, exact component topology/config 또는 August 17만의 모든 후속 조치 완료 여부 | L00 framing; L06–L07 cascade/mitigation; L10 narrative | VERIFIED 2026-08-31 |
+| RCA-03 | Published 2026-09-09 | [GitHub availability report: August 2026](https://github.blog/news-insights/company-news/github-availability-report-august-2026/) | `PRIMARY_INCIDENT_SOURCE` | August 17의 service-mesh sidecar concurrency limit/failed scale-up, datacenter load-balancer capacity와 network flow pressure, shared gateway authentication degradation, client retry amplification, retry pressure reduction과 gradual ramp-up recovery, peak 56.07% front-door failed-or-slow rate, 약 29K organizations와 약 4.8M failed-or-slow requests | `RCA-01`의 13:28–21:15 UTC window를 대체하거나 exact HAProxy identity, exact HPA/Istio/HAProxy configuration, retry algorithm, Central US/Northern Virginia mapping을 입증하지 않는다. 자체 13:40/7시간 35분 heading 및 약 6시간 44분 impact duration을 다른 source와 합산하지 않는다. | L00–L07 failure questions; L10 source integrity | VERIFIED 2026-09-17 |
 
 `RCA-02`가 August 6과 August 17에 공통으로 적용한다고 명시한 조치는 두 incident에 대한
 공동 reliability response다. August 17의 개별 technical FACT가 필요할 때는 `RCA-01`을
@@ -113,7 +120,7 @@ architecture, component documentation과 별도 incident를 분리한다. Freshn
 | --- | --- | --- |
 | [GitHub availability report: May 2026](https://github.blog/news-insights/company-news/github-availability-report-may-2026/) | NOT REGISTERED | `CTX-01`/`CTX-02`와 reliability program 설명이 중복되고 August 17을 직접 다루지 않는다. |
 | [GitHub availability report: July 2026](https://github.blog/news-insights/company-news/github-availability-report-july-2026/) | NOT REGISTERED | August 17 이전 발행이며 July incidents와 August 6 preview가 중심이다. August 17 Core에 고유 지원을 추가하지 않는다. |
-| GitHub availability report: August 2026 | NOT AVAILABLE | 2026-08-31 현재 official archive에 발행되지 않았다. |
+| [GitHub availability report: August 2026](https://github.blog/news-insights/company-news/github-availability-report-august-2026/) | REGISTERED AS `RCA-03` | 2026-09-09 발행 후 August 17 incident의 independent primary coverage와 고유 quantitative impact를 제공한다. Source별 time-window boundary는 유지한다. |
 | [GLB: GitHub’s open source load balancer](https://github.blog/engineering/infrastructure/glb-director-open-source-load-balancer/) | NOT REGISTERED | Source quality는 높지만 현재 필요한 historical boundary는 `HIST-LB-01`/`02`로 충족되며 내용이 중복된다. |
 | [Debugging network stalls on Kubernetes](https://github.blog/engineering/infrastructure/debugging-network-stalls-on-kubernetes/) | NOT REGISTERED | 2019년의 별도 latency investigation으로 August 17 saturation과 혼동될 위험이 있고 현재 learning question에 고유 지원이 없다. |
 | [Deployment reliability at GitHub](https://github.blog/developer-skills/github/deployment-reliability-at-github/) | NOT REGISTERED | Historical deployment mechanics가 중심이며 L00–L07 failure-chain source로 필요하지 않다. |
