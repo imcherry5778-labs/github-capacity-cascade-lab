@@ -4,7 +4,7 @@ SHELL := /bin/bash
 BINARY ?= bin/auth-sim
 IMAGE ?= capacity-cascade/auth-sim:dev
 SCENARIO ?=
-K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05
+K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05 l06
 L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
 L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 L02_ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
@@ -17,8 +17,11 @@ L04_K6_IMAGE ?= grafana/k6:2.2.0
 L04_K3S_IMAGE ?= $(L03_K3S_IMAGE)
 L05_K6_IMAGE ?= $(L04_K6_IMAGE)
 L05_K3S_IMAGE ?= $(L03_K3S_IMAGE)
+L06_K6_IMAGE ?= $(L04_K6_IMAGE)
+L06_K3S_IMAGE ?= $(L03_K3S_IMAGE)
+L06_HAPROXY_IMAGE ?= $(L01_HAPROXY_IMAGE)
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-verify l02-scenario l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -311,6 +314,47 @@ l05-verify: l05-check ## 같은 고정 workload의 blind/aware pair를 실제 HP
 
 l05-clean: ## exact L05 cluster/process/APIService만 정리하고 evidence는 보존합니다.
 	@ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L05_K6_IMAGE)" K3S_IMAGE="$(L05_K3S_IMAGE)" scripts/run-l05-hpa.sh clean
+
+l06-doctor: ## L06 cascade lifecycle에 필요한 local 도구와 Docker daemon을 확인합니다.
+	@missing=0; \
+	for tool in git go k6 docker kubectl k3d helm curl awk sed grep rg jq ruby tee wc tr mktemp sha256sum diff cmp sort find ps make; do \
+		if ! command -v "$$tool" >/dev/null 2>&1; then printf '%-16s MISSING\n' "$$tool"; missing=1; else printf '%-16s OK\n' "$$tool"; fi; \
+	done; \
+	if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi; \
+	exit $$missing
+
+l06-check: l06-doctor ## L06 manifests, HAProxy no-retry contract, k6 및 runner를 정적으로 검사합니다.
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d "$${TMPDIR:-/tmp}/capacity-cascade-l06-check.XXXXXX")"; \
+	trap 'find "$$tmp" -depth -delete' EXIT; \
+	for image in "$(L06_K3S_IMAGE)" "$(L06_K6_IMAGE)" "$(L06_HAPROXY_IMAGE)"; do case "$$image" in *:latest|latest) printf 'latest image is forbidden: %s\n' "$$image" >&2; exit 1;; *:*) ;; *) printf 'explicit image tag required: %s\n' "$$image" >&2; exit 1;; esac; done; \
+	ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_stream(File.read(f)); }' l06/*.yaml; \
+	if grep -ERq ':latest|[[:space:]]latest[[:space:]]' l06 load/k6/l06.js; then printf 'latest is forbidden in L06\n' >&2; exit 1; fi; \
+	if grep -q 'retry_policy:' l06/retry-disabled.yaml; then printf 'Envoy retry must be omitted\n' >&2; exit 1; fi; \
+	grep -q 'retries 0' l06/haproxy.yaml; \
+	grep -q 'no option redispatch' l06/haproxy.yaml; \
+	grep -q 'http2MaxRequests: 1' l06/sidecar.yaml; \
+	grep -q 'ContainerResource' l06/hpa-blind.yaml; \
+	sed -e 's/AUTH_SIM_SERVICE_FQDN/auth-sim.capacity-cascade-l06-target.svc.cluster.local/g' -e 's/HAPROXY_IMAGE/$(L06_HAPROXY_IMAGE)/g' l06/haproxy.yaml >"$$tmp/haproxy.yaml"; \
+	ruby -e 'require "yaml"; d=YAML.load_stream(File.read(ARGV[0])).find { |x| x["kind"]=="ConfigMap" }; File.write(ARGV[1], d.dig("data", "haproxy.cfg"))' "$$tmp/haproxy.yaml" "$$tmp/haproxy.cfg"; \
+	docker run --rm --entrypoint haproxy --volume "$$tmp/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" "$(L06_HAPROXY_IMAGE)" -c -f /usr/local/etc/haproxy/haproxy.cfg; \
+	k6 inspect load/k6/l06.js >/dev/null; \
+	bash -n scripts/run-l06-cascade.sh
+
+l06-smoke: l06-check ## 짧은 no-retry stable→peak→recovery datapath와 cleanup을 확인합니다.
+	PHASE_STABLE_DURATION=2s PHASE_PEAK_DURATION=3s PHASE_RECOVERY_DURATION=2s ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L06_K6_IMAGE)" K3S_IMAGE="$(L06_K3S_IMAGE)" HAPROXY_IMAGE="$(L06_HAPROXY_IMAGE)" scripts/run-l06-cascade.sh smoke
+
+l06-scenario: l06-check ## SCENARIO으로 one-variable L06 cascade scenario를 실행합니다.
+	@if [[ "$(SCENARIO)" != "cascade-no-retry" && "$(SCENARIO)" != "cascade-retry" ]]; then \
+		printf 'SCENARIO is required (cascade-no-retry|cascade-retry)\n' >&2; exit 2; \
+	fi
+	ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L06_K6_IMAGE)" K3S_IMAGE="$(L06_K3S_IMAGE)" HAPROXY_IMAGE="$(L06_HAPROXY_IMAGE)" scripts/run-l06-cascade.sh "$(SCENARIO)"
+
+l06-verify: l06-check ## Fresh L06 cluster에서 no-retry/retry fixed comparison을 한 번 실행합니다.
+	ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L06_K6_IMAGE)" K3S_IMAGE="$(L06_K3S_IMAGE)" HAPROXY_IMAGE="$(L06_HAPROXY_IMAGE)" scripts/run-l06-cascade.sh pair
+
+l06-clean: ## exact L06 cluster/process만 정리하고 evidence는 보존합니다.
+	@ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L06_K6_IMAGE)" K3S_IMAGE="$(L06_K3S_IMAGE)" HAPROXY_IMAGE="$(L06_HAPROXY_IMAGE)" scripts/run-l06-cascade.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"
