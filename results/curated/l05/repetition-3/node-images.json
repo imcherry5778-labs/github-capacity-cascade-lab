@@ -1,0 +1,17 @@
+{
+  "images":  [
+    {
+      "id":  "sha256:d506126b9cc76ea35e968478d234d26e1154a1b6615600dfef4f4e6e8f4d8fdd",
+      "repoTags":  [
+        "docker.io/capacity-cascade/auth-sim:l05-bc19711f5140"
+      ],
+      "repoDigests":  [],
+      "size":  "9967360",
+      "uid":  {
+        "value":  "65532"
+      },
+      "username":  "",
+      "pinned":  false
+    }
+  ]
+}

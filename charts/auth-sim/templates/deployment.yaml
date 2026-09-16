@@ -59,3 +59,28 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+        {{- if .Values.sidecarMetricsExporter.enabled }}
+        - name: proxy-metrics-exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/proxy-metrics-exporter"]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            allowPrivilegeEscalation: false
+          ports:
+            - name: proxy-metrics
+              containerPort: {{ .Values.sidecarMetricsExporter.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: proxy-metrics
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 15
+          resources:
+            {{- toYaml .Values.sidecarMetricsExporter.resources | nindent 12 }}
+        {{- end }}

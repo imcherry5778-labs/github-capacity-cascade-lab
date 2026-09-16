@@ -1,0 +1,37 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: auth-sim-inbound-retry-disabled
+  namespace: capacity-cascade-l05-aware
+spec:
+  workloadSelector:
+    labels:
+      app.kubernetes.io/name: auth-sim
+      app.kubernetes.io/instance: auth-sim-aware
+  configPatches:
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: SIDECAR_INBOUND
+        routeConfiguration:
+          name: inbound|8080||
+          vhost:
+            name: inbound|http|8080
+      patch:
+        # L04와 같은 selected-version no-retry fallback이다.
+        operation: REPLACE
+        value:
+          name: inbound|http|8080
+          domains:
+            - "*"
+          routes:
+            - name: default
+              match:
+                prefix: /
+              route:
+                cluster: inbound|8080||
+                timeout: 0s
+                max_stream_duration:
+                  max_stream_duration: 0s
+                  grpc_timeout_header_max: 0s
+              decorator:
+                operation: auth-sim-inbound-capacity.capacity-cascade-l05-aware:8080/*

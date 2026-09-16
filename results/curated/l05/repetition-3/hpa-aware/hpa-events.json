@@ -1,0 +1,40 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-15T15:56:01Z",
+            "involvedObject": {
+                "apiVersion": "autoscaling/v2",
+                "kind": "HorizontalPodAutoscaler",
+                "name": "auth-sim-scaling",
+                "namespace": "capacity-cascade-l05-aware",
+                "resourceVersion": "1120",
+                "uid": "32b416ab-05a5-4624-a10b-65521b7f0cad"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-15T15:56:01Z",
+            "message": "New size: 2; reason: pods metric sidecar_active_requests above target",
+            "metadata": {
+                "creationTimestamp": "2026-09-15T15:56:01Z",
+                "name": "auth-sim-scaling.18d589a346a7b5e1",
+                "namespace": "capacity-cascade-l05-aware",
+                "resourceVersion": "1150",
+                "uid": "229ddbad-979b-4bbf-be6f-bbfb8c62dff6"
+            },
+            "reason": "SuccessfulRescale",
+            "reportingComponent": "horizontal-pod-autoscaler",
+            "reportingInstance": "",
+            "source": {
+                "component": "horizontal-pod-autoscaler"
+            },
+            "type": "Normal"
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

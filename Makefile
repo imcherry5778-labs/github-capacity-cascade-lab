@@ -4,7 +4,7 @@ SHELL := /bin/bash
 BINARY ?= bin/auth-sim
 IMAGE ?= capacity-cascade/auth-sim:dev
 SCENARIO ?=
-K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04
+K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05
 L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
 L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 L02_ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
@@ -15,8 +15,10 @@ L03_RENDER_TAG ?= l03-dev
 L04_ISTIO_VERSION ?= 1.30.4
 L04_K6_IMAGE ?= grafana/k6:2.2.0
 L04_K3S_IMAGE ?= $(L03_K3S_IMAGE)
+L05_K6_IMAGE ?= $(L04_K6_IMAGE)
+L05_K3S_IMAGE ?= $(L03_K3S_IMAGE)
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-verify l02-scenario l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-verify l02-scenario l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -251,6 +253,64 @@ l04-verify: l04-check ## Control/constrained pair를 한 cluster lifecycle에서
 
 l04-clean: ## exact L04 cluster/process만 정리하고 evidence는 보존합니다.
 	@ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L04_K6_IMAGE)" K3S_IMAGE="$(L04_K3S_IMAGE)" scripts/run-l04-sidecar.sh clean
+
+l05-doctor: ## L05 HPA lifecycle, custom metrics API와 evidence 도구를 확인합니다.
+	@missing=0; \
+	for tool in git go k6 docker kubectl k3d helm curl awk sed grep rg jq ruby tee wc tr mktemp sha256sum diff cmp sort find ps make; do \
+		if ! command -v "$$tool" >/dev/null 2>&1; then printf '%-16s MISSING\n' "$$tool"; missing=1; else printf '%-16s OK\n' "$$tool"; fi; \
+	done; \
+	if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi; \
+	exit $$missing
+
+l05-check: l05-doctor ## L05 HPA/custom-metrics manifests, chart, k6와 runner를 정적으로 검사합니다.
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d "$${TMPDIR:-/tmp}/capacity-cascade-l05-check.XXXXXX")"; \
+	trap 'find "$$tmp" -depth -delete' EXIT; \
+	helm lint "$(L03_CHART)" --set-string image.repository="$(L03_RENDER_REPOSITORY)" --set-string image.tag="l05-check"; \
+	helm template auth-sim "$(L03_CHART)" --namespace capacity-cascade-l05-aware --set-string image.repository="$(L03_RENDER_REPOSITORY)" --set-string image.tag="l05-check" --set sidecarMetricsExporter.enabled=true >"$$tmp/auth-sim.yaml"; \
+	if grep -ERq ':latest|[[:space:]]latest[[:space:]]' l05 load/k6/l05.js; then printf 'latest is forbidden in L05\n' >&2; exit 1; fi; \
+	if grep -Eq '^kind: (Gateway|GatewayClass|DaemonSet|ScaledObject|ServiceMonitor)$$' l05/*.yaml; then printf 'out-of-scope resource found\n' >&2; exit 1; fi; \
+	if grep -ERq 'replace-with|LAB_ADMIN_TOKEN_PLACEHOLDER|local-[0-9]+-[0-9]+' l05 "$$tmp/auth-sim.yaml"; then printf 'secret literal or placeholder found\n' >&2; exit 1; fi; \
+	grep -q 'type: ContainerResource' l05/hpa-blind.yaml; \
+	grep -q 'container: auth-sim' l05/hpa-blind.yaml; \
+	grep -q 'type: Pods' l05/hpa-aware.yaml; \
+	grep -q 'name: sidecar_active_requests' l05/hpa-aware.yaml; \
+	grep -q 'kind: APIService' l05/custom-metrics-adapter.yaml; \
+	grep -q 'insecureSkipTLSVerify: true' l05/custom-metrics-adapter.yaml; \
+	grep -q 'name: proxy-metrics-exporter' "$$tmp/auth-sim.yaml"; \
+	grep -q 'command: \["/proxy-metrics-exporter"\]' "$$tmp/auth-sim.yaml"; \
+	sed -E '/namespace:/d; /app.kubernetes.io\/instance:/d; s/capacity-cascade-l05-(blind|aware)/capacity-cascade-l05-SCENARIO/g; s/auth-sim-(blind|aware)/auth-sim-SCENARIO/g' l05/sidecar-blind.yaml >"$$tmp/sidecar-blind.yaml"; \
+	sed -E '/namespace:/d; /app.kubernetes.io\/instance:/d; s/capacity-cascade-l05-(blind|aware)/capacity-cascade-l05-SCENARIO/g; s/auth-sim-(blind|aware)/auth-sim-SCENARIO/g' l05/sidecar-aware.yaml >"$$tmp/sidecar-aware.yaml"; \
+	cmp -s "$$tmp/sidecar-blind.yaml" "$$tmp/sidecar-aware.yaml"; \
+	ruby -e 'require "yaml"; ARGV.each { |f| d=YAML.safe_load_file(f, aliases: true); abort("invalid HPA: #{f}") unless d["apiVersion"]=="autoscaling/v2" && d["kind"]=="HorizontalPodAutoscaler" && d.dig("spec","minReplicas")==1 && d.dig("spec","maxReplicas")==4 }' l05/hpa-blind.yaml l05/hpa-aware.yaml; \
+	for repetition in results/curated/l05/repetition-1 results/curated/l05/repetition-2 results/curated/l05/repetition-3; do \
+		test -f "$$repetition/metadata.json"; test -f "$$repetition/contract.json"; test -f "$$repetition/cleanup.json"; \
+		jq -e '.git_dirty == false' "$$repetition/metadata.json" >/dev/null; \
+		jq -e '.passed == true and .blind.passed == true and .capacity_aware.passed == true' "$$repetition/contract.json" >/dev/null; \
+		jq -e '.runner_exit_code == 0 and .cluster_removed == true and .remaining_owned_containers == 0 and .remaining_owned_networks == 0 and .remaining_owned_port_forwards == 0 and .temporary_kubeconfig_removed == true and .temporary_helm_state_removed == true and .original_context_unchanged == true and .original_helm_repository_config_unchanged == true' "$$repetition/cleanup.json" >/dev/null; \
+		for scenario in hpa-blind hpa-aware; do test -f "$$repetition/$$scenario/samples.jsonl"; jq -e '.passed == true' "$$repetition/$$scenario/contract.json" >/dev/null; done; \
+	done; \
+	if rg -n -i '/home/|authorization:[[:space:]]*bearer|bearer[[:space:]]+l05-' results/curated/l05; then printf 'private path or credential-like content found in curated L05 evidence\n' >&2; exit 1; fi; \
+	awk '/^## L05 / { in_l05=1; next } /^## L06 / { in_l05=0 } in_l05 && /Complete — implementation verified/ { found=1 } END { exit(found ? 0 : 1) }' docs/roadmap.md; \
+	grep -q 'L06 — Full Capacity Cascade.*Planned — next' README.md; \
+	k6 inspect load/k6/l05.js >/dev/null; \
+	bash -n scripts/run-l05-hpa.sh
+
+l05-smoke: l05-check ## blind HPA의 짧은 lifecycle/datapath/cleanup을 bounded 실행합니다.
+	LOGICAL_RATE=1 DURATION=35s APPLICATION_LATENCY_MS=300 ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L05_K6_IMAGE)" K3S_IMAGE="$(L05_K3S_IMAGE)" scripts/run-l05-hpa.sh smoke
+
+l05-scenario: l05-check ## SCENARIO의 HPA lifecycle과 timestamped evidence를 실행합니다.
+	@if [[ "$(SCENARIO)" != "hpa-blind" && "$(SCENARIO)" != "hpa-aware" ]]; then \
+		printf 'SCENARIO is required (hpa-blind|hpa-aware)\n' >&2; \
+		exit 2; \
+	fi
+	ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L05_K6_IMAGE)" K3S_IMAGE="$(L05_K3S_IMAGE)" scripts/run-l05-hpa.sh "$(SCENARIO)"
+
+l05-verify: l05-check ## 같은 고정 workload의 blind/aware pair를 실제 HPA lifecycle로 실행합니다.
+	ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L05_K6_IMAGE)" K3S_IMAGE="$(L05_K3S_IMAGE)" scripts/run-l05-hpa.sh pair
+
+l05-clean: ## exact L05 cluster/process/APIService만 정리하고 evidence는 보존합니다.
+	@ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L05_K6_IMAGE)" K3S_IMAGE="$(L05_K3S_IMAGE)" scripts/run-l05-hpa.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"

@@ -1,0 +1,245 @@
+{
+    "apiVersion": "batch/v1",
+    "kind": "Job",
+    "metadata": {
+        "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"batch/v1\",\"kind\":\"Job\",\"metadata\":{\"annotations\":{},\"labels\":{\"capacity-cascade-lab/owner\":\"l05\",\"capacity-cascade-lab/scenario\":\"hpa-aware\"},\"name\":\"l05-k6-aware\",\"namespace\":\"capacity-cascade-l05-load\"},\"spec\":{\"activeDeadlineSeconds\":420,\"backoffLimit\":0,\"template\":{\"metadata\":{\"labels\":{\"capacity-cascade-lab/owner\":\"l05\",\"capacity-cascade-lab/scenario\":\"hpa-aware\",\"sidecar.istio.io/inject\":\"false\"}},\"spec\":{\"automountServiceAccountToken\":false,\"containers\":[{\"args\":[\"set +e\\nk6 version \\u003e /results/k6-version.txt\\nk6 run /scripts/l05.js\\ncode=$?\\nprintf '%s\\\\n' \\\"${code}\\\" \\u003e /results/k6.exit\\n: \\u003e /results/k6.done\\nwhile [ ! -f /results/collected ]; do sleep 1; done\\nexit \\\"${code}\\\"\\n\"],\"command\":[\"/bin/sh\",\"-c\"],\"env\":[{\"name\":\"BASE_URL\",\"value\":\"http://auth-sim-aware.capacity-cascade-l05-aware.svc.cluster.local:8080\"},{\"name\":\"RESULT_DIR\",\"value\":\"/results\"},{\"name\":\"STARTED_AT_UTC\",\"value\":\"2026-09-15T15:51:29Z\"},{\"name\":\"GIT_COMMIT\",\"value\":\"bc19711f514036e29c678d435903a7afd54f7318\"},{\"name\":\"GIT_DIRTY\",\"value\":\"false\"},{\"name\":\"GO_VERSION\",\"value\":\"not-used\"},{\"name\":\"K6_VERSION\",\"value\":\"grafana/k6:2.2.0\"},{\"name\":\"DOCKER_VERSION\",\"value\":\"not-used\"},{\"name\":\"LAB_OS\",\"value\":\"linux-container\"},{\"name\":\"LAB_ARCH\",\"value\":\"amd64\"},{\"name\":\"L05_SCENARIO\",\"value\":\"hpa-aware\"},{\"name\":\"LOGICAL_RATE\",\"value\":\"3\"},{\"name\":\"DURATION\",\"value\":\"150s\"},{\"name\":\"REQUEST_TIMEOUT\",\"value\":\"2s\"},{\"name\":\"APPLICATION_LATENCY_MS\",\"value\":\"1000\"},{\"name\":\"FAULT_SEED\",\"value\":\"17082026\"},{\"name\":\"LOGICAL_ID_NAMESPACE\",\"value\":\"l05-hpa-pair\"},{\"name\":\"SIDECAR_ACTIVE_REQUEST_TARGET\",\"value\":\"1\"},{\"name\":\"REQUEST_PATH\",\"value\":\"non-injected k6 Job -\\u003e ClusterIP Service :8080 -\\u003e target Pod istio-proxy -\\u003e auth-sim\"},{\"name\":\"AUTH_SIM_IMAGE\",\"value\":\"capacity-cascade/auth-sim:l05-bc19711f5140\"},{\"name\":\"K6_IMAGE\",\"value\":\"grafana/k6:2.2.0\"},{\"name\":\"ISTIO_PROXY_IMAGE\",\"value\":\"docker.io/istio/proxyv2:1.30.4\"}],\"image\":\"grafana/k6:2.2.0\",\"imagePullPolicy\":\"IfNotPresent\",\"name\":\"k6\",\"securityContext\":{\"allowPrivilegeEscalation\":false,\"capabilities\":{\"drop\":[\"ALL\"]},\"readOnlyRootFilesystem\":true,\"runAsGroup\":12345,\"runAsNonRoot\":true,\"runAsUser\":12345},\"volumeMounts\":[{\"mountPath\":\"/scripts/l05.js\",\"name\":\"scripts\",\"readOnly\":true,\"subPath\":\"l05.js\"},{\"mountPath\":\"/scripts/lib/config.js\",\"name\":\"scripts\",\"readOnly\":true,\"subPath\":\"config.js\"},{\"mountPath\":\"/scripts/lib/retry.js\",\"name\":\"scripts\",\"readOnly\":true,\"subPath\":\"retry.js\"},{\"mountPath\":\"/scripts/lib/summary.js\",\"name\":\"scripts\",\"readOnly\":true,\"subPath\":\"summary.js\"},{\"mountPath\":\"/results\",\"name\":\"results\"}]}],\"restartPolicy\":\"Never\",\"securityContext\":{\"fsGroup\":12345},\"volumes\":[{\"configMap\":{\"name\":\"l05-k6-aware\"},\"name\":\"scripts\"},{\"emptyDir\":{},\"name\":\"results\"}]}}}}\n"
+        },
+        "creationTimestamp": "2026-09-15T15:55:47Z",
+        "generation": 1,
+        "labels": {
+            "capacity-cascade-lab/owner": "l05",
+            "capacity-cascade-lab/scenario": "hpa-aware"
+        },
+        "name": "l05-k6-aware",
+        "namespace": "capacity-cascade-l05-load",
+        "resourceVersion": "1339",
+        "uid": "4dfb5c90-620e-4da9-9821-58a88b888a67"
+    },
+    "spec": {
+        "activeDeadlineSeconds": 420,
+        "backoffLimit": 0,
+        "completionMode": "NonIndexed",
+        "completions": 1,
+        "manualSelector": false,
+        "parallelism": 1,
+        "podReplacementPolicy": "TerminatingOrFailed",
+        "selector": {
+            "matchLabels": {
+                "batch.kubernetes.io/controller-uid": "4dfb5c90-620e-4da9-9821-58a88b888a67"
+            }
+        },
+        "suspend": false,
+        "template": {
+            "metadata": {
+                "labels": {
+                    "batch.kubernetes.io/controller-uid": "4dfb5c90-620e-4da9-9821-58a88b888a67",
+                    "batch.kubernetes.io/job-name": "l05-k6-aware",
+                    "capacity-cascade-lab/owner": "l05",
+                    "capacity-cascade-lab/scenario": "hpa-aware",
+                    "controller-uid": "4dfb5c90-620e-4da9-9821-58a88b888a67",
+                    "job-name": "l05-k6-aware",
+                    "sidecar.istio.io/inject": "false"
+                }
+            },
+            "spec": {
+                "automountServiceAccountToken": false,
+                "containers": [
+                    {
+                        "args": [
+                            "set +e\nk6 version \u003e /results/k6-version.txt\nk6 run /scripts/l05.js\ncode=$?\nprintf '%s\\n' \"${code}\" \u003e /results/k6.exit\n: \u003e /results/k6.done\nwhile [ ! -f /results/collected ]; do sleep 1; done\nexit \"${code}\"\n"
+                        ],
+                        "command": [
+                            "/bin/sh",
+                            "-c"
+                        ],
+                        "env": [
+                            {
+                                "name": "BASE_URL",
+                                "value": "http://auth-sim-aware.capacity-cascade-l05-aware.svc.cluster.local:8080"
+                            },
+                            {
+                                "name": "RESULT_DIR",
+                                "value": "/results"
+                            },
+                            {
+                                "name": "STARTED_AT_UTC",
+                                "value": "2026-09-15T15:51:29Z"
+                            },
+                            {
+                                "name": "GIT_COMMIT",
+                                "value": "bc19711f514036e29c678d435903a7afd54f7318"
+                            },
+                            {
+                                "name": "GIT_DIRTY",
+                                "value": "false"
+                            },
+                            {
+                                "name": "GO_VERSION",
+                                "value": "not-used"
+                            },
+                            {
+                                "name": "K6_VERSION",
+                                "value": "grafana/k6:2.2.0"
+                            },
+                            {
+                                "name": "DOCKER_VERSION",
+                                "value": "not-used"
+                            },
+                            {
+                                "name": "LAB_OS",
+                                "value": "linux-container"
+                            },
+                            {
+                                "name": "LAB_ARCH",
+                                "value": "amd64"
+                            },
+                            {
+                                "name": "L05_SCENARIO",
+                                "value": "hpa-aware"
+                            },
+                            {
+                                "name": "LOGICAL_RATE",
+                                "value": "3"
+                            },
+                            {
+                                "name": "DURATION",
+                                "value": "150s"
+                            },
+                            {
+                                "name": "REQUEST_TIMEOUT",
+                                "value": "2s"
+                            },
+                            {
+                                "name": "APPLICATION_LATENCY_MS",
+                                "value": "1000"
+                            },
+                            {
+                                "name": "FAULT_SEED",
+                                "value": "17082026"
+                            },
+                            {
+                                "name": "LOGICAL_ID_NAMESPACE",
+                                "value": "l05-hpa-pair"
+                            },
+                            {
+                                "name": "SIDECAR_ACTIVE_REQUEST_TARGET",
+                                "value": "1"
+                            },
+                            {
+                                "name": "REQUEST_PATH",
+                                "value": "non-injected k6 Job -\u003e ClusterIP Service :8080 -\u003e target Pod istio-proxy -\u003e auth-sim"
+                            },
+                            {
+                                "name": "AUTH_SIM_IMAGE",
+                                "value": "capacity-cascade/auth-sim:l05-bc19711f5140"
+                            },
+                            {
+                                "name": "K6_IMAGE",
+                                "value": "grafana/k6:2.2.0"
+                            },
+                            {
+                                "name": "ISTIO_PROXY_IMAGE",
+                                "value": "docker.io/istio/proxyv2:1.30.4"
+                            }
+                        ],
+                        "image": "grafana/k6:2.2.0",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "k6",
+                        "resources": {},
+                        "securityContext": {
+                            "allowPrivilegeEscalation": false,
+                            "capabilities": {
+                                "drop": [
+                                    "ALL"
+                                ]
+                            },
+                            "readOnlyRootFilesystem": true,
+                            "runAsGroup": 12345,
+                            "runAsNonRoot": true,
+                            "runAsUser": 12345
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/scripts/l05.js",
+                                "name": "scripts",
+                                "readOnly": true,
+                                "subPath": "l05.js"
+                            },
+                            {
+                                "mountPath": "/scripts/lib/config.js",
+                                "name": "scripts",
+                                "readOnly": true,
+                                "subPath": "config.js"
+                            },
+                            {
+                                "mountPath": "/scripts/lib/retry.js",
+                                "name": "scripts",
+                                "readOnly": true,
+                                "subPath": "retry.js"
+                            },
+                            {
+                                "mountPath": "/scripts/lib/summary.js",
+                                "name": "scripts",
+                                "readOnly": true,
+                                "subPath": "summary.js"
+                            },
+                            {
+                                "mountPath": "/results",
+                                "name": "results"
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "restartPolicy": "Never",
+                "schedulerName": "default-scheduler",
+                "securityContext": {
+                    "fsGroup": 12345
+                },
+                "terminationGracePeriodSeconds": 30,
+                "volumes": [
+                    {
+                        "configMap": {
+                            "defaultMode": 420,
+                            "name": "l05-k6-aware"
+                        },
+                        "name": "scripts"
+                    },
+                    {
+                        "emptyDir": {},
+                        "name": "results"
+                    }
+                ]
+            }
+        }
+    },
+    "status": {
+        "completionTime": "2026-09-15T15:58:22Z",
+        "conditions": [
+            {
+                "lastProbeTime": "2026-09-15T15:58:22Z",
+                "lastTransitionTime": "2026-09-15T15:58:22Z",
+                "message": "Reached expected number of succeeded pods",
+                "reason": "CompletionsReached",
+                "status": "True",
+                "type": "SuccessCriteriaMet"
+            },
+            {
+                "lastProbeTime": "2026-09-15T15:58:22Z",
+                "lastTransitionTime": "2026-09-15T15:58:22Z",
+                "message": "Reached expected number of succeeded pods",
+                "reason": "CompletionsReached",
+                "status": "True",
+                "type": "Complete"
+            }
+        ],
+        "ready": 0,
+        "startTime": "2026-09-15T15:55:47Z",
+        "succeeded": 1,
+        "terminating": 0,
+        "uncountedTerminatedPods": {}
+    }
+}

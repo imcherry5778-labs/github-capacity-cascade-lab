@@ -163,6 +163,29 @@ boundary를 같은 workload로 관찰한다. HPA blind spot은 L05의 별도 질
 - retry behavior experiment, full cascade, HAProxy coupling, Chaos Mesh, multi-node/cloud/AKS/CI
 - GitHub incident error/RPS/10x value를 local acceptance target으로 사용
 
+## L05 goal
+
+L04에서 local evidence로 확인한 inbound sidecar capacity boundary와 HPA observed metric이 다를 때,
+같은 fixed workload에서 scaling blind spot이 보이는지를 actual Kubernetes HPA로 관찰한다.
+
+## L05 in scope
+
+- L04 constrained target과 같은 automatic injection, ClusterIP public path, no-client/no-proxy retry
+- actual `autoscaling/v2` blind `ContainerResource` CPU HPA와 actual Pods custom metric HPA 비교
+- `auth-sim` CPU와 selected sidecar active-request signal의 metric-scope separation
+- Pod-local proxy/application observer, namespaces-scoped read-only custom metrics adapter와 temporary APIService
+- HPA metric/status/conditions/events/last scale time, replica/Ready endpoint, proxy/app timeline과 k6 result
+- fixed source/image/version/latency/workload/min-max/behavior 조건에서 clean source 3회 반복
+- append-only raw evidence, byte-for-byte curated selection, root/scenario/cleanup contract
+
+## L05 out of scope
+
+- GitHub exact HPA/custom metric/threshold/stabilization/resource/sidecar topology 또는 production TLS 추정
+- Prometheus server, Grafana, KEDA, ServiceMonitor, tracing, dashboard 또는 broad monitoring platform
+- HPA scale-down tuning recommendation, node autoscaling, VPA, cluster autoscaler 또는 capacity planning
+- retry amplification/HAProxy 결합 full cascade, mitigation, Chaos Mesh, multi-node/cloud/AKS/CI
+- Istio Gateway, Gateway API, Ingress, Ambient, CNI, mTLS/security-policy 또는 production performance tuning
+
 ## Core vs Optional Extension
 
 - **Core:** L00–L10. 최소 workload에서 시작해 proxy, sidecar metric, autoscaling blind

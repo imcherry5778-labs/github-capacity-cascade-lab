@@ -75,12 +75,12 @@
 - **Title:** HPA Blind Spot
 - **Goal:** Scaling metric이 실제 bottleneck capacity를 반영하지 않을 때 생기는 blind spot을 축소 재현한다.
 - **Learn:** Observed metric, scaling decision, saturated component 사이의 mismatch를 이해한다.
-- **Build:** 한 개의 명확한 blind-spot experiment와 개선 metric 비교.
-- **Observe:** Desired/current replicas, application load, sidecar signal, rejection과 latency.
-- **Done:** 동일 workload에서 blind policy와 capacity-aware policy의 차이를 반복 evidence로 제시한다.
-- **Non-goals:** GitHub의 정확한 HPA config 주장, production recommendation 일반화.
+- **Build:** `autoscaling/v2` blind `ContainerResource` HPA와 narrow custom-metrics bridge를 통한 Pods capacity-aware HPA를 같은 L04 sidecar target 위에 둔다.
+- **Observe:** HPA observed metric → desired/current replicas → Pod/endpoint state → selected sidecar active/overflow → user-facing rejection/latency를 timestamped sample로 연결한다.
+- **Done:** 동일 fixed workload에서 blind `auth-sim` CPU HPA와 capacity-aware `sidecar_active_requests` HPA를 clean source로 3회 반복해, blind의 sidecar overflow/503와 replica 1 유지, aware의 actual replica increase와 overflow/503 개선, per-scenario/root contract 및 exact cleanup을 local evidence로 확인한다.
+- **Non-goals:** GitHub의 정확한 HPA config/metric/threshold/behavior 주장, production recommendation 일반화, Prometheus/Grafana/KEDA monitoring stack, L06 retry cascade.
 - **Dependencies:** L03, L04.
-- **Status:** Planned — next.
+- **Status:** Complete — implementation verified; 3 clean local repetitions are curated as local exploratory evidence.
 
 ## L06 — Full Capacity Cascade
 
@@ -93,7 +93,7 @@
 - **Done:** Cascade 시작·확산·회복이 timestamped evidence와 제한사항으로 설명된다.
 - **Non-goals:** GitHub incident 전체 또는 private topology 재현, 임의의 10x 목표 맞추기.
 - **Dependencies:** L01–L05.
-- **Status:** Planned.
+- **Status:** Planned — next.
 
 ## L07 — RCA Mitigations
 

@@ -74,6 +74,21 @@ target config, actual selected metric name, contract와 summary처럼 판정에 
 byte-for-byte 복사한다. L04 EnvoyFilter는 no-retry contract를 위한 selected-version fallback이며
 GitHub production route/config evidence가 아니다.
 
+L05는 `results/hpa-blind-spot/<UTC timestamp>/` 아래 하나의 paired parent와 `hpa-blind`/
+`hpa-aware` scenario directory를 만든다. Root에는 source cleanliness, local k3d/K3s/Istio/image
+identity, fixed comparison variable, pair contract와 cleanup을 둔다. 각 scenario에는 actual HPA
+initial/final status와 event, selected proxy target/mapping, Pod/Deployment/Service/workload state,
+one-second HPA/Pod/proxy/application JSONL sample, custom-metric response (aware only), k6 identity/
+summary와 scenario contract를 둔다. HPA metric은 단위가 다르므로 raw metadata에 target 수치를
+서로 비교하지 않고 각각의 의미로 기록한다.
+
+L05 curated evidence는 clean-source fixed-condition pair 세 개만 포함한다. Runtime identity,
+HPA status timeline, proxy/application timeline, k6 result, per-run contract와 cleanup을 검사하는 데
+필요한 파일만 복사하며, 각 selected file은 raw와 byte-for-byte 동일하다. Full proxy config dump,
+rendered manifest, Secret/port-forward command log, temporary file과 failed/dirty-source run은
+raw-only로 남긴다. Local exporter/adapter, threshold와 short-lived aggregation TLS는 GitHub
+production evidence가 아닌 `LAB_IMPLEMENTATION`이다.
+
 Scenario 도중 실패한 파일도 raw directory에 보존한다. Curated copy에는 해석에 필요한
 파일만 포함하며 전체 noisy log를 자동으로 복사하지 않는다. Admin token, 전체 environment,
 credential, 개인 절대 경로는 raw와 curated evidence 어디에도 저장하지 않는다. 측정값은

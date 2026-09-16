@@ -1,0 +1,53 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L05",
+  "phase": "L05",
+  "scenario": "hpa-blind",
+  "started_at_utc": "2026-09-15T15:35:31Z",
+  "git_commit": "bc19711f514036e29c678d435903a7afd54f7318",
+  "git_dirty": false,
+  "go_version": "not-used",
+  "k6_version": "grafana/k6:2.2.0",
+  "os": "linux-container",
+  "architecture": "amd64",
+  "tool_versions": {
+    "go": "not-used",
+    "k6": "grafana/k6:2.2.0",
+    "docker": "not-used",
+    "docker_compose": "not-used",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "not-used",
+    "envoy_server": "not-used"
+  },
+  "image_tags": {
+    "auth_sim": "capacity-cascade/auth-sim:l05-bc19711f5140",
+    "k6": "grafana/k6:2.2.0",
+    "istio_proxy": "docker.io/istio/proxyv2:1.30.4"
+  },
+  "base_url": "http://auth-sim-blind.capacity-cascade-l05-blind.svc.cluster.local:8080",
+  "request_path": "non-injected k6 Job -> ClusterIP Service :8080 -> target Pod istio-proxy -> auth-sim",
+  "logical_id_namespace": "l05-hpa-pair",
+  "logical_rate": 3,
+  "duration": "150s",
+  "request_timeout": "2s",
+  "fault": {
+    "latency_ms": 1000,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "application_fault": {
+    "latency_ms": 1000,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": {
+    "mechanism": "Sidecar ingress connectionPool http2MaxRequests",
+    "target": 1
+  },
+  "network_toxic": null,
+  "envoy_proxy": null,
+  "retry_policy": "none",
+  "max_attempts": 1
+}

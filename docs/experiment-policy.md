@@ -189,6 +189,34 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
   temporary kubeconfig/Helm home을 모두 정리하고 cleanup failure를 run failure로 처리한다.
   Failed/incomplete raw run도 새 timestamp로 보존한다.
 
+### L05 HPA blind vs capacity-aware
+
+- 한 paired run은 fresh L05 k3d cluster와 한 Istio base/istiod installation을 쓰되, blind와 aware는
+  fresh namespace, release, Pod, HPA object와 proxy counter를 쓴다. 별도 scenario/repetition의
+  cumulative 값을 서로 빼지 않는다.
+- Source/image/K3s/Istio version, injection/data path, Sidecar target `http2MaxRequests: 1`, application
+  latency/error/admission, logical rate `3/s`, duration `150 s`, timeout `2 s`, logical identity,
+  client/proxy retry none, min/max replicas `1/4`, HPA behavior, sample interval `1 s`와 cleanup
+  contract를 고정한다. observed HPA metric/policy만 다르다.
+- Blind는 `auth-sim`에 한정한 actual `autoscaling/v2` `ContainerResource` CPU metric이어야 하며,
+  proxy CPU나 application CPU snapshot을 sidecar request-capacity authority로 해석하지 않는다.
+  Capacity-aware는 fabricated HPA status 값이 아니라 selected `sidecar_active_requests`의 actual Pods
+  custom metric이어야 한다. Adapter는 selected Ready Pod만 노출하고 minimal namespace-scoped RBAC를 쓴다.
+- 각 policy는 workload 전부터 final state까지 UTC timestamp로 sample한다. Metric current/target,
+  desired/current replicas, HPA condition/last scale time/event, Ready Pod/endpoint, selected proxy
+  downstream/upstream/active/pending-overflow/active-overflow/retry/timeout와 application
+  in-flight/token/admission counter를 기록한다. k6 logical/physical/retry, status/failure와 p95도 함께 둔다.
+- Blind는 actual sidecar active overflow와 user-facing rejection이 발생하고 application admission
+  rejection이 0이며 observed workload에서 application-only HPA가 충분히 늘지 않을 때만 통과한다.
+  Aware는 custom metric이 실제 보이고 HPA가 blind보다 scale-up하며 overflow 또는 rejection이 개선될
+  때만 통과한다. Metric 누락, adapter/APIService 실패, 불완전 time series 또는 cleanup failure는 PASS가 아니다.
+- Fixed pair를 clean source에서 최소 세 번 실행한다. 모든 pair/scenario/cleanup contract가 PASS이고
+  secret/private path가 없는 `git_dirty=false` run만 curate한다. Selected original file은 byte-for-byte
+  복사하고 failed 또는 dirty exploratory raw run은 append-only로 남기며 curate하지 않는다.
+- HPA target 단위가 다르므로 수치 equality는 요구되지도 의미도 없다. CPU `80%`, active request
+  `500m`, behavior와 temporary aggregation TLS setting은 local `LAB_IMPLEMENTATION`이며 GitHub metric,
+  threshold, scaling behavior 또는 production security policy가 아니다.
+
 ## Reporting rules
 
 - 측정하지 않은 값은 결과로 작성하지 않는다.
