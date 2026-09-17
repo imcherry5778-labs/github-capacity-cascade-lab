@@ -17,6 +17,7 @@ export function createSummaryHandler(experiment) {
     const httpP95 = metricValue(data, 'http_req_duration', 'p(95)');
     const downstreamStatusCounts = {
       200: metricValue(data, 'downstream_responses_200', 'count') ?? 0,
+      429: metricValue(data, 'downstream_responses_429', 'count') ?? 0,
       503: metricValue(data, 'downstream_responses_503', 'count') ?? 0,
       504: metricValue(data, 'downstream_responses_504', 'count') ?? 0,
       other: metricValue(data, 'downstream_responses_other', 'count') ?? 0,
@@ -121,11 +122,12 @@ ${renderDownstreamStatusRows(values)}
 }
 
 function renderDownstreamStatusRows(values) {
-  if (values.phase !== 'L02' && values.phase !== 'L04' && values.phase !== 'L05' && values.phase !== 'L06') {
+  if (values.phase !== 'L02' && values.phase !== 'L04' && values.phase !== 'L05' && values.phase !== 'L06' && values.phase !== 'L07') {
     return '';
   }
   const counts = values.downstreamStatusCounts;
   return `| Downstream status 200 | ${formatCount(counts[200])} |
+| Downstream status 429 | ${formatCount(counts[429])} |
 | Downstream status 503 | ${formatCount(counts[503])} |
 | Downstream status 504 | ${formatCount(counts[504])} |
 | Downstream status other/transport | ${formatCount(counts.other)} |`;

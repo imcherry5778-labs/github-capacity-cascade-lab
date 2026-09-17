@@ -1,0 +1,202 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "creationTimestamp": "2026-09-17T15:26:29Z",
+        "generation": 1,
+        "labels": {
+            "capacity-cascade-lab/owner": "l07",
+            "capacity-cascade-lab/scenario": "retry-immediate"
+        },
+        "name": "l07-datapath-retry-immediate",
+        "namespace": "capacity-cascade-l07-load",
+        "resourceVersion": "785",
+        "uid": "f4f33181-263e-41ff-90e4-2687f52f5928"
+    },
+    "spec": {
+        "containers": [
+            {
+                "command": [
+                    "/bin/sh",
+                    "-c",
+                    "wget -qO- http://l07-haproxy.capacity-cascade-l07-retry-immediate.svc.cluster.local:8080/readyz"
+                ],
+                "image": "grafana/k6:2.2.0",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "l07-datapath-retry-immediate",
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-cw6q6",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "k3d-capacity-cascade-l07-server-0",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "name": "kube-api-access-cw6q6",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T15:26:38Z",
+                "observedGeneration": 1,
+                "status": "False",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T15:26:29Z",
+                "observedGeneration": 1,
+                "reason": "PodCompleted",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T15:26:37Z",
+                "observedGeneration": 1,
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T15:26:37Z",
+                "observedGeneration": 1,
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T15:26:29Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "containerd://c719afcf9aec32bfb170742ae311d4fe0329bf1777924e6d9eccb74e59e58444",
+                "image": "docker.io/grafana/k6:2.2.0",
+                "imageID": "docker.io/grafana/k6@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+                "lastState": {},
+                "name": "l07-datapath-retry-immediate",
+                "ready": false,
+                "resources": {},
+                "restartCount": 0,
+                "started": false,
+                "state": {
+                    "terminated": {
+                        "containerID": "containerd://c719afcf9aec32bfb170742ae311d4fe0329bf1777924e6d9eccb74e59e58444",
+                        "exitCode": 0,
+                        "finishedAt": "2026-09-17T15:26:36Z",
+                        "reason": "Completed",
+                        "startedAt": "2026-09-17T15:26:36Z"
+                    }
+                },
+                "user": {
+                    "linux": {
+                        "gid": 12345,
+                        "supplementalGroups": [
+                            12345
+                        ],
+                        "uid": 12345
+                    }
+                },
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-cw6q6",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    }
+                ]
+            }
+        ],
+        "hostIP": "172.18.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.18.0.2"
+            }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "podIP": "10.42.0.8",
+        "podIPs": [
+            {
+                "ip": "10.42.0.8"
+            }
+        ],
+        "qosClass": "BestEffort",
+        "startTime": "2026-09-17T15:26:29Z"
+    }
+}

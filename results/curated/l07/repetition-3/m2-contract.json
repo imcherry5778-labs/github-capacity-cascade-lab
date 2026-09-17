@@ -1,0 +1,89 @@
+{
+  "axis": "m2",
+  "passed": true,
+  "control": {
+    "passed": true,
+    "scenario": "shedding-control",
+    "validation_mode": "mechanism-and-recovery",
+    "k6": {
+      "logical_requests": 219,
+      "physical_attempts": 219,
+      "retry_attempts": 0,
+      "logical_failure_rate": 0.6529680365296804,
+      "logical_p95_ms": 1003,
+      "dropped_iterations": 0,
+      "status": {
+        "429": 0,
+        "503": 143
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 143
+    },
+    "haproxy": {
+      "backend_sessions_delta": 219,
+      "backend_responses_5xx_delta": 143,
+      "denied_requests_delta": 0
+    },
+    "sampling": {
+      "recovery_idle": true
+    }
+  },
+  "mitigation": {
+    "passed": true,
+    "scenario": "shedding-429",
+    "validation_mode": "mechanism-and-recovery",
+    "k6": {
+      "logical_requests": 219,
+      "physical_attempts": 219,
+      "retry_attempts": 0,
+      "logical_failure_rate": 0.8082191780821918,
+      "logical_p95_ms": 1003,
+      "dropped_iterations": 0,
+      "status": {
+        "429": 131,
+        "503": 46
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 46
+    },
+    "haproxy": {
+      "backend_sessions_delta": 88,
+      "backend_responses_5xx_delta": 46,
+      "denied_requests_delta": 131
+    },
+    "sampling": {
+      "recovery_idle": true
+    }
+  },
+  "comparison": {
+    "one_variable": true,
+    "recovery_boundary": "final selected sidecar active and HAProxy queue/sessions equal zero",
+    "acceptance": "both paths completed their required validation and recovery checks; metric direction is recorded, not required",
+    "observed": {
+      "measures": [
+        "downstream_429",
+        "denied_requests_delta",
+        "active_overflow_delta",
+        "logical_failure_rate",
+        "logical_p95_ms"
+      ],
+      "mitigation_minus_control": {
+        "downstream_429": 131,
+        "denied_requests_delta": 131,
+        "active_overflow_delta": -97,
+        "logical_failure_rate": 0.1552511415525114,
+        "logical_p95_ms": 0
+      }
+    }
+  }
+}

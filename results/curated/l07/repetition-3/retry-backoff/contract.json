@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "scenario": "retry-backoff",
+  "validation_mode": "mechanism-and-recovery",
+  "k6": {
+    "logical_requests": 220,
+    "physical_attempts": 545,
+    "retry_attempts": 325,
+    "logical_failure_rate": 0.6090909090909091,
+    "logical_p95_ms": 1201.6499999999999,
+    "dropped_iterations": 0,
+    "status": {
+      "429": 0,
+      "503": 134
+    }
+  },
+  "hpa": {
+    "desired_replicas_max": 1,
+    "current_replicas_max": 1
+  },
+  "sidecar": {
+    "active_overflow_delta": 459
+  },
+  "haproxy": {
+    "backend_sessions_delta": 545,
+    "backend_responses_5xx_delta": 459,
+    "denied_requests_delta": 0
+  },
+  "sampling": {
+    "recovery_idle": true
+  }
+}

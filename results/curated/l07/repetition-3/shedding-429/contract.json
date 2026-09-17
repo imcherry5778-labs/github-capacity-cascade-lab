@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "scenario": "shedding-429",
+  "validation_mode": "mechanism-and-recovery",
+  "k6": {
+    "logical_requests": 219,
+    "physical_attempts": 219,
+    "retry_attempts": 0,
+    "logical_failure_rate": 0.8082191780821918,
+    "logical_p95_ms": 1003,
+    "dropped_iterations": 0,
+    "status": {
+      "429": 131,
+      "503": 46
+    }
+  },
+  "hpa": {
+    "desired_replicas_max": 1,
+    "current_replicas_max": 1
+  },
+  "sidecar": {
+    "active_overflow_delta": 46
+  },
+  "haproxy": {
+    "backend_sessions_delta": 88,
+    "backend_responses_5xx_delta": 46,
+    "denied_requests_delta": 131
+  },
+  "sampling": {
+    "recovery_idle": true
+  }
+}

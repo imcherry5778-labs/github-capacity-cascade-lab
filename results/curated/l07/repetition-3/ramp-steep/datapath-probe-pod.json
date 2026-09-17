@@ -1,0 +1,202 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "creationTimestamp": "2026-09-17T16:17:04Z",
+        "generation": 1,
+        "labels": {
+            "capacity-cascade-lab/owner": "l07",
+            "capacity-cascade-lab/scenario": "ramp-steep"
+        },
+        "name": "l07-datapath-ramp-steep",
+        "namespace": "capacity-cascade-l07-load",
+        "resourceVersion": "2672",
+        "uid": "7570d995-b6b5-4b42-9736-03aadc451616"
+    },
+    "spec": {
+        "containers": [
+            {
+                "command": [
+                    "/bin/sh",
+                    "-c",
+                    "wget -qO- http://l07-haproxy.capacity-cascade-l07-ramp-steep.svc.cluster.local:8080/readyz"
+                ],
+                "image": "grafana/k6:2.2.0",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "l07-datapath-ramp-steep",
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-rdb86",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "k3d-capacity-cascade-l07-server-0",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ],
+        "volumes": [
+            {
+                "name": "kube-api-access-rdb86",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T16:17:08Z",
+                "observedGeneration": 1,
+                "status": "False",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T16:17:04Z",
+                "observedGeneration": 1,
+                "reason": "PodCompleted",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T16:17:07Z",
+                "observedGeneration": 1,
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T16:17:07Z",
+                "observedGeneration": 1,
+                "reason": "PodCompleted",
+                "status": "False",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-17T16:17:04Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "containerd://ffe931cc69a66372ef655ad0782dd359a55ff6e79a5e0b0662defacb74af329d",
+                "image": "docker.io/grafana/k6:2.2.0",
+                "imageID": "docker.io/grafana/k6@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+                "lastState": {},
+                "name": "l07-datapath-ramp-steep",
+                "ready": false,
+                "resources": {},
+                "restartCount": 0,
+                "started": false,
+                "state": {
+                    "terminated": {
+                        "containerID": "containerd://ffe931cc69a66372ef655ad0782dd359a55ff6e79a5e0b0662defacb74af329d",
+                        "exitCode": 0,
+                        "finishedAt": "2026-09-17T16:17:06Z",
+                        "reason": "Completed",
+                        "startedAt": "2026-09-17T16:17:06Z"
+                    }
+                },
+                "user": {
+                    "linux": {
+                        "gid": 12345,
+                        "supplementalGroups": [
+                            12345
+                        ],
+                        "uid": 12345
+                    }
+                },
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-rdb86",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    }
+                ]
+            }
+        ],
+        "hostIP": "172.18.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.18.0.2"
+            }
+        ],
+        "observedGeneration": 1,
+        "phase": "Succeeded",
+        "podIP": "10.42.0.41",
+        "podIPs": [
+            {
+                "ip": "10.42.0.41"
+            }
+        ],
+        "qosClass": "BestEffort",
+        "startTime": "2026-09-17T16:17:04Z"
+    }
+}

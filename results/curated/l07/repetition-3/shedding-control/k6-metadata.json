@@ -1,0 +1,72 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L07",
+  "phase": "L07",
+  "scenario": "shedding-control",
+  "started_at_utc": "2026-09-17T16:02:56Z",
+  "git_commit": "23bf7c4d267e3c6f39655fac7cd1710254848d09",
+  "git_dirty": false,
+  "go_version": "not-used",
+  "k6_version": "grafana/k6:2.2.0",
+  "os": "linux-container",
+  "architecture": "amd64",
+  "tool_versions": {
+    "go": "not-used",
+    "k6": "grafana/k6:2.2.0",
+    "docker": "not-used",
+    "docker_compose": "not-used",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "not-used",
+    "envoy_server": "not-used"
+  },
+  "image_tags": {
+    "auth_sim": "capacity-cascade/auth-sim:l07-23bf7c4d267e",
+    "haproxy": "haproxy:3.2.23-alpine",
+    "k6": "grafana/k6:2.2.0",
+    "istio_proxy": "docker.io/istio/proxyv2:1.30.4"
+  },
+  "base_url": "http://l07-haproxy.capacity-cascade-l07-shedding-control.svc.cluster.local:8080",
+  "request_path": "non-injected k6 Job -> HAProxy -> ClusterIP Service -> istio-proxy -> auth-sim",
+  "logical_id_namespace": "l07-shedding-control",
+  "logical_rate": 4,
+  "duration": "20s + 60s + 20s",
+  "workload_stages": [
+    {
+      "phase": "stable",
+      "target": 1,
+      "duration": "20s"
+    },
+    {
+      "phase": "ramp-up",
+      "target": 4,
+      "duration": "60s"
+    },
+    {
+      "phase": "ramp-down",
+      "target": 1,
+      "duration": "20s"
+    }
+  ],
+  "request_timeout": "2s",
+  "fault": {
+    "latency_ms": 1000,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "application_fault": {
+    "latency_ms": 1000,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": {
+    "mechanism": "Sidecar ingress connectionPool http2MaxRequests",
+    "target": 1
+  },
+  "network_toxic": null,
+  "envoy_proxy": null,
+  "retry_policy": "none",
+  "retry_source": "none",
+  "max_attempts": 1
+}

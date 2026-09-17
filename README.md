@@ -59,9 +59,9 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Completed through L06 — next L07
+## Completed through L07
 
-현재 완료된 구현 범위는 **L06 — Full Capacity Cascade**까지다. L04는 L00/L01/L02의
+현재 완료된 구현 범위는 **L07 — RCA Mitigations**까지다. L04는 L00/L01/L02의
 logical/physical/retry 의미와 L03 Kubernetes lifecycle을 바꾸지 않고, application과 inbound
 sidecar의 capacity boundary를 별도로 관찰했다. L05는 그 local boundary를 다시 설계하지 않고,
 같은 constrained inbound sidecar 조건에서 HPA가 보는 대상만 바꿔 scaling decision을 비교했다.
@@ -137,8 +137,12 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L00–L06는 completed foundation이다. 상세 topology와 단계별 plane 경계는
-[architecture](docs/architecture.md)에 있다. 다음 mitigation comparison은 L07 범위다.
+L00–L06는 completed foundation이고 L07은 L06 path를 유지한 M1 retry-policy comparison,
+M2 local load shedding, M3 capacity-aware scaling, M4 gradual-ramp matrix를 구현했다. 세
+clean-source full matrix와 curated evidence는 완료됐으며, 이 값은 fixed local condition의
+trade-off 관찰값일 뿐 GitHub production mitigation이나 일반 tuning recommendation이 아니다.
+상세 topology와 boundary는 [architecture](docs/architecture.md), 원문 evidence는
+[L07 curated evidence](results/curated/l07/README.md)에 있다.
 
 ## Local quick start
 
@@ -432,8 +436,8 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L06까지는 completed
-foundation이고 다음 단계는 **L07 — RCA Mitigations** (`Planned`)다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L07까지는 completed
+foundation이며 L08 이후는 planned 단계다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -449,15 +453,17 @@ Retry Amplification = Physical Attempts / Logical Requests
 
 ## Results — Local evidence
 
-L05와 L06는 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
+L05, L06, L07은 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
 implementation verification이며 portfolio final evidence, production benchmark 또는
 machine-independent performance conclusion은 아니다. 최종 portfolio comparison은 L10에서
 별도로 구성한다.
 
-## Mitigations — Planned
+## Mitigations — Local evidence
 
-Retry budget, capacity-aware scaling, load shedding, progressive recovery 비교는 후속 단계의
-`Planned` 작업이다.
+L07은 retry backoff/jitter, local load shedding, capacity-aware scaling, gradual ramp-up을
+fixed local `LAB_IMPLEMENTATION` 조건에서 비교했다. 이는 GitHub exact production mitigation
+재현이나 production recommendation이 아니며, 상세 결과와 경계는
+[L07 curated evidence](results/curated/l07/README.md)에 있다.
 
 ## Azure validation — Planned
 
@@ -477,6 +483,6 @@ preflight와 승인 경계를 거쳐 검증한다.
 - Completed foundation: L04 — Istio Sidecar and Proxy Metrics (implementation verified; local exploratory evidence)
 - Completed foundation: L05 — HPA Blind Spot (implementation verified; 3 clean local repetitions)
 - Completed foundation: L06 — Full Capacity Cascade (implementation verified; 3 clean local repetitions)
-- Next: L07 — RCA Mitigations (`Planned`)
+- Completed foundation: L07 — RCA Mitigations (implementation verified; 3 clean local repetitions)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

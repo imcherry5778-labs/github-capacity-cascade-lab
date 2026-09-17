@@ -389,9 +389,44 @@ ClusterIP topology, retry algorithm, HPA policy, production capacity, or a gener
 The raw-selection details and individual timestamped files are in
 [L06 curated evidence](../results/curated/l06/README.md).
 
+## L07 RCA mitigations
+
+L07 keeps the L06 non-injected k6 → HAProxy → ClusterIP → constrained inbound sidecar →
+auth-sim path. Each pair changes one local mechanism only; neither the topology nor any chosen
+value represents GitHub's private mitigation implementation.
+
+| Pair | Control | Changed local mechanism | Held fixed |
+| --- | --- | --- | --- |
+| M1 retry | bounded immediate, max attempts 3 | bounded exponential backoff with full jitter, max attempts 3 | failure/capacity, logical schedule, HPA, HAProxy and proxy retry |
+| M2 shedding | HAProxy forwarding | HAProxy per-source one-second rate above 2 returns 429 | no client retry, workload, HPA, sidecar and HAProxy backend bound |
+| M3 scaling | auth-sim CPU ContainerResource HPA | L05 Pods sidecar_active_requests custom metric HPA | L06 path, retry, latency, sidecar target, HPA min/max/behavior and HAProxy |
+| M4 ramp | rapid rise/hold/fall | gradual rise/fall | retry, HPA, capacity, HAProxy, latency and intended 220 logical requests |
+
+The M2 status and threshold, M1 delay/jitter values, M3 adapter and HPA target, and both M4
+schedules are LAB_IMPLEMENTATION. HAProxy's M2 policy protects the selected downstream sidecar;
+it is not a local HAProxy saturation experiment or a claim about the RCA's undisclosed 403
+implementation. M4 schedules share start/end rate 1/s, peak 4/s, duration 100s and intended 220
+logical requests: steep is 30s at 1/s → 1s rise → 39s at 4/s → 1s fall → 29s at 1/s, while
+gradual is 20s at 1/s → 60s rise → 20s fall.
+
+The runner discovers selected-proxy metric spelling from the actual config/stats inventory,
+records k6 logical/physical/retry/status/p95/dropped work, HAProxy sessions/5xx/denials,
+sidecar downstream/upstream/active/overflow/retry/timeout, application counters and HPA/Pod/
+Endpoint state in timestamped samples. Recovery remains a final-idle boundary: final selected
+sidecar active requests and HAProxy queue/sessions are zero. It does not measure or compare
+recovery duration.
+
+Three curated clean-source local repetitions showed that M1 backoff+jitter reduced logical
+failure but increased physical attempts, selected sidecar overflow and p95 relative to immediate
+retry. M2's local 429 policy reduced forwarded backend sessions and overflow while explicitly
+increasing client-visible failure. M3's actual custom-metric HPA scaled to `2/2` and reduced
+overflow/503 relative to the blind `1/1` policy under these fixed conditions. M4 gradual arrival
+had lower overflow than steep arrival in these runs, while raw logical counts sometimes differed
+by one request. These are local observations, not GitHub mitigation facts or general tuning
+recommendations. The original selected files and exact values are in
+[L07 curated evidence](../results/curated/l07/README.md).
+
 ## Future architecture only
 
-L07+ mitigation, Chaos Mesh와 AKS 질문은 별도 scope와 evidence 설계 뒤에만 연결한다.
-Gateway, Ambient/CNI, Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing과 production tuning은
-L06 범위가 아니다. 이 repetition set은 production benchmark나 GitHub topology reproduction이 아닌
-local exploratory evidence다.
+Chaos Mesh와 AKS 질문은 L07 evidence contract 뒤에만 연결한다. Gateway, Ambient/CNI,
+Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing과 production tuning은 L07 범위가 아니다.
