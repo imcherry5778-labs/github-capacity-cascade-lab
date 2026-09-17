@@ -425,6 +425,7 @@ l08-check: l08-doctor ## L08 manifests, Helm chart rendering, k6 script 및 runn
 	grep -q 'retries 0' l08/haproxy.yaml; \
 	grep -q 'no option redispatch' l08/haproxy.yaml; \
 	grep -q 'action: delay' l08/network-delay.yaml; \
+	grep -q 'correlation: "0"' l08/network-delay.yaml; \
 	grep -q 'enableFilterNamespace: true' l08/chaos-values.yaml; \
 	grep -q 'runtime: containerd' l08/chaos-values.yaml; \
 	grep -q 'socketPath: /run/k3s/containerd/containerd.sock' l08/chaos-values.yaml; \

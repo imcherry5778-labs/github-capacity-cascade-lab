@@ -105,8 +105,18 @@ if [[ "${ACTION}" == "doctor" ]]; then
     if ! command -v "${tool}" >/dev/null 2>&1; then printf '%-16s MISSING\n' "${tool}"; missing=1; else printf '%-16s OK\n' "${tool}"; fi
   done
   if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi
-  if grep -q 'iptable_filter' /proc/modules 2>/dev/null; then printf '%-16s OK\n' 'kernel iptable_filter'; else printf '%-16s MISSING (will be loaded)\n' 'kernel iptable_filter'; fi
-  if grep -q 'sch_netem' /proc/modules 2>/dev/null; then printf '%-16s OK\n' 'kernel sch_netem'; else printf '%-16s MISSING (will be loaded)\n' 'kernel sch_netem'; fi
+  if grep -q 'iptable_filter' /proc/modules 2>/dev/null; then
+    printf '%-24s OK\n' 'kernel iptable_filter'
+  else
+    printf '%-24s MISSING — host prerequisite; automatic modification is intentionally disabled\n' 'kernel iptable_filter'
+    missing=1
+  fi
+  if grep -q 'sch_netem' /proc/modules 2>/dev/null; then
+    printf '%-24s OK\n' 'kernel sch_netem'
+  else
+    printf '%-24s MISSING — host prerequisite; automatic modification is intentionally disabled\n' 'kernel sch_netem'
+    missing=1
+  fi
   exit "${missing}"
 fi
 
@@ -126,15 +136,15 @@ for required_tool in git go k6 docker kubectl k3d helm make curl awk sed grep jq
 done
 docker info >/dev/null
 
-# Kernel module check: ensure iptable_filter and sch_netem are loaded
+# Host kernel module preflight check (read-only): ensure iptable_filter and sch_netem are loaded on host
 if ! grep -q 'iptable_filter' /proc/modules 2>/dev/null; then
-  docker run --rm --privileged -v /lib/modules:/lib/modules alpine:3.21.3 sh -c "which modprobe || apk add kmod >/dev/null 2>&1; modprobe iptable_filter" >/dev/null 2>&1 || true
+  printf 'prerequisite kernel module iptable_filter is not loaded on host; automatic modification is disabled\n' >&2
+  exit 1
 fi
 if ! grep -q 'sch_netem' /proc/modules 2>/dev/null; then
-  docker run --rm --privileged -v /lib/modules:/lib/modules alpine:3.21.3 sh -c "which modprobe || apk add kmod >/dev/null 2>&1; modprobe sch_netem" >/dev/null 2>&1 || true
+  printf 'prerequisite kernel module sch_netem is not loaded on host; automatic modification is disabled\n' >&2
+  exit 1
 fi
-grep -q 'iptable_filter' /proc/modules 2>/dev/null || { printf 'iptable_filter kernel module could not be loaded\n' >&2; exit 1; }
-grep -q 'sch_netem' /proc/modules 2>/dev/null || { printf 'sch_netem kernel module could not be loaded\n' >&2; exit 1; }
 
 if cluster_exists; then
   printf 'refusing to replace existing exact L08 cluster: %s\n' "${CLUSTER_NAME}" >&2
@@ -317,6 +327,38 @@ prom_metric_sum() { local file=$1 metric=$2 first_filter=${3:-}; awk -v metric="
 stat_value() { local file=$1 metric=$2; awk -F': ' -v metric="${metric}" '$1 == metric { print $2+0; found=1; exit } END { if (!found) print 0 }' "${file}"; }
 select_actual_stat_name() { local file=$1 prefix=$2 suffix=$3 matches; matches="$(awk -F': ' -v prefix="${prefix}" -v suffix="${suffix}" 'index($1,prefix)==1 && substr($1,length($1)-length(suffix)+1)==suffix {print $1}' "${file}" | sort -u)"; [[ "$(printf '%s\n' "${matches}" | awk 'NF{count++}END{print count+0}')" -eq 1 ]] || { printf 'expected one actual proxy metric for %s%s, found %s\n' "${prefix}" "${suffix}" "${matches:-none}" >&2; return 1; }; printf '%s\n' "${matches}"; }
 collect_proxy_stats() { kubectl exec --namespace "$1" "$2" -c istio-proxy -- pilot-agent request GET 'stats?filter=8080' >"$3"; }
+
+verify_network_chaos_state() {
+  local namespace=$1 chaos_name=$2 expected_phase=$3 target_pod=$4
+  local raw_json
+  raw_json="$(kubectl get networkchaos "${chaos_name}" -n "${namespace}" -o json 2>/dev/null)" || return 1
+
+  jq -e \
+    --arg exp_phase "${expected_phase}" \
+    --arg expected_id "${namespace}/${target_pod}" \
+    '
+    .status as $s |
+    ($s.conditions[]? | select(.type=="Selected") | .status == "True") and
+    (
+      if $exp_phase == "Injected" then
+        ($s.conditions[]? | select(.type=="AllInjected") | .status == "True") and
+        ($s.conditions[]? | select(.type=="AllRecovered") | .status == "False") and
+        ($s.experiment.desiredPhase == "Run")
+      elif $exp_phase == "Not Injected" then
+        ($s.conditions[]? | select(.type=="AllInjected") | .status == "False") and
+        ($s.conditions[]? | select(.type=="AllRecovered") | .status == "True") and
+        ($s.experiment.desiredPhase == "Stop")
+      else
+        false
+      end
+    ) and
+    (($s.experiment.containerRecords // []) | length == 1) and
+    ($s.experiment.containerRecords[0].id == $expected_id) and
+    ($s.experiment.containerRecords[0].phase == $exp_phase) and
+    (($s.instances // {}) | keys == [$expected_id]) and
+    ([($s.experiment.containerRecords[].id // "") | select(test("haproxy"))] | length == 0)
+    ' <<<"${raw_json}" >/dev/null 2>&1
+}
 
 haproxy_value() {
   local file=$1 pxname=$2 svname=$3 field=$4
@@ -831,11 +873,12 @@ if [[ "${ACTION}" == "abort-smoke" ]]; then
   sleep "${PRE_FAULT_DURATION_VALUE}"
   kubectl apply -f "${result_dir}/chaos-resource-applied.yaml" >"${result_dir}/chaos-apply.log"
   fault_applied=true
-  # Wait for injection to become active
+  # Wait for injection to become active and target identity to match
+  target_identity_verified=false
   for _ in {1..30}; do
-    injected="$(kubectl get networkchaos auth-sim-delay -n "${TARGET_NAMESPACE}" -o jsonpath='{.status.conditions[?(@.type=="AllInjected")].status}' 2>/dev/null || echo '')"
-    if [[ "${injected}" == "True" ]]; then
+    if verify_network_chaos_state "${TARGET_NAMESPACE}" "auth-sim-delay" "Injected" "${pod}"; then
       fault_injected=true
+      target_identity_verified=true
       t_injected_epoch="$(date +%s)"
       t_injected_utc="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
       kubectl get networkchaos auth-sim-delay -n "${TARGET_NAMESPACE}" -o yaml >"${result_dir}/chaos-resource-active.yaml"
@@ -843,7 +886,7 @@ if [[ "${ACTION}" == "abort-smoke" ]]; then
     fi
     sleep 0.5
   done
-  [[ "${fault_injected}" == true ]] || { printf 'fault was not injected in abort-smoke\n' >&2; exit 1; }
+  [[ "${fault_injected}" == true && "${target_identity_verified}" == true ]] || { printf 'fault was not injected or target identity mismatch in abort-smoke\n' >&2; exit 1; }
 
   printf 'Controlled abort triggered while fault is active!\n'
   abort_triggered=true
@@ -858,16 +901,115 @@ if [[ "${ACTION}" == "abort-smoke" ]]; then
   jq -n \
     --argjson fault_applied "${fault_applied}" \
     --argjson fault_injected "${fault_injected}" \
+    --argjson target_identity_verified "${target_identity_verified}" \
     --argjson abort_triggered "${abort_triggered}" \
     --argjson chaos_remaining "${chaos_remaining}" \
+    --arg t_injected "${t_injected_utc}" \
     '{
       passed: true,
       fault_applied: $fault_applied,
       fault_injected: $fault_injected,
+      target_identity_verified: $target_identity_verified,
       abort_triggered: $abort_triggered,
       chaos_resources_remaining_after_abort: $chaos_remaining,
+      timeline: {
+        fault_injected_utc: $t_injected
+      },
       abort_contract_satisfied: true
     }' > "${result_dir}/abort-contract.json"
+
+  jq -n \
+    --arg started_at_utc "${STARTED_AT_UTC}" \
+    --arg git_commit "${SOURCE_COMMIT}" \
+    --argjson git_dirty "${GIT_DIRTY}" \
+    --arg action "${ACTION}" \
+    --arg k3s_image "${K3S_IMAGE_VALUE}" \
+    --arg istio_version "${ISTIO_VERSION_VALUE}" \
+    --arg chaos_version "${CHAOS_MESH_VERSION_VALUE}" \
+    --arg haproxy_image "${HAPROXY_IMAGE_VALUE}" \
+    --arg k6_image "${K6_IMAGE_VALUE}" \
+    --arg auth_image "${AUTH_SIM_IMAGE_VALUE}" \
+    --arg duration "${DURATION_VALUE}" \
+    --argjson rate "${RATE_VALUE}" \
+    --arg fault_latency "${FAULT_LATENCY_VALUE}" \
+    --arg fault_duration "${FAULT_DURATION_VALUE}s" \
+    --arg t_injected "${t_injected_utc}" \
+    '{
+      project: "GitHub Capacity Cascade Lab",
+      learning_unit: "L08",
+      classification: "local exploratory evidence",
+      scenario: "chaos-network-delay",
+      scenario_mode: $action,
+      started_at_utc: $started_at_utc,
+      git_commit: $git_commit,
+      git_dirty: $git_dirty,
+      cluster: {
+        name: "capacity-cascade-l08",
+        k3s_image: $k3s_image,
+        container_runtime: "containerd",
+        socket_path: "/run/k3s/containerd/containerd.sock"
+      },
+      istio: {
+        version: $istio_version,
+        mode: "sidecar",
+        inbound_capacity_target: 1,
+        inbound_retry: "off"
+      },
+      chaos_mesh: {
+        version: $chaos_version,
+        fault_type: "NetworkChaos",
+        action: "delay",
+        mode: "all",
+        target_selector: {
+          namespace: "capacity-cascade-l08-target",
+          label: "app.kubernetes.io/name=auth-sim"
+        },
+        target_identity_verified: true,
+        namespace_filtering: true,
+        daemon_privileged: true
+      },
+      workload: {
+        rate: $rate,
+        duration: $duration,
+        fault_latency: $fault_latency,
+        fault_duration: $fault_duration,
+        client_retry: "none",
+        haproxy_retry: "off"
+      },
+      timeline: {
+        injected_utc: $t_injected,
+        recovered_utc: null
+      },
+      abort: {
+        abort_mode: "controlled abort path",
+        fault_active_at_abort: true,
+        chaos_resources_remaining: 0
+      },
+      source_boundary: {
+        fact: "GitHub official RCA described cascade effects; incident facts documented in docs/facts-and-assumptions.md",
+        inference: "Declarative fault window directly correlates with user-facing and proxy saturation signals",
+        lab_implementation: "Chaos Mesh 2.8.4 NetworkChaos delay on local k3d cluster with Istio sidecar",
+        unknown: "Whether GitHub utilized Chaos Mesh or specific chaos tooling during incident analysis"
+      }
+    }' >"${result_dir}/metadata.json"
+
+  cat <<EOF >"${result_dir}/summary.md"
+# L08 Chaos Mesh Abort Smoke Summary
+
+> 이 결과는 로컬 ephemeral k3d 환경에서 측정된 local exploratory evidence이며,
+> OS signal handling이 아닌 runner의 controlled abort path 및 resource cleanup을 검증합니다.
+
+| 관측 항목 | 측정값 / 상태 |
+| --- | --- |
+| Abort Contract Satisfied | true |
+| Chaos Mesh Version | ${CHAOS_MESH_VERSION_VALUE} |
+| Runtime Socket Verified | ${containerd_socket_verified} |
+| Target Identity Verified | ${target_identity_verified} (${TARGET_NAMESPACE}/${pod}) |
+| Injection Active at Abort | true (${t_injected_utc}) |
+| Controlled Abort Triggered | true |
+| Chaos CR Remaining After Abort | ${chaos_remaining} |
+EOF
+
   printf 'Abort smoke test PASSED. Chaos CR was safely cleared upon abort.\n'
   exit 0
 fi
@@ -880,11 +1022,12 @@ printf 'Applying declarative NetworkChaos resource...\n'
 kubectl apply -f "${result_dir}/chaos-resource-applied.yaml" >"${result_dir}/chaos-apply.log"
 fault_applied=true
 
-# Wait for AllInjected: True
+# Wait for AllInjected: True and target identity
+target_identity_verified=false
 for _ in {1..30}; do
-  injected="$(kubectl get networkchaos auth-sim-delay -n "${TARGET_NAMESPACE}" -o jsonpath='{.status.conditions[?(@.type=="AllInjected")].status}' 2>/dev/null || echo '')"
-  if [[ "${injected}" == "True" ]]; then
+  if verify_network_chaos_state "${TARGET_NAMESPACE}" "auth-sim-delay" "Injected" "${pod}"; then
     fault_injected=true
+    target_identity_verified=true
     t_injected_epoch="$(date +%s)"
     t_injected_utc="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
     kubectl get networkchaos auth-sim-delay -n "${TARGET_NAMESPACE}" -o yaml >"${result_dir}/chaos-resource-active.yaml"
@@ -892,17 +1035,16 @@ for _ in {1..30}; do
   fi
   sleep 0.5
 done
-[[ "${fault_injected}" == true ]] || { printf 'Chaos Mesh did not report AllInjected=True\n' >&2; exit 1; }
-printf 'Chaos fault active at %s (phase: Injected)\n' "${t_injected_utc}"
+[[ "${fault_injected}" == true && "${target_identity_verified}" == true ]] || { printf 'Chaos Mesh did not report AllInjected=True or target identity mismatch\n' >&2; exit 1; }
+printf 'Chaos fault active at %s (phase: Injected, target: %s/%s)\n' "${t_injected_utc}" "${TARGET_NAMESPACE}" "${pod}"
 
 # Wait for fault duration to expire
 printf 'Fault window active for %ss. Waiting for recovery...\n' "${FAULT_DURATION_VALUE}"
 sleep "${FAULT_DURATION_VALUE}"
 
-# Wait for AllRecovered: True
+# Wait for AllRecovered: True and containerRecords phase: Not Injected
 for _ in {1..40}; do
-  recovered="$(kubectl get networkchaos auth-sim-delay -n "${TARGET_NAMESPACE}" -o jsonpath='{.status.conditions[?(@.type=="AllRecovered")].status}' 2>/dev/null || echo '')"
-  if [[ "${recovered}" == "True" ]]; then
+  if verify_network_chaos_state "${TARGET_NAMESPACE}" "auth-sim-delay" "Not Injected" "${pod}"; then
     fault_recovered=true
     t_recovered_epoch="$(date +%s)"
     t_recovered_utc="$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)"
@@ -911,8 +1053,8 @@ for _ in {1..40}; do
   fi
   sleep 0.5
 done
-[[ "${fault_recovered}" == true ]] || { printf 'Chaos Mesh did not report AllRecovered=True\n' >&2; exit 1; }
-printf 'Chaos fault recovered at %s (phase: Recovered)\n' "${t_recovered_utc}"
+[[ "${fault_recovered}" == true ]] || { printf 'Chaos Mesh did not report AllRecovered=True or recovery state mismatch\n' >&2; exit 1; }
+printf 'Chaos fault recovered at %s (phase: Not Injected, AllRecovered: True)\n' "${t_recovered_utc}"
 
 # Wait for k6 to finish
 printf 'Waiting for k6 workload completion...\n'
@@ -999,6 +1141,7 @@ fi
 
 contract_passed=false
 if [[ "${fault_injected}" == true \
+   && "${target_identity_verified}" == true \
    && "${fault_recovered}" == true \
    && "${pre_healthy}" == true \
    && "${fault_effect_observed}" == true \
@@ -1013,6 +1156,7 @@ jq -n \
   --argjson chaos_installed true \
   --argjson namespace_filtering_enabled true \
   --argjson containerd_socket_verified "${containerd_socket_verified}" \
+  --argjson target_identity_verified "${target_identity_verified}" \
   --argjson pre_fault_healthy "${pre_healthy}" \
   --argjson fault_injected "${fault_injected}" \
   --argjson fault_effect_observed "${fault_effect_observed}" \
@@ -1035,6 +1179,7 @@ jq -n \
       chaos_installed: $chaos_installed,
       namespace_filtering_enabled: $namespace_filtering_enabled,
       containerd_socket_verified: $containerd_socket_verified,
+      target_identity_verified: $target_identity_verified,
       pre_fault_healthy: $pre_fault_healthy,
       fault_injected: $fault_injected,
       fault_effect_observed: $fault_effect_observed,
@@ -1105,6 +1250,7 @@ jq -n \
         namespace: "capacity-cascade-l08-target",
         label: "app.kubernetes.io/name=auth-sim"
       },
+      target_identity_verified: true,
       namespace_filtering: true,
       daemon_privileged: true
     },
@@ -1139,6 +1285,7 @@ cat <<EOF >"${result_dir}/summary.md"
 | Contract Passed | ${contract_passed} |
 | Chaos Mesh Version | ${CHAOS_MESH_VERSION_VALUE} |
 | Runtime Socket Verified | ${containerd_socket_verified} |
+| Target Identity Verified | ${target_identity_verified} (${TARGET_NAMESPACE}/${pod}) |
 | Namespace Blast-Radius Protected | true (enableFilterNamespace=true) |
 | Fault Type & Target | NetworkChaos delay (${FAULT_LATENCY_VALUE}) on auth-sim |
 | Injection Injected Timestamp | ${t_injected_utc} |
@@ -1146,7 +1293,7 @@ cat <<EOF >"${result_dir}/summary.md"
 | Pre-fault Healthy | ${pre_healthy} (overflow peak: ${pre_overflow_max}) |
 | Fault Window Observed Peak Overflow | ${fault_overflow_max} |
 | Fault Window Observed 5xx | ${fault_503_max} (k6 503 total: ${status_503}) |
-| Post-fault Recovery | ${post_recovered} |
+| Post-fault Recovery | ${post_recovered} (phase: Not Injected, AllRecovered: True) |
 | Dropped Iterations | ${dropped_iterations} |
 | Chaos CR Deleted | true |
 EOF
