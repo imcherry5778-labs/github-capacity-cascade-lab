@@ -416,6 +416,16 @@ Endpoint state in timestamped samples. Recovery remains a final-idle boundary: f
 sidecar active requests and HAProxy queue/sessions are zero. It does not measure or compare
 recovery duration.
 
+Three curated clean-source local repetitions showed that M1 backoff+jitter reduced logical
+failure but increased physical attempts, selected sidecar overflow and p95 relative to immediate
+retry. M2's local 429 policy reduced forwarded backend sessions and overflow while explicitly
+increasing client-visible failure. M3's actual custom-metric HPA scaled to `2/2` and reduced
+overflow/503 relative to the blind `1/1` policy under these fixed conditions. M4 gradual arrival
+had lower overflow than steep arrival in these runs, while raw logical counts sometimes differed
+by one request. These are local observations, not GitHub mitigation facts or general tuning
+recommendations. The original selected files and exact values are in
+[L07 curated evidence](../results/curated/l07/README.md).
+
 ## Future architecture only
 
 Chaos Mesh와 AKS 질문은 L07 evidence contract 뒤에만 연결한다. Gateway, Ambient/CNI,

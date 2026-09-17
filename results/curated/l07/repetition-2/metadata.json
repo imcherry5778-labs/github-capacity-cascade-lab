@@ -1,0 +1,31 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L07",
+  "classification": "local exploratory evidence",
+  "scenario_mode": "matrix",
+  "started_at_utc": "2026-09-17T15:44:10Z",
+  "git_commit": "23bf7c4d267e3c6f39655fac7cd1710254848d09",
+  "git_dirty": false,
+  "images": {
+    "auth_sim": "capacity-cascade/auth-sim:l07-23bf7c4d267e",
+    "haproxy": "haproxy:3.2.23-alpine",
+    "k6": "grafana/k6:2.2.0"
+  },
+  "istio": {
+    "version": "1.30.4"
+  },
+  "topology": "non-injected k6 Job -> HAProxy -> ClusterIP Service -> inbound istio-proxy -> auth-sim",
+  "fixed_local_conditions": {
+    "sidecar_http2MaxRequests": 1,
+    "application_latency_ms": 1000,
+    "request_timeout": "2s",
+    "haproxy_retry": "off",
+    "proxy_retry": "off"
+  },
+  "matrix": {
+    "m1": "retry timing only",
+    "m2": "HAProxy local shedding policy only",
+    "m3": "HPA observed signal only",
+    "m4": "arrival schedule only"
+  }
+}
