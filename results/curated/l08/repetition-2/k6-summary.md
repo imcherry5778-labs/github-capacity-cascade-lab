@@ -10,9 +10,9 @@
 | Physical Attempts | 211 |
 | Retry Attempts | 0 |
 | Retry Amplification | 1.000x |
-| Logical Failure Rate | 20.85% |
+| Logical Failure Rate | 23.70% |
 | Logical Duration P95 | 1202.00 ms |
-| HTTP Request Duration P95 | 1201.63 ms |
+| HTTP Request Duration P95 | 1201.67 ms |
 
 
 ## 실행 조건

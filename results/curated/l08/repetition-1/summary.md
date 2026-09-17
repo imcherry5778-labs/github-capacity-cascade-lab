@@ -8,13 +8,14 @@
 | Contract Passed | true |
 | Chaos Mesh Version | 2.8.4 |
 | Runtime Socket Verified | true |
+| Target Identity Verified | true (capacity-cascade-l08-target/auth-sim-8498d7b54f-jtsh5) |
 | Namespace Blast-Radius Protected | true (enableFilterNamespace=true) |
 | Fault Type & Target | NetworkChaos delay (600ms) on auth-sim |
-| Injection Injected Timestamp | 2026-09-17T18:05:22.880Z |
-| Recovery Timestamp | 2026-09-17T18:05:47.937Z |
+| Injection Injected Timestamp | 2026-09-17T18:46:55.446Z |
+| Recovery Timestamp | 2026-09-17T18:47:20.507Z |
 | Pre-fault Healthy | true (overflow peak: 0) |
 | Fault Window Observed Peak Overflow | 0 |
-| Fault Window Observed 5xx | 20 (k6 503 total: 25) |
-| Post-fault Recovery | true |
+| Fault Window Observed 5xx | 22 (k6 503 total: 47) |
+| Post-fault Recovery | true (phase: Not Injected, AllRecovered: True) |
 | Dropped Iterations | 0 |
 | Chaos CR Deleted | true |

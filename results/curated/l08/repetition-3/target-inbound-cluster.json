@@ -18,9 +18,9 @@
       "istio": {
         "services": [
           {
-            "host": "auth-sim.capacity-cascade-l08-target.svc.cluster.local",
+            "name": "auth-sim",
             "namespace": "capacity-cascade-l08-target",
-            "name": "auth-sim"
+            "host": "auth-sim.capacity-cascade-l08-target.svc.cluster.local"
           }
         ]
       }

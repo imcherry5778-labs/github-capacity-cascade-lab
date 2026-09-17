@@ -4,7 +4,7 @@ metadata:
   annotations:
     kubectl.kubernetes.io/last-applied-configuration: |
       {"apiVersion":"chaos-mesh.org/v1alpha1","kind":"NetworkChaos","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"auth-sim-delay","capacity-cascade-lab/owner":"l08"},"name":"auth-sim-delay","namespace":"capacity-cascade-l08-target"},"spec":{"action":"delay","delay":{"correlation":"0","jitter":"0ms","latency":"600ms"},"direction":"to","duration":"25s","mode":"all","selector":{"labelSelectors":{"app.kubernetes.io/instance":"auth-sim","app.kubernetes.io/name":"auth-sim"},"namespaces":["capacity-cascade-l08-target"]}}}
-  creationTimestamp: "2026-09-17T18:05:21Z"
+  creationTimestamp: "2026-09-17T18:46:54Z"
   finalizers:
   - chaos-mesh/records
   generation: 12
@@ -13,8 +13,8 @@ metadata:
     capacity-cascade-lab/owner: l08
   name: auth-sim-delay
   namespace: capacity-cascade-l08-target
-  resourceVersion: "1064"
-  uid: 70521b50-fc3f-4e69-8f6a-586323cdd963
+  resourceVersion: "1068"
+  uid: 2aaabc6c-46e7-4df2-87b7-49a77936e53a
 spec:
   action: delay
   delay:
@@ -32,28 +32,28 @@ spec:
     - capacity-cascade-l08-target
 status:
   conditions:
-  - status: "True"
-    type: Selected
   - status: "False"
     type: AllInjected
   - status: "True"
     type: AllRecovered
   - status: "False"
     type: Paused
+  - status: "True"
+    type: Selected
   experiment:
     containerRecords:
     - events:
       - operation: Apply
-        timestamp: "2026-09-17T18:05:22Z"
+        timestamp: "2026-09-17T18:46:55Z"
         type: Succeeded
       - operation: Recover
-        timestamp: "2026-09-17T18:05:46Z"
+        timestamp: "2026-09-17T18:47:19Z"
         type: Succeeded
-      id: capacity-cascade-l08-target/auth-sim-55fb7b9896-npp5x
+      id: capacity-cascade-l08-target/auth-sim-8498d7b54f-jtsh5
       injectedCount: 1
       phase: Not Injected
       recoveredCount: 1
       selectorKey: .
     desiredPhase: Stop
   instances:
-    capacity-cascade-l08-target/auth-sim-55fb7b9896-npp5x: 2
+    capacity-cascade-l08-target/auth-sim-8498d7b54f-jtsh5: 2

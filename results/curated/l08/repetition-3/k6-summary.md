@@ -6,13 +6,13 @@
 | --- | ---: |
 | Scenario | chaos-network-delay |
 | Learning Unit | L08 |
-| Logical Requests | 211 |
-| Physical Attempts | 211 |
+| Logical Requests | 210 |
+| Physical Attempts | 210 |
 | Retry Attempts | 0 |
 | Retry Amplification | 1.000x |
-| Logical Failure Rate | 18.01% |
-| Logical Duration P95 | 1203.00 ms |
-| HTTP Request Duration P95 | 1202.03 ms |
+| Logical Failure Rate | 22.86% |
+| Logical Duration P95 | 1202.00 ms |
+| HTTP Request Duration P95 | 1201.70 ms |
 
 
 ## 실행 조건

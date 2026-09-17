@@ -19,8 +19,8 @@
         "services": [
           {
             "name": "auth-sim",
-            "host": "auth-sim.capacity-cascade-l08-target.svc.cluster.local",
-            "namespace": "capacity-cascade-l08-target"
+            "namespace": "capacity-cascade-l08-target",
+            "host": "auth-sim.capacity-cascade-l08-target.svc.cluster.local"
           }
         ]
       }

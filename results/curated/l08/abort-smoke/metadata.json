@@ -3,8 +3,8 @@
   "learning_unit": "L08",
   "classification": "local exploratory evidence",
   "scenario": "chaos-network-delay",
-  "scenario_mode": "verify",
-  "started_at_utc": "2026-09-17T18:44:37Z",
+  "scenario_mode": "abort-smoke",
+  "started_at_utc": "2026-09-17T18:54:41Z",
   "git_commit": "ecb0086546f71a7e02a36eb5156498c1bd2172e3",
   "git_dirty": false,
   "cluster": {
@@ -34,15 +34,20 @@
   },
   "workload": {
     "rate": 3,
-    "duration": "70s",
+    "duration": "25s",
     "fault_latency": "600ms",
-    "fault_duration": "25s",
+    "fault_duration": "15s",
     "client_retry": "none",
     "haproxy_retry": "off"
   },
   "timeline": {
-    "injected_utc": "2026-09-17T18:46:55.446Z",
-    "recovered_utc": "2026-09-17T18:47:20.507Z"
+    "injected_utc": "2026-09-17T18:56:49.162Z",
+    "recovered_utc": null
+  },
+  "abort": {
+    "abort_mode": "controlled abort path",
+    "fault_active_at_abort": true,
+    "chaos_resources_remaining": 0
   },
   "source_boundary": {
     "fact": "GitHub official RCA described cascade effects; incident facts documented in docs/facts-and-assumptions.md",

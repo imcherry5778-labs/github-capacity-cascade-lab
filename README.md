@@ -433,7 +433,7 @@ k6 summary, HAProxy before/after CSV, timestamped samples, HPA 및 selected prox
 L08 실행은 `results/chaos-mesh/<UTC timestamp>/` 아래에 metadata, contract, cleanup, k6 summary,
 timestamped samples, 선언적 NetworkChaos 리소스 스냅샷(applied/active/recovered), proxy metric
 mapping, HAProxy before/after 통계를 남긴다. [L08 curated evidence](results/curated/l08/README.md)는
-clean-source 3회 반복 실행에서 판정에 필요한 원문을 byte-for-byte로 선별 보존한다.
+clean-source 3회 반복 실행 및 controlled abort-smoke 실행에서 판정에 필요한 원문을 byte-for-byte로 선별 보존한다.
 
 ## Application metrics
 

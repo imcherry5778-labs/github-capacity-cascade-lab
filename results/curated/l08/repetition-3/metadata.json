@@ -4,8 +4,8 @@
   "classification": "local exploratory evidence",
   "scenario": "chaos-network-delay",
   "scenario_mode": "verify",
-  "started_at_utc": "2026-09-17T18:09:43Z",
-  "git_commit": "c1c79d6a7ce4cd500dd00109fc48f8b78fbc1665",
+  "started_at_utc": "2026-09-17T18:51:09Z",
+  "git_commit": "ecb0086546f71a7e02a36eb5156498c1bd2172e3",
   "git_dirty": false,
   "cluster": {
     "name": "capacity-cascade-l08",
@@ -28,6 +28,7 @@
       "namespace": "capacity-cascade-l08-target",
       "label": "app.kubernetes.io/name=auth-sim"
     },
+    "target_identity_verified": true,
     "namespace_filtering": true,
     "daemon_privileged": true
   },
@@ -40,8 +41,8 @@
     "haproxy_retry": "off"
   },
   "timeline": {
-    "injected_utc": "2026-09-17T18:12:02.403Z",
-    "recovered_utc": "2026-09-17T18:12:27.456Z"
+    "injected_utc": "2026-09-17T18:53:26.697Z",
+    "recovered_utc": "2026-09-17T18:53:51.754Z"
   },
   "source_boundary": {
     "fact": "GitHub official RCA described cascade effects; incident facts documented in docs/facts-and-assumptions.md",

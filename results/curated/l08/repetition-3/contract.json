@@ -4,6 +4,7 @@
     "chaos_installed": true,
     "namespace_filtering_enabled": true,
     "containerd_socket_verified": true,
+    "target_identity_verified": true,
     "pre_fault_healthy": true,
     "fault_injected": true,
     "fault_effect_observed": true,
@@ -13,16 +14,16 @@
     "chaos_resource_deleted": true
   },
   "timeline": {
-    "fault_injected_utc": "2026-09-17T18:12:02.403Z",
-    "fault_recovered_utc": "2026-09-17T18:12:27.456Z"
+    "fault_injected_utc": "2026-09-17T18:53:26.697Z",
+    "fault_recovered_utc": "2026-09-17T18:53:51.754Z"
   },
   "measurements": {
-    "logical_requests": 211,
-    "physical_attempts": 211,
-    "downstream_200": 173,
-    "downstream_503": 38,
-    "http_req_duration_p95_ms": 1202.030597,
+    "logical_requests": 210,
+    "physical_attempts": 210,
+    "downstream_200": 162,
+    "downstream_503": 48,
+    "http_req_duration_p95_ms": 1201.70448305,
     "fault_sidecar_overflow_peak": 0,
-    "fault_haproxy_5xx_peak": 17
+    "fault_haproxy_5xx_peak": 33
   }
 }

@@ -4,25 +4,25 @@
         {
             "action": "Binding",
             "apiVersion": "v1",
-            "eventTime": "2026-09-17T18:11:05.534113Z",
+            "eventTime": "2026-09-17T18:52:31.223231Z",
             "firstTimestamp": null,
             "involvedObject": {
                 "apiVersion": "v1",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "803",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "804",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
             "lastTimestamp": null,
-            "message": "Successfully assigned capacity-cascade-l08-target/auth-sim-55fb7b9896-h6dc7 to k3d-capacity-cascade-l08-server-0",
+            "message": "Successfully assigned capacity-cascade-l08-target/auth-sim-8498d7b54f-54cml to k3d-capacity-cascade-l08-server-0",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:05Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2b52cef84a",
+                "creationTimestamp": "2026-09-17T18:52:31Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6306e116ce9df",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "807",
-                "uid": "b112a2dc-e900-4d9a-b489-9733d98987ee"
+                "resourceVersion": "808",
+                "uid": "fb37dd09-f83d-480e-80f2-81fe760fa607"
             },
             "reason": "Scheduled",
             "reportingComponent": "default-scheduler",
@@ -34,25 +34,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:06Z",
+            "firstTimestamp": "2026-09-17T18:52:31Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.initContainers{istio-init}",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:06Z",
+            "lastTimestamp": "2026-09-17T18:52:31Z",
             "message": "Pulling image \"registry.istio.io/release/proxyv2:1.30.4\"",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:06Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2b73faf5b0",
+                "creationTimestamp": "2026-09-17T18:52:31Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6306e31f3e731",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "812",
-                "uid": "fce3a280-c0e0-486a-b5aa-e990ae43bb9a"
+                "resourceVersion": "814",
+                "uid": "fa430c3e-184c-4a8f-be14-b965b95cae04"
             },
             "reason": "Pulling",
             "reportingComponent": "kubelet",
@@ -67,25 +67,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:14Z",
+            "firstTimestamp": "2026-09-17T18:52:41Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.initContainers{istio-init}",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:14Z",
-            "message": "Successfully pulled image \"registry.istio.io/release/proxyv2:1.30.4\" in 8.788s (8.788s including waiting). Image size: 88165018 bytes.",
+            "lastTimestamp": "2026-09-17T18:52:41Z",
+            "message": "Successfully pulled image \"registry.istio.io/release/proxyv2:1.30.4\" in 9.803s (9.803s including waiting). Image size: 88165018 bytes.",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:14Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2d7fcdc931",
+                "creationTimestamp": "2026-09-17T18:52:41Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d630707a43f6e7",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "824",
-                "uid": "c14c96d7-548f-4034-b6c0-ebf00ab40b5a"
+                "resourceVersion": "828",
+                "uid": "eb230750-e850-4ded-b3a5-1f487f004653"
             },
             "reason": "Pulled",
             "reportingComponent": "kubelet",
@@ -100,124 +100,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:14Z",
+            "firstTimestamp": "2026-09-17T18:52:41Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.initContainers{istio-init}",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:14Z",
+            "lastTimestamp": "2026-09-17T18:52:41Z",
             "message": "Container created",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:14Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2d863b100c",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "825",
-                "uid": "bee01fda-468d-4597-9d15-5c1e96f49cbd"
-            },
-            "reason": "Created",
-            "reportingComponent": "kubelet",
-            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
-            "source": {
-                "component": "kubelet",
-                "host": "k3d-capacity-cascade-l08-server-0"
-            },
-            "type": "Normal"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 1,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:15Z",
-            "involvedObject": {
-                "apiVersion": "v1",
-                "fieldPath": "spec.initContainers{istio-init}",
-                "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:15Z",
-            "message": "Container started",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:15Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2d8aa8ea66",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "826",
-                "uid": "62076941-66de-41de-9417-7f000d0427b0"
-            },
-            "reason": "Started",
-            "reportingComponent": "kubelet",
-            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
-            "source": {
-                "component": "kubelet",
-                "host": "k3d-capacity-cascade-l08-server-0"
-            },
-            "type": "Normal"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 1,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:15Z",
-            "involvedObject": {
-                "apiVersion": "v1",
-                "fieldPath": "spec.initContainers{istio-proxy}",
-                "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:15Z",
-            "message": "Container image \"registry.istio.io/release/proxyv2:1.30.4\" already present on machine and can be accessed by the pod",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:15Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2db0711a14",
+                "creationTimestamp": "2026-09-17T18:52:41Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d63070802f5c09",
                 "namespace": "capacity-cascade-l08-target",
                 "resourceVersion": "829",
-                "uid": "164da259-7e67-4268-8c53-4076d1334ef7"
-            },
-            "reason": "Pulled",
-            "reportingComponent": "kubelet",
-            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
-            "source": {
-                "component": "kubelet",
-                "host": "k3d-capacity-cascade-l08-server-0"
-            },
-            "type": "Normal"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 1,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:15Z",
-            "involvedObject": {
-                "apiVersion": "v1",
-                "fieldPath": "spec.initContainers{istio-proxy}",
-                "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:15Z",
-            "message": "Container created",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:15Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2db7a92671",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "833",
-                "uid": "c77c0b9a-4890-4290-b3b2-f7d07b07a714"
+                "uid": "0faf9bec-4b2c-4ee4-a8be-ae2fcebf2975"
             },
             "reason": "Created",
             "reportingComponent": "kubelet",
@@ -232,124 +133,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:15Z",
+            "firstTimestamp": "2026-09-17T18:52:41Z",
             "involvedObject": {
                 "apiVersion": "v1",
-                "fieldPath": "spec.initContainers{istio-proxy}",
+                "fieldPath": "spec.initContainers{istio-init}",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:15Z",
+            "lastTimestamp": "2026-09-17T18:52:41Z",
             "message": "Container started",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:15Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2dba17cba3",
+                "creationTimestamp": "2026-09-17T18:52:41Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d63070828bd42d",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "834",
-                "uid": "0d01a1de-cf4c-4b7a-8854-ee890c2e5599"
-            },
-            "reason": "Started",
-            "reportingComponent": "kubelet",
-            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
-            "source": {
-                "component": "kubelet",
-                "host": "k3d-capacity-cascade-l08-server-0"
-            },
-            "type": "Normal"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 2,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:17Z",
-            "involvedObject": {
-                "apiVersion": "v1",
-                "fieldPath": "spec.containers{auth-sim}",
-                "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:17Z",
-            "message": "Container image \"capacity-cascade/auth-sim:l08-c1c79d6a7ce4\" already present on machine and can be accessed by the pod",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:17Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2e27dbd249",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1031",
-                "uid": "81d5e690-b497-4341-96d5-2a8f8790d24e"
-            },
-            "reason": "Pulled",
-            "reportingComponent": "kubelet",
-            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
-            "source": {
-                "component": "kubelet",
-                "host": "k3d-capacity-cascade-l08-server-0"
-            },
-            "type": "Normal"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 2,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:17Z",
-            "involvedObject": {
-                "apiVersion": "v1",
-                "fieldPath": "spec.containers{auth-sim}",
-                "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:17Z",
-            "message": "Container created",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:17Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2e2e8e3b93",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1032",
-                "uid": "eba10dbd-4fcd-4940-a6a0-8ca16a85f3aa"
-            },
-            "reason": "Created",
-            "reportingComponent": "kubelet",
-            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
-            "source": {
-                "component": "kubelet",
-                "host": "k3d-capacity-cascade-l08-server-0"
-            },
-            "type": "Normal"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 2,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:17Z",
-            "involvedObject": {
-                "apiVersion": "v1",
-                "fieldPath": "spec.containers{auth-sim}",
-                "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:17Z",
-            "message": "Container started",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:17Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e2e31602875",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1033",
-                "uid": "af2ad6f2-8e51-4b58-9950-c023ae6a700a"
+                "resourceVersion": "830",
+                "uid": "346e4061-466d-4419-a4a0-59ebd5105c4e"
             },
             "reason": "Started",
             "reportingComponent": "kubelet",
@@ -364,28 +166,226 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:02Z",
+            "firstTimestamp": "2026-09-17T18:52:42Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.initContainers{istio-proxy}",
+                "kind": "Pod",
+                "name": "auth-sim-8498d7b54f-54cml",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:52:42Z",
+            "message": "Container image \"registry.istio.io/release/proxyv2:1.30.4\" already present on machine and can be accessed by the pod",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:52:42Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d63070a4730635",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "831",
+                "uid": "9062bd06-03a9-4c55-8f16-3b6b6f410b40"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
+            "source": {
+                "component": "kubelet",
+                "host": "k3d-capacity-cascade-l08-server-0"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:52:42Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.initContainers{istio-proxy}",
+                "kind": "Pod",
+                "name": "auth-sim-8498d7b54f-54cml",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:52:42Z",
+            "message": "Container created",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:52:42Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d63070ac444540",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "835",
+                "uid": "fe463ee3-704a-4ed5-86ed-b8b3841a9518"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
+            "source": {
+                "component": "kubelet",
+                "host": "k3d-capacity-cascade-l08-server-0"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:52:42Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.initContainers{istio-proxy}",
+                "kind": "Pod",
+                "name": "auth-sim-8498d7b54f-54cml",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:52:42Z",
+            "message": "Container started",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:52:42Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d63070af2cb72d",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "837",
+                "uid": "40f1ae8f-97e6-4e0b-89b7-2531734ae5a3"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
+            "source": {
+                "component": "kubelet",
+                "host": "k3d-capacity-cascade-l08-server-0"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 2,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:52:44Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{auth-sim}",
+                "kind": "Pod",
+                "name": "auth-sim-8498d7b54f-54cml",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:53:37Z",
+            "message": "Container image \"capacity-cascade/auth-sim:l08-ecb0086546f7\" already present on machine and can be accessed by the pod",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:52:44Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d630711c06e5c3",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "1022",
+                "uid": "2a7e4df8-c10d-4879-a7ce-fa32a7ca00f0"
+            },
+            "reason": "Pulled",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
+            "source": {
+                "component": "kubelet",
+                "host": "k3d-capacity-cascade-l08-server-0"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 2,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:52:44Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{auth-sim}",
+                "kind": "Pod",
+                "name": "auth-sim-8498d7b54f-54cml",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:53:37Z",
+            "message": "Container created",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:52:44Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6307122821df3",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "1023",
+                "uid": "bbd9d26f-b053-4d68-b98c-2765a0fdaab0"
+            },
+            "reason": "Created",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
+            "source": {
+                "component": "kubelet",
+                "host": "k3d-capacity-cascade-l08-server-0"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 2,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:52:44Z",
+            "involvedObject": {
+                "apiVersion": "v1",
+                "fieldPath": "spec.containers{auth-sim}",
+                "kind": "Pod",
+                "name": "auth-sim-8498d7b54f-54cml",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:53:37Z",
+            "message": "Container started",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:52:44Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6307124f10089",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "1028",
+                "uid": "8a2d5290-4a4e-41fa-9ff9-0497a5bad764"
+            },
+            "reason": "Started",
+            "reportingComponent": "kubelet",
+            "reportingInstance": "k3d-capacity-cascade-l08-server-0",
+            "source": {
+                "component": "kubelet",
+                "host": "k3d-capacity-cascade-l08-server-0"
+            },
+            "type": "Normal"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "PodNetworkChaos",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "986",
-                "uid": "0bcd38a6-3d0f-4a7e-9b7b-e66a14b31eb6"
+                "resourceVersion": "987",
+                "uid": "a0fc3833-bb80-47f6-bc9c-944e0ac9e4bd"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:02Z",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
             "message": "Successfully update ObservedGeneration and FailedMessage of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "ObservedGeneration and FailedMessage",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:02Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e387ce19d53",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6307aebbd05e4",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "992",
-                "uid": "9e781506-a037-481f-9d09-1e5a6287795f"
+                "resourceVersion": "993",
+                "uid": "2f459a72-6516-475c-b128-481a9a009ed3"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -397,27 +397,27 @@
         },
         {
             "apiVersion": "v1",
-            "count": 12,
+            "count": 5,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:03Z",
+            "firstTimestamp": "2026-09-17T18:53:27Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.containers{auth-sim}",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
-            "message": "Readiness probe failed: Get \"http://10.42.0.7:15020/app-health/auth-sim/readyz\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
+            "lastTimestamp": "2026-09-17T18:53:47Z",
+            "message": "Liveness probe failed: Get \"http://10.42.0.7:15020/app-health/auth-sim/livez\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:12:03Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e38e9f25362",
+                "creationTimestamp": "2026-09-17T18:53:27Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6307b39bbe999",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1064",
-                "uid": "ff24e2dd-3a99-467b-9a6b-6b13d786a232"
+                "resourceVersion": "1058",
+                "uid": "06133105-3e79-4680-85a0-7c9b46e73238"
             },
             "reason": "Unhealthy",
             "reportingComponent": "kubelet",
@@ -430,27 +430,27 @@
         },
         {
             "apiVersion": "v1",
-            "count": 5,
+            "count": 13,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:07Z",
+            "firstTimestamp": "2026-09-17T18:53:28Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.containers{auth-sim}",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
-            "message": "Liveness probe failed: Get \"http://10.42.0.7:15020/app-health/auth-sim/livez\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
+            "lastTimestamp": "2026-09-17T18:53:50Z",
+            "message": "Readiness probe failed: Get \"http://10.42.0.7:15020/app-health/auth-sim/readyz\": context deadline exceeded (Client.Timeout exceeded while awaiting headers)",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:12:07Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e39a528d950",
+                "creationTimestamp": "2026-09-17T18:53:28Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6307b66f6cf87",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1082",
-                "uid": "7188531e-52fd-4b7c-913a-9fede9855a1f"
+                "resourceVersion": "1063",
+                "uid": "5edbb845-2ef7-4356-a8d2-078459e2c900"
             },
             "reason": "Unhealthy",
             "reportingComponent": "kubelet",
@@ -465,25 +465,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:17Z",
+            "firstTimestamp": "2026-09-17T18:53:37Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.containers{auth-sim}",
                 "kind": "Pod",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "804",
-                "uid": "4d2d7324-42d8-47ce-a819-6e5443ea350c"
+                "resourceVersion": "806",
+                "uid": "f2b1d100-15df-4ad8-a70b-2bbb588d1e40"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:17Z",
+            "lastTimestamp": "2026-09-17T18:53:37Z",
             "message": "Container auth-sim failed liveness probe, will be restarted",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:12:17Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e3bf944db82",
+                "creationTimestamp": "2026-09-17T18:53:37Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d6307d8dd1c569",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1030",
-                "uid": "52f18d49-edf8-4198-8234-648eb7e71682"
+                "resourceVersion": "1021",
+                "uid": "9776c348-3269-4009-a4d2-1b74d5ac6386"
             },
             "reason": "Killing",
             "reportingComponent": "kubelet",
@@ -498,28 +498,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:26Z",
+            "firstTimestamp": "2026-09-17T18:53:51Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "PodNetworkChaos",
-                "name": "auth-sim-55fb7b9896-h6dc7",
+                "name": "auth-sim-8498d7b54f-54cml",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1062",
-                "uid": "0bcd38a6-3d0f-4a7e-9b7b-e66a14b31eb6"
+                "resourceVersion": "1067",
+                "uid": "a0fc3833-bb80-47f6-bc9c-944e0ac9e4bd"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
+            "lastTimestamp": "2026-09-17T18:53:51Z",
             "message": "Successfully update ObservedGeneration and FailedMessage of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "ObservedGeneration and FailedMessage",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:26Z",
-                "name": "auth-sim-55fb7b9896-h6dc7.18d62e3e12874a9e",
+                "creationTimestamp": "2026-09-17T18:53:51Z",
+                "name": "auth-sim-8498d7b54f-54cml.18d63080a6ee8e60",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1068",
-                "uid": "2219b442-db56-44a1-8248-67d0cdd10052"
+                "resourceVersion": "1072",
+                "uid": "97942781-715e-47c2-97ac-b0bcc78a7ff8"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -533,24 +533,24 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:05Z",
+            "firstTimestamp": "2026-09-17T18:52:31Z",
             "involvedObject": {
                 "apiVersion": "apps/v1",
                 "kind": "ReplicaSet",
-                "name": "auth-sim-55fb7b9896",
+                "name": "auth-sim-8498d7b54f",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "798",
-                "uid": "aa012b88-209a-4a0a-a1e4-dee3a682c60f"
+                "resourceVersion": "795",
+                "uid": "3b9df4bd-991b-4b76-86a2-db0437dd75f3"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:05Z",
-            "message": "Created pod: auth-sim-55fb7b9896-h6dc7",
+            "lastTimestamp": "2026-09-17T18:52:31Z",
+            "message": "Created pod: auth-sim-8498d7b54f-54cml",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:05Z",
-                "name": "auth-sim-55fb7b9896.18d62e2b52b02874",
+                "creationTimestamp": "2026-09-17T18:52:31Z",
+                "name": "auth-sim-8498d7b54f.18d6306e113cb729",
                 "namespace": "capacity-cascade-l08-target",
                 "resourceVersion": "805",
-                "uid": "df9fda61-2657-41cb-9161-c5c0d5167fa6"
+                "uid": "4ed45bf6-edb3-4ec4-83e4-1c7e8939ff67"
             },
             "reason": "SuccessfulCreate",
             "reportingComponent": "replicaset-controller",
@@ -564,27 +564,27 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:01Z",
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "977",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "979",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:01Z",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
             "message": "Finalizer has been inited",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/type": "finalizer-inited"
                 },
-                "creationTimestamp": "2026-09-17T18:12:01Z",
-                "name": "auth-sim-delay.18d62e384f80ce03",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-delay.18d6307ad9f55610",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "978",
-                "uid": "bccfb0d1-3929-4031-ad55-77aa5ca838ae"
+                "resourceVersion": "980",
+                "uid": "32213f8b-2e2b-450c-a0ad-cd0e18f3190d"
             },
             "reason": "FinalizerInited",
             "reportingComponent": "",
@@ -598,28 +598,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:01Z",
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "977",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "979",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:01Z",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
             "message": "Successfully update finalizer of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "finalizer",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:01Z",
-                "name": "auth-sim-delay.18d62e384fcb30ce",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-delay.18d6307ada45ce64",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "980",
-                "uid": "07b6e5cc-b338-4c15-9ab8-25678be631f4"
+                "resourceVersion": "982",
+                "uid": "a6a8637f-444a-4f04-b9eb-bb7c87e686c6"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -633,27 +633,27 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:01Z",
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "979",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "981",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:01Z",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
             "message": "Experiment has started",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/type": "started"
                 },
-                "creationTimestamp": "2026-09-17T18:12:01Z",
-                "name": "auth-sim-delay.18d62e384fcc0883",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-delay.18d6307ada47c624",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "981",
-                "uid": "c441976c-ddaa-452e-893b-4cdbc64f46b7"
+                "resourceVersion": "983",
+                "uid": "80c735b5-e412-42b3-8a38-7198548d9ed1"
             },
             "reason": "Started",
             "reportingComponent": "",
@@ -667,28 +667,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:01Z",
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "979",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "981",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:01Z",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
             "message": "Successfully update desiredPhase of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "desiredPhase",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:01Z",
-                "name": "auth-sim-delay.18d62e3850253a40",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-delay.18d6307adc1ecbba",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "983",
-                "uid": "659f3d0f-ab01-4f36-a95f-e8f2756fea01"
+                "resourceVersion": "985",
+                "uid": "3524b09e-af7c-4423-9e00-17112849ce3a"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -702,28 +702,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:01Z",
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "984",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "986",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:01Z",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
             "message": "Successfully update records of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "records",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:01Z",
-                "name": "auth-sim-delay.18d62e386312348c",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-delay.18d6307ae3f72e77",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "988",
-                "uid": "a443e526-44e5-49b0-a72d-a265f5603398"
+                "resourceVersion": "989",
+                "uid": "1f86ae9c-fca4-4c8e-aaae-a4e28437bc50"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -737,28 +737,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:02Z",
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "989",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "990",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:02Z",
-            "message": "Successfully apply chaos for capacity-cascade-l08-target/auth-sim-55fb7b9896-h6dc7",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
+            "message": "Successfully apply chaos for capacity-cascade-l08-target/auth-sim-8498d7b54f-54cml",
             "metadata": {
                 "annotations": {
-                    "chaos-mesh.org/id": "capacity-cascade-l08-target/auth-sim-55fb7b9896-h6dc7",
+                    "chaos-mesh.org/id": "capacity-cascade-l08-target/auth-sim-8498d7b54f-54cml",
                     "chaos-mesh.org/type": "applied"
                 },
-                "creationTimestamp": "2026-09-17T18:12:02Z",
-                "name": "auth-sim-delay.18d62e387ce847d5",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-delay.18d6307aebc05831",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "993",
-                "uid": "3378324a-b297-49b3-93c8-7f4a9ab282fd"
+                "resourceVersion": "992",
+                "uid": "c73f0094-c751-43be-b371-fffdb8809f0b"
             },
             "reason": "Applied",
             "reportingComponent": "",
@@ -772,28 +772,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:02Z",
+            "firstTimestamp": "2026-09-17T18:53:26Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "989",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "990",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:02Z",
+            "lastTimestamp": "2026-09-17T18:53:26Z",
             "message": "Successfully update records of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "records",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:02Z",
-                "name": "auth-sim-delay.18d62e387d46a0d3",
+                "creationTimestamp": "2026-09-17T18:53:26Z",
+                "name": "auth-sim-delay.18d6307aec2518ef",
                 "namespace": "capacity-cascade-l08-target",
                 "resourceVersion": "995",
-                "uid": "3f4bd507-6dd9-4f5f-b422-dab426542433"
+                "uid": "3b5a115e-dfc1-421b-bb78-9abc0b1857e8"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -807,27 +807,27 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:26Z",
+            "firstTimestamp": "2026-09-17T18:53:51Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
                 "resourceVersion": "996",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
+            "lastTimestamp": "2026-09-17T18:53:51Z",
             "message": "Time up according to the duration",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/type": "time-up"
                 },
-                "creationTimestamp": "2026-09-17T18:12:26Z",
-                "name": "auth-sim-delay.18d62e3e0f0379b7",
+                "creationTimestamp": "2026-09-17T18:53:51Z",
+                "name": "auth-sim-delay.18d63080a48c083f",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1059",
-                "uid": "5cf75527-72f2-4c8a-a7d1-f880a3bc9535"
+                "resourceVersion": "1064",
+                "uid": "236634d8-c7d9-419e-bfa8-84525d2a492a"
             },
             "reason": "TimeUp",
             "reportingComponent": "",
@@ -841,28 +841,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:26Z",
+            "firstTimestamp": "2026-09-17T18:53:51Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
                 "resourceVersion": "996",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
+            "lastTimestamp": "2026-09-17T18:53:51Z",
             "message": "Successfully update desiredPhase of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "desiredPhase",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:26Z",
-                "name": "auth-sim-delay.18d62e3e0f86f631",
+                "creationTimestamp": "2026-09-17T18:53:51Z",
+                "name": "auth-sim-delay.18d63080a50729c3",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1061",
-                "uid": "7da26eee-84a3-4ec5-8e03-2b5a5c28bc65"
+                "resourceVersion": "1066",
+                "uid": "c72944ed-03e5-49aa-af3e-f007bbbddc22"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -876,28 +876,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:26Z",
+            "firstTimestamp": "2026-09-17T18:53:51Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1060",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "1065",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
+            "lastTimestamp": "2026-09-17T18:53:51Z",
             "message": "Successfully update records of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "records",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:26Z",
-                "name": "auth-sim-delay.18d62e3e10cbc230",
+                "creationTimestamp": "2026-09-17T18:53:51Z",
+                "name": "auth-sim-delay.18d63080a5d243f3",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1065",
-                "uid": "490c85a2-49a4-48bd-8664-d558e5474ba4"
+                "resourceVersion": "1069",
+                "uid": "1f53edf4-de62-4e5a-89a4-2e54f382289c"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -911,28 +911,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:26Z",
+            "firstTimestamp": "2026-09-17T18:53:51Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1066",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "1070",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
-            "message": "Successfully recover chaos for capacity-cascade-l08-target/auth-sim-55fb7b9896-h6dc7",
+            "lastTimestamp": "2026-09-17T18:53:51Z",
+            "message": "Successfully recover chaos for capacity-cascade-l08-target/auth-sim-8498d7b54f-54cml",
             "metadata": {
                 "annotations": {
-                    "chaos-mesh.org/id": "capacity-cascade-l08-target/auth-sim-55fb7b9896-h6dc7",
+                    "chaos-mesh.org/id": "capacity-cascade-l08-target/auth-sim-8498d7b54f-54cml",
                     "chaos-mesh.org/type": "recovered"
                 },
-                "creationTimestamp": "2026-09-17T18:12:26Z",
-                "name": "auth-sim-delay.18d62e3e128c0316",
+                "creationTimestamp": "2026-09-17T18:53:51Z",
+                "name": "auth-sim-delay.18d63080a6f2f0f0",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1069",
-                "uid": "b7d239ec-f911-4ee0-bf17-6014f0c33f94"
+                "resourceVersion": "1073",
+                "uid": "3f280008-fa94-4093-8d3a-5a7644c9b131"
             },
             "reason": "Recovered",
             "reportingComponent": "",
@@ -946,28 +946,28 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:26Z",
+            "firstTimestamp": "2026-09-17T18:53:51Z",
             "involvedObject": {
                 "apiVersion": "chaos-mesh.org/v1alpha1",
                 "kind": "NetworkChaos",
                 "name": "auth-sim-delay",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1066",
-                "uid": "b36de3bb-c702-48f4-83a6-4c08ffe18904"
+                "resourceVersion": "1070",
+                "uid": "76ec3ce7-f13a-4181-8160-e5efda13a718"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:26Z",
+            "lastTimestamp": "2026-09-17T18:53:51Z",
             "message": "Successfully update records of resource",
             "metadata": {
                 "annotations": {
                     "chaos-mesh.org/field": "records",
                     "chaos-mesh.org/type": "updated"
                 },
-                "creationTimestamp": "2026-09-17T18:12:26Z",
-                "name": "auth-sim-delay.18d62e3e12ff1589",
+                "creationTimestamp": "2026-09-17T18:53:51Z",
+                "name": "auth-sim-delay.18d63080a8e5d4d4",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1071",
-                "uid": "39e26392-a480-4111-9b95-978892307532"
+                "resourceVersion": "1075",
+                "uid": "440b3869-5e67-4716-b694-4cb7fd7dde23"
             },
             "reason": "Updated",
             "reportingComponent": "",
@@ -981,24 +981,24 @@
             "apiVersion": "v1",
             "count": 2,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:34Z",
+            "firstTimestamp": "2026-09-17T18:53:02Z",
             "involvedObject": {
                 "apiVersion": "autoscaling/v2",
                 "kind": "HorizontalPodAutoscaler",
                 "name": "auth-sim-scaling",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "857",
-                "uid": "0db21fb1-2954-432d-be0a-2818c17b391e"
+                "resourceVersion": "861",
+                "uid": "62936c84-9d25-476f-bae0-0559a5b21a01"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:34Z",
+            "lastTimestamp": "2026-09-17T18:53:47Z",
             "message": "failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:34Z",
-                "name": "auth-sim-scaling.18d62e322a0cdd3b",
+                "creationTimestamp": "2026-09-17T18:53:02Z",
+                "name": "auth-sim-scaling.18d630755232e470",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1096",
-                "uid": "0c078017-a1c0-47d0-95df-18e0b44c7bdf"
+                "resourceVersion": "1055",
+                "uid": "4900c14e-da37-4381-a8b7-054c97d52e73"
             },
             "reason": "FailedGetContainerResourceMetric",
             "reportingComponent": "horizontal-pod-autoscaler",
@@ -1012,86 +1012,24 @@
             "apiVersion": "v1",
             "count": 2,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:34Z",
+            "firstTimestamp": "2026-09-17T18:53:02Z",
             "involvedObject": {
                 "apiVersion": "autoscaling/v2",
                 "kind": "HorizontalPodAutoscaler",
                 "name": "auth-sim-scaling",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "857",
-                "uid": "0db21fb1-2954-432d-be0a-2818c17b391e"
+                "resourceVersion": "861",
+                "uid": "62936c84-9d25-476f-bae0-0559a5b21a01"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:34Z",
+            "lastTimestamp": "2026-09-17T18:53:47Z",
             "message": "invalid metrics (1 invalid out of 1), first error is: failed to get auth-sim container metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:34Z",
-                "name": "auth-sim-scaling.18d62e322a269add",
+                "creationTimestamp": "2026-09-17T18:53:02Z",
+                "name": "auth-sim-scaling.18d6307552564163",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1097",
-                "uid": "673db21c-24e4-4ea6-bb04-8f64aa84b48d"
-            },
-            "reason": "FailedComputeMetricsReplicas",
-            "reportingComponent": "horizontal-pod-autoscaler",
-            "reportingInstance": "",
-            "source": {
-                "component": "horizontal-pod-autoscaler"
-            },
-            "type": "Warning"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 2,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:19Z",
-            "involvedObject": {
-                "apiVersion": "autoscaling/v2",
-                "kind": "HorizontalPodAutoscaler",
-                "name": "auth-sim-scaling",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1004",
-                "uid": "0db21fb1-2954-432d-be0a-2818c17b391e"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:49Z",
-            "message": "failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:12:19Z",
-                "name": "auth-sim-scaling.18d62e3ca653bfd6",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1121",
-                "uid": "d75f847b-d9d8-48c7-a531-f3e9a2e7c4a4"
-            },
-            "reason": "FailedGetContainerResourceMetric",
-            "reportingComponent": "horizontal-pod-autoscaler",
-            "reportingInstance": "",
-            "source": {
-                "component": "horizontal-pod-autoscaler"
-            },
-            "type": "Warning"
-        },
-        {
-            "apiVersion": "v1",
-            "count": 2,
-            "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:12:19Z",
-            "involvedObject": {
-                "apiVersion": "autoscaling/v2",
-                "kind": "HorizontalPodAutoscaler",
-                "name": "auth-sim-scaling",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1004",
-                "uid": "0db21fb1-2954-432d-be0a-2818c17b391e"
-            },
-            "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:12:49Z",
-            "message": "invalid metrics (1 invalid out of 1), first error is: failed to get auth-sim container metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)",
-            "metadata": {
-                "creationTimestamp": "2026-09-17T18:12:19Z",
-                "name": "auth-sim-scaling.18d62e3ca68549c7",
-                "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "1122",
-                "uid": "8948e810-8c0c-48de-9d9f-5cc7f1a27fe7"
+                "resourceVersion": "1056",
+                "uid": "f9600d4e-2b98-4a3f-b13b-3becffa0e578"
             },
             "reason": "FailedComputeMetricsReplicas",
             "reportingComponent": "horizontal-pod-autoscaler",
@@ -1105,24 +1043,86 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:05Z",
+            "firstTimestamp": "2026-09-17T18:54:02Z",
+            "involvedObject": {
+                "apiVersion": "autoscaling/v2",
+                "kind": "HorizontalPodAutoscaler",
+                "name": "auth-sim-scaling",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "1054",
+                "uid": "62936c84-9d25-476f-bae0-0559a5b21a01"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:54:02Z",
+            "message": "failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:54:02Z",
+                "name": "auth-sim-scaling.18d630834d36f93e",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "1100",
+                "uid": "e6306e6a-3f9b-455e-b0b1-fb562ebdb596"
+            },
+            "reason": "FailedGetContainerResourceMetric",
+            "reportingComponent": "horizontal-pod-autoscaler",
+            "reportingInstance": "",
+            "source": {
+                "component": "horizontal-pod-autoscaler"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:54:02Z",
+            "involvedObject": {
+                "apiVersion": "autoscaling/v2",
+                "kind": "HorizontalPodAutoscaler",
+                "name": "auth-sim-scaling",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "1054",
+                "uid": "62936c84-9d25-476f-bae0-0559a5b21a01"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-17T18:54:02Z",
+            "message": "invalid metrics (1 invalid out of 1), first error is: failed to get auth-sim container metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)",
+            "metadata": {
+                "creationTimestamp": "2026-09-17T18:54:02Z",
+                "name": "auth-sim-scaling.18d630834db5c5de",
+                "namespace": "capacity-cascade-l08-target",
+                "resourceVersion": "1102",
+                "uid": "ed700044-24ff-4ddf-a683-9b05a0af1f9c"
+            },
+            "reason": "FailedComputeMetricsReplicas",
+            "reportingComponent": "horizontal-pod-autoscaler",
+            "reportingInstance": "",
+            "source": {
+                "component": "horizontal-pod-autoscaler"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-17T18:52:28Z",
             "involvedObject": {
                 "apiVersion": "apps/v1",
                 "kind": "Deployment",
                 "name": "auth-sim",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "797",
-                "uid": "13070076-a9d1-4ecd-99b5-69584ca1a749"
+                "resourceVersion": "794",
+                "uid": "0f72dcb2-ca44-4c2b-bf60-2202a92a892e"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:05Z",
-            "message": "Scaled up replica set auth-sim-55fb7b9896 from 0 to 1",
+            "lastTimestamp": "2026-09-17T18:52:28Z",
+            "message": "Scaled up replica set auth-sim-8498d7b54f from 0 to 1",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:05Z",
-                "name": "auth-sim.18d62e2b34276285",
+                "creationTimestamp": "2026-09-17T18:52:28Z",
+                "name": "auth-sim.18d6306d716f31de",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "799",
-                "uid": "fba73777-6d45-4068-9c30-548a469916d3"
+                "resourceVersion": "796",
+                "uid": "92e41c8a-f802-4248-bbe6-b8d8894b30d9"
             },
             "reason": "ScalingReplicaSet",
             "reportingComponent": "deployment-controller",
@@ -1135,25 +1135,25 @@
         {
             "action": "Binding",
             "apiVersion": "v1",
-            "eventTime": "2026-09-17T18:11:19.995841Z",
+            "eventTime": "2026-09-17T18:52:47.450916Z",
             "firstTimestamp": null,
             "involvedObject": {
                 "apiVersion": "v1",
                 "kind": "Pod",
-                "name": "l08-haproxy-6dc54bbd5-gw95n",
+                "name": "l08-haproxy-6dc54bbd5-fnltp",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "862",
-                "uid": "42a87a76-fb1f-4798-b00e-5c27c1b7b38d"
+                "resourceVersion": "865",
+                "uid": "8ba011ee-ff9b-400c-8011-8d4995e10aed"
             },
             "kind": "Event",
             "lastTimestamp": null,
-            "message": "Successfully assigned capacity-cascade-l08-target/l08-haproxy-6dc54bbd5-gw95n to k3d-capacity-cascade-l08-server-0",
+            "message": "Successfully assigned capacity-cascade-l08-target/l08-haproxy-6dc54bbd5-fnltp to k3d-capacity-cascade-l08-server-0",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:19Z",
-                "name": "l08-haproxy-6dc54bbd5-gw95n.18d62e2eb0cb6b2b",
+                "creationTimestamp": "2026-09-17T18:52:47Z",
+                "name": "l08-haproxy-6dc54bbd5-fnltp.18d63071d8abb2de",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "871",
-                "uid": "e146d859-c379-4d56-94f4-39129e4b3a58"
+                "resourceVersion": "873",
+                "uid": "b51702c4-c984-4a85-8309-7296365f5f76"
             },
             "reason": "Scheduled",
             "reportingComponent": "default-scheduler",
@@ -1165,25 +1165,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:21Z",
+            "firstTimestamp": "2026-09-17T18:52:48Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.containers{haproxy}",
                 "kind": "Pod",
-                "name": "l08-haproxy-6dc54bbd5-gw95n",
+                "name": "l08-haproxy-6dc54bbd5-fnltp",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "868",
-                "uid": "42a87a76-fb1f-4798-b00e-5c27c1b7b38d"
+                "resourceVersion": "871",
+                "uid": "8ba011ee-ff9b-400c-8011-8d4995e10aed"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:21Z",
+            "lastTimestamp": "2026-09-17T18:52:48Z",
             "message": "Pulling image \"haproxy:3.2.23-alpine\"",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:21Z",
-                "name": "l08-haproxy-6dc54bbd5-gw95n.18d62e2ef657b169",
+                "creationTimestamp": "2026-09-17T18:52:48Z",
+                "name": "l08-haproxy-6dc54bbd5-fnltp.18d63071fa0e3402",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "877",
-                "uid": "2925ddf4-cb69-479f-8707-5799ee8beffb"
+                "resourceVersion": "882",
+                "uid": "037432fb-85ab-4e84-b815-3585ce67ba90"
             },
             "reason": "Pulling",
             "reportingComponent": "kubelet",
@@ -1198,25 +1198,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:28Z",
+            "firstTimestamp": "2026-09-17T18:52:53Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.containers{haproxy}",
                 "kind": "Pod",
-                "name": "l08-haproxy-6dc54bbd5-gw95n",
+                "name": "l08-haproxy-6dc54bbd5-fnltp",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "868",
-                "uid": "42a87a76-fb1f-4798-b00e-5c27c1b7b38d"
+                "resourceVersion": "871",
+                "uid": "8ba011ee-ff9b-400c-8011-8d4995e10aed"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:28Z",
-            "message": "Successfully pulled image \"haproxy:3.2.23-alpine\" in 7.023s (7.023s including waiting). Image size: 20533855 bytes.",
+            "lastTimestamp": "2026-09-17T18:52:53Z",
+            "message": "Successfully pulled image \"haproxy:3.2.23-alpine\" in 5.902s (5.902s including waiting). Image size: 20533855 bytes.",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:28Z",
-                "name": "l08-haproxy-6dc54bbd5-gw95n.18d62e3098f60131",
+                "creationTimestamp": "2026-09-17T18:52:53Z",
+                "name": "l08-haproxy-6dc54bbd5-fnltp.18d6307359dc93cc",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "891",
-                "uid": "4806a2d1-b93a-4fb5-a8ab-41f93dcb9396"
+                "resourceVersion": "893",
+                "uid": "a35c7931-4a90-4d9a-9279-27fb0e36d97a"
             },
             "reason": "Pulled",
             "reportingComponent": "kubelet",
@@ -1231,25 +1231,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:28Z",
+            "firstTimestamp": "2026-09-17T18:52:54Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.containers{haproxy}",
                 "kind": "Pod",
-                "name": "l08-haproxy-6dc54bbd5-gw95n",
+                "name": "l08-haproxy-6dc54bbd5-fnltp",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "868",
-                "uid": "42a87a76-fb1f-4798-b00e-5c27c1b7b38d"
+                "resourceVersion": "871",
+                "uid": "8ba011ee-ff9b-400c-8011-8d4995e10aed"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:28Z",
+            "lastTimestamp": "2026-09-17T18:52:54Z",
             "message": "Container created",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:28Z",
-                "name": "l08-haproxy-6dc54bbd5-gw95n.18d62e309edcd397",
+                "creationTimestamp": "2026-09-17T18:52:54Z",
+                "name": "l08-haproxy-6dc54bbd5-fnltp.18d630735fffe997",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "892",
-                "uid": "8acb2b2a-ec20-4e93-a48e-68ef7e757ca9"
+                "resourceVersion": "894",
+                "uid": "b3aa1afb-c4a7-4667-ac8b-144ebec27f77"
             },
             "reason": "Created",
             "reportingComponent": "kubelet",
@@ -1264,25 +1264,25 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:28Z",
+            "firstTimestamp": "2026-09-17T18:52:54Z",
             "involvedObject": {
                 "apiVersion": "v1",
                 "fieldPath": "spec.containers{haproxy}",
                 "kind": "Pod",
-                "name": "l08-haproxy-6dc54bbd5-gw95n",
+                "name": "l08-haproxy-6dc54bbd5-fnltp",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "868",
-                "uid": "42a87a76-fb1f-4798-b00e-5c27c1b7b38d"
+                "resourceVersion": "871",
+                "uid": "8ba011ee-ff9b-400c-8011-8d4995e10aed"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:28Z",
+            "lastTimestamp": "2026-09-17T18:52:54Z",
             "message": "Container started",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:28Z",
-                "name": "l08-haproxy-6dc54bbd5-gw95n.18d62e30a1ba4a93",
+                "creationTimestamp": "2026-09-17T18:52:54Z",
+                "name": "l08-haproxy-6dc54bbd5-fnltp.18d6307362f26f96",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "893",
-                "uid": "01cbfa26-75f8-4392-87ed-d0ab819b07e5"
+                "resourceVersion": "895",
+                "uid": "fcc5b6e1-24f7-4d26-ad84-b67a9f9c8146"
             },
             "reason": "Started",
             "reportingComponent": "kubelet",
@@ -1297,24 +1297,24 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:19Z",
+            "firstTimestamp": "2026-09-17T18:52:47Z",
             "involvedObject": {
                 "apiVersion": "apps/v1",
                 "kind": "ReplicaSet",
                 "name": "l08-haproxy-6dc54bbd5",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "860",
-                "uid": "ba8dc97d-e627-46fa-bac8-e36762e0691f"
+                "resourceVersion": "864",
+                "uid": "c50e0eaa-4d26-4662-91b0-22846341a3d2"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:19Z",
-            "message": "Created pod: l08-haproxy-6dc54bbd5-gw95n",
+            "lastTimestamp": "2026-09-17T18:52:47Z",
+            "message": "Created pod: l08-haproxy-6dc54bbd5-fnltp",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:19Z",
-                "name": "l08-haproxy-6dc54bbd5.18d62e2eb091d17b",
+                "creationTimestamp": "2026-09-17T18:52:47Z",
+                "name": "l08-haproxy-6dc54bbd5.18d63071d87ce15a",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "865",
-                "uid": "6751d4df-f5ce-4d88-8a10-b0d375cfe650"
+                "resourceVersion": "869",
+                "uid": "fb65aad2-31fc-425b-9d20-bd8471456ea6"
             },
             "reason": "SuccessfulCreate",
             "reportingComponent": "replicaset-controller",
@@ -1328,24 +1328,24 @@
             "apiVersion": "v1",
             "count": 1,
             "eventTime": null,
-            "firstTimestamp": "2026-09-17T18:11:19Z",
+            "firstTimestamp": "2026-09-17T18:52:47Z",
             "involvedObject": {
                 "apiVersion": "apps/v1",
                 "kind": "Deployment",
                 "name": "l08-haproxy",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "859",
-                "uid": "2647d670-d1f5-42ce-9469-b6e3007ef439"
+                "resourceVersion": "863",
+                "uid": "2434d9be-c501-43d8-a442-ad72b67771b6"
             },
             "kind": "Event",
-            "lastTimestamp": "2026-09-17T18:11:19Z",
+            "lastTimestamp": "2026-09-17T18:52:47Z",
             "message": "Scaled up replica set l08-haproxy-6dc54bbd5 from 0 to 1",
             "metadata": {
-                "creationTimestamp": "2026-09-17T18:11:19Z",
-                "name": "l08-haproxy.18d62e2eb06ebfdc",
+                "creationTimestamp": "2026-09-17T18:52:47Z",
+                "name": "l08-haproxy.18d63071d8632413",
                 "namespace": "capacity-cascade-l08-target",
-                "resourceVersion": "861",
-                "uid": "7e7543d1-18c1-4d23-8c64-a95c4d016f8f"
+                "resourceVersion": "866",
+                "uid": "6b3633bd-4fd2-4e23-9478-090b2d22e3af"
             },
             "reason": "ScalingReplicaSet",
             "reportingComponent": "deployment-controller",
