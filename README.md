@@ -137,7 +137,7 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L00–L06는 completed foundation이고 L07은 L06 path를 유지한 one-variable M1 retry timing,
+L00–L06는 completed foundation이고 L07은 L06 path를 유지한 M1 retry-policy comparison,
 M2 local load shedding, M3 capacity-aware scaling, M4 gradual-ramp matrix를 구현했다. 세
 clean-source full matrix와 curated evidence는 완료됐으며, 이 값은 fixed local condition의
 trade-off 관찰값일 뿐 GitHub production mitigation이나 일반 tuning recommendation이 아니다.

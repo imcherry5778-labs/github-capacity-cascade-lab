@@ -36,6 +36,12 @@ Each pair changes exactly one local mechanism:
 | M3 | `auth-sim` CPU `ContainerResource` HPA | `sidecar_active_requests` Pods custom-metric HPA | L06 path, retry, HPA min/max/behavior, fault and sidecar target |
 | M4 | steep arrival shape | gradual arrival shape | retry, HPA, sidecar, HAProxy, duration 100 s, start/end 1/s, peak 4/s and intended 220 logical requests |
 
+M1의 두 policy는 retry eligibility도 다르므로, 구현 전체를 문자 그대로 timing-only
+comparison으로 일반화하지 않는다. 다만 세 fixed local M1 contract가 기록한 user-facing
+failure status는 503뿐이고, 이는 두 policy 모두 retryable로 분류한다. application error rate
+`0`, HAProxy/proxy retry off, max attempts `3`가 동일하므로 이 evidence의 M1 차이는 주로
+활성화된 retry timing/backoff/jitter behavior의 차이로 해석한다.
+
 HAProxy is not the constrained target. Its backend sessions, 5xx and denials describe
 propagated traffic or the local M2 policy; they do not establish HAProxy saturation. The exact
 M1 budget, M2 status/threshold, M3 adapter/HPA target, and M4 schedules are
