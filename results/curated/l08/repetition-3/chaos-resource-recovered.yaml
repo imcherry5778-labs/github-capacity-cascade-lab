@@ -1,0 +1,59 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"chaos-mesh.org/v1alpha1","kind":"NetworkChaos","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"auth-sim-delay","capacity-cascade-lab/owner":"l08"},"name":"auth-sim-delay","namespace":"capacity-cascade-l08-target"},"spec":{"action":"delay","delay":{"correlation":"0","jitter":"0ms","latency":"600ms"},"direction":"to","duration":"25s","mode":"all","selector":{"labelSelectors":{"app.kubernetes.io/instance":"auth-sim","app.kubernetes.io/name":"auth-sim"},"namespaces":["capacity-cascade-l08-target"]}}}
+  creationTimestamp: "2026-09-17T18:53:26Z"
+  finalizers:
+  - chaos-mesh/records
+  generation: 12
+  labels:
+    app.kubernetes.io/name: auth-sim-delay
+    capacity-cascade-lab/owner: l08
+  name: auth-sim-delay
+  namespace: capacity-cascade-l08-target
+  resourceVersion: "1076"
+  uid: 76ec3ce7-f13a-4181-8160-e5efda13a718
+spec:
+  action: delay
+  delay:
+    correlation: "0"
+    jitter: 0ms
+    latency: 600ms
+  direction: to
+  duration: 25s
+  mode: all
+  selector:
+    labelSelectors:
+      app.kubernetes.io/instance: auth-sim
+      app.kubernetes.io/name: auth-sim
+    namespaces:
+    - capacity-cascade-l08-target
+status:
+  conditions:
+  - status: "False"
+    type: Paused
+  - status: "True"
+    type: Selected
+  - status: "False"
+    type: AllInjected
+  - status: "True"
+    type: AllRecovered
+  experiment:
+    containerRecords:
+    - events:
+      - operation: Apply
+        timestamp: "2026-09-17T18:53:26Z"
+        type: Succeeded
+      - operation: Recover
+        timestamp: "2026-09-17T18:53:51Z"
+        type: Succeeded
+      id: capacity-cascade-l08-target/auth-sim-8498d7b54f-54cml
+      injectedCount: 1
+      phase: Not Injected
+      recoveredCount: 1
+      selectorKey: .
+    desiredPhase: Stop
+  instances:
+    capacity-cascade-l08-target/auth-sim-8498d7b54f-54cml: 2

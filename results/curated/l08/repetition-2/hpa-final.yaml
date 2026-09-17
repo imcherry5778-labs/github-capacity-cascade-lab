@@ -1,0 +1,66 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"capacity-cascade-lab/owner":"l08","capacity-cascade-lab/policy":"blind-application-cpu"},"name":"auth-sim-scaling","namespace":"capacity-cascade-l08-target"},"spec":{"behavior":{"scaleDown":{"policies":[{"periodSeconds":60,"type":"Pods","value":1}],"selectPolicy":"Max","stabilizationWindowSeconds":300},"scaleUp":{"policies":[{"periodSeconds":15,"type":"Pods","value":4}],"selectPolicy":"Max","stabilizationWindowSeconds":0}},"maxReplicas":4,"metrics":[{"containerResource":{"container":"auth-sim","name":"cpu","target":{"averageUtilization":80,"type":"Utilization"}},"type":"ContainerResource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"auth-sim"}}}
+  creationTimestamp: "2026-09-17T18:49:26Z"
+  labels:
+    capacity-cascade-lab/owner: l08
+    capacity-cascade-lab/policy: blind-application-cpu
+  name: auth-sim-scaling
+  namespace: capacity-cascade-l08-target
+  resourceVersion: "1120"
+  uid: fc92e138-b408-48e7-8b84-f35758c0b8be
+spec:
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 1
+      selectPolicy: Max
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      policies:
+      - periodSeconds: 15
+        type: Pods
+        value: 4
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+  maxReplicas: 4
+  metrics:
+  - containerResource:
+      container: auth-sim
+      name: cpu
+      target:
+        averageUtilization: 80
+        type: Utilization
+    type: ContainerResource
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: auth-sim
+status:
+  conditions:
+  - lastTransitionTime: "2026-09-17T18:49:41Z"
+    message: the HPA controller was able to get the target's current scale
+    reason: SucceededGetScale
+    status: "True"
+    type: AbleToScale
+  - lastTransitionTime: "2026-09-17T18:50:26Z"
+    message: 'the HPA was unable to compute the replica count: failed to get cpu utilization:
+      did not receive metrics for targeted pods (pods might be unready)'
+    reason: FailedGetContainerResourceMetric
+    status: "False"
+    type: ScalingActive
+  - lastTransitionTime: "2026-09-17T18:50:11Z"
+    message: the desired count is within the acceptable range
+    reason: DesiredWithinRange
+    status: "False"
+    type: ScalingLimited
+  currentMetrics:
+  - type: ""
+  currentReplicas: 1
+  desiredReplicas: 1

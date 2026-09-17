@@ -1,0 +1,23 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: auth-sim-delay
+  namespace: TARGET_NAMESPACE
+  labels:
+    app.kubernetes.io/name: auth-sim-delay
+    capacity-cascade-lab/owner: l08
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces:
+      - TARGET_NAMESPACE
+    labelSelectors:
+      app.kubernetes.io/name: auth-sim
+      app.kubernetes.io/instance: auth-sim
+  delay:
+    latency: FAULT_LATENCY
+    jitter: "0ms"
+    correlation: "0"
+  direction: to
+  duration: FAULT_DURATION

@@ -125,10 +125,10 @@
 - **Learn:** Fault timing, blast radius, cleanup과 evidence correlation의 중요성을 이해한다.
 - **Build:** 최소 Chaos Mesh experiment와 안전한 preflight/cleanup.
 - **Observe:** Scheduled fault window와 application/proxy/scaling signal의 정렬.
-- **Done:** Abort와 cleanup을 포함해 반복 가능하며 cluster 외부에 영향이 없다.
+- **Done:** Abort와 cleanup을 포함해 3회 이상 반복 가능하며 cluster 외부에 영향이 없다.
 - **Non-goals:** 광범위 chaos program, production cluster 실행.
 - **Dependencies:** L03, L06, L07.
-- **Status:** Planned.
+- **Status:** Complete — implementation verified; 3 clean-source fixed-condition repetitions with controlled abort safety and cleanup are curated as local exploratory evidence.
 
 ## L09 — Azure AKS Validation
 

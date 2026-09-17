@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "fault_applied": true,
+  "fault_injected": true,
+  "target_identity_verified": true,
+  "abort_triggered": true,
+  "chaos_resources_remaining_after_abort": 0,
+  "timeline": {
+    "fault_injected_utc": "2026-09-17T18:56:49.162Z"
+  },
+  "abort_contract_satisfied": true
+}

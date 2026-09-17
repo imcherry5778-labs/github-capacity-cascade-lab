@@ -4,7 +4,7 @@ SHELL := /bin/bash
 BINARY ?= bin/auth-sim
 IMAGE ?= capacity-cascade/auth-sim:dev
 SCENARIO ?=
-K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05 l06 l07
+K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05 l06 l07 l08
 L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
 L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 L02_ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
@@ -20,8 +20,13 @@ L05_K3S_IMAGE ?= $(L03_K3S_IMAGE)
 L06_K6_IMAGE ?= $(L04_K6_IMAGE)
 L06_K3S_IMAGE ?= $(L03_K3S_IMAGE)
 L06_HAPROXY_IMAGE ?= $(L01_HAPROXY_IMAGE)
+L08_K3S_IMAGE ?= $(L03_K3S_IMAGE)
+L08_K6_IMAGE ?= $(L04_K6_IMAGE)
+L08_HAPROXY_IMAGE ?= $(L01_HAPROXY_IMAGE)
+L08_ISTIO_VERSION ?= $(L04_ISTIO_VERSION)
+L08_CHAOS_MESH_VERSION ?= 2.8.4
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -402,6 +407,46 @@ l07-verify: l07-check ## 4개 pair를 fresh cluster에서 한 번 실행합니�
 
 l07-clean: ## exact L07 cluster/process만 정리하고 evidence는 보존합니다.
 	@ISTIO_VERSION="$(L04_ISTIO_VERSION)" K6_IMAGE="$(L04_K6_IMAGE)" K3S_IMAGE="$(L04_K3S_IMAGE)" HAPROXY_IMAGE="$(L01_HAPROXY_IMAGE)" scripts/run-l07-mitigations.sh clean
+
+l08-doctor: ## L08 Chaos Mesh lifecycle에 필요한 local tool과 Docker daemon을 확인합니다.
+	scripts/run-l08-chaos.sh doctor
+
+l08-check: l08-doctor ## L08 manifests, Helm chart rendering, k6 script 및 runner를 정적으로 검사합니다.
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d /tmp/capacity-cascade-l08-check.XXXXXX)"; \
+	trap 'find "$$tmp" -depth -delete' EXIT; \
+	for image in "$(L08_K3S_IMAGE)" "$(L08_K6_IMAGE)" "$(L08_HAPROXY_IMAGE)"; do \
+		case "$$image" in *:latest|latest) printf 'latest image is forbidden: %s\n' "$$image" >&2; exit 1;; *:*) ;; *) printf 'explicit image tag required: %s\n' "$$image" >&2; exit 1;; esac; \
+	done; \
+	ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_stream(File.read(f)) }' l08/*.yaml; \
+	if grep -ERq ':latest|[[:space:]]latest[[:space:]]' l08 load/k6/l08.js; then printf 'latest is forbidden in L08\n' >&2; exit 1; fi; \
+	grep -q 'http2MaxRequests: 1' l08/sidecar.yaml; \
+	grep -q 'ContainerResource' l08/hpa-blind.yaml; \
+	grep -q 'retries 0' l08/haproxy.yaml; \
+	grep -q 'no option redispatch' l08/haproxy.yaml; \
+	grep -q 'action: delay' l08/network-delay.yaml; \
+	grep -q 'correlation: "0"' l08/network-delay.yaml; \
+	grep -q 'enableFilterNamespace: true' l08/chaos-values.yaml; \
+	grep -q 'runtime: containerd' l08/chaos-values.yaml; \
+	grep -q 'socketPath: /run/k3s/containerd/containerd.sock' l08/chaos-values.yaml; \
+	if grep -q 'retry_policy:' l08/retry-disabled.yaml; then printf 'Envoy retry must be omitted\n' >&2; exit 1; fi; \
+	sed -e 's/TARGET_NAMESPACE/capacity-cascade-l08-target/g' -e 's/AUTH_SIM_SERVICE_FQDN/auth-sim.capacity-cascade-l08-target.svc.cluster.local/g' -e 's#HAPROXY_IMAGE#$(L08_HAPROXY_IMAGE)#g' l08/haproxy.yaml >"$$tmp/haproxy.yaml"; \
+	ruby -e 'require "yaml"; d=YAML.load_stream(File.read(ARGV[0])).find { |x| x["kind"]=="ConfigMap" }; File.write(ARGV[1], d.dig("data","haproxy.cfg"))' "$$tmp/haproxy.yaml" "$$tmp/haproxy.cfg"; \
+	docker run --rm --entrypoint haproxy --volume "$$tmp/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" "$(L08_HAPROXY_IMAGE)" -c -f /usr/local/etc/haproxy/haproxy.cfg; \
+	k6 inspect load/k6/l08.js >/dev/null; \
+	bash -n scripts/run-l08-chaos.sh
+
+l08-smoke: l08-check ## 짧은 Chaos Mesh 주입→회복 datapath와 cleanup을 확인합니다.
+	ISTIO_VERSION="$(L08_ISTIO_VERSION)" CHAOS_MESH_VERSION="$(L08_CHAOS_MESH_VERSION)" K6_IMAGE="$(L08_K6_IMAGE)" K3S_IMAGE="$(L08_K3S_IMAGE)" HAPROXY_IMAGE="$(L08_HAPROXY_IMAGE)" scripts/run-l08-chaos.sh smoke
+
+l08-abort-smoke: l08-check ## Active fault 상태에서 controlled abort 및 safe cleanup을 검증합니다.
+	ISTIO_VERSION="$(L08_ISTIO_VERSION)" CHAOS_MESH_VERSION="$(L08_CHAOS_MESH_VERSION)" K6_IMAGE="$(L08_K6_IMAGE)" K3S_IMAGE="$(L08_K3S_IMAGE)" HAPROXY_IMAGE="$(L08_HAPROXY_IMAGE)" scripts/run-l08-chaos.sh abort-smoke
+
+l08-verify: l08-check ## Fresh cluster에서 frozen condition L08 experiment를 1회 실행합니다.
+	ISTIO_VERSION="$(L08_ISTIO_VERSION)" CHAOS_MESH_VERSION="$(L08_CHAOS_MESH_VERSION)" K6_IMAGE="$(L08_K6_IMAGE)" K3S_IMAGE="$(L08_K3S_IMAGE)" HAPROXY_IMAGE="$(L08_HAPROXY_IMAGE)" scripts/run-l08-chaos.sh verify
+
+l08-clean: ## exact L08 cluster/process만 정리하고 evidence는 보존합니다.
+	@scripts/run-l08-chaos.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"

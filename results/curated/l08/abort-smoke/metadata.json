@@ -1,0 +1,58 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L08",
+  "classification": "local exploratory evidence",
+  "scenario": "chaos-network-delay",
+  "scenario_mode": "abort-smoke",
+  "started_at_utc": "2026-09-17T18:54:41Z",
+  "git_commit": "ecb0086546f71a7e02a36eb5156498c1bd2172e3",
+  "git_dirty": false,
+  "cluster": {
+    "name": "capacity-cascade-l08",
+    "k3s_image": "rancher/k3s:v1.35.5-k3s1",
+    "container_runtime": "containerd",
+    "socket_path": "/run/k3s/containerd/containerd.sock"
+  },
+  "istio": {
+    "version": "1.30.4",
+    "mode": "sidecar",
+    "inbound_capacity_target": 1,
+    "inbound_retry": "off"
+  },
+  "chaos_mesh": {
+    "version": "2.8.4",
+    "fault_type": "NetworkChaos",
+    "action": "delay",
+    "mode": "all",
+    "target_selector": {
+      "namespace": "capacity-cascade-l08-target",
+      "label": "app.kubernetes.io/name=auth-sim"
+    },
+    "target_identity_verified": true,
+    "namespace_filtering": true,
+    "daemon_privileged": true
+  },
+  "workload": {
+    "rate": 3,
+    "duration": "25s",
+    "fault_latency": "600ms",
+    "fault_duration": "15s",
+    "client_retry": "none",
+    "haproxy_retry": "off"
+  },
+  "timeline": {
+    "injected_utc": "2026-09-17T18:56:49.162Z",
+    "recovered_utc": null
+  },
+  "abort": {
+    "abort_mode": "controlled abort path",
+    "fault_active_at_abort": true,
+    "chaos_resources_remaining": 0
+  },
+  "source_boundary": {
+    "fact": "GitHub official RCA described cascade effects; incident facts documented in docs/facts-and-assumptions.md",
+    "inference": "Declarative fault window directly correlates with user-facing and proxy saturation signals",
+    "lab_implementation": "Chaos Mesh 2.8.4 NetworkChaos delay on local k3d cluster with Istio sidecar",
+    "unknown": "Whether GitHub utilized Chaos Mesh or specific chaos tooling during incident analysis"
+  }
+}
