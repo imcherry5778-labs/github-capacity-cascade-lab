@@ -1,0 +1,25 @@
+# Chaos Mesh Helm values for ephemeral local k3d cluster
+# Used in L08 to provide a minimal, declarative, and blast-radius-limited fault runner.
+clusterScoped: true
+timezone: "UTC"
+
+dashboard:
+  create: false
+
+dnsServer:
+  create: false
+
+bpfki:
+  create: false
+
+controllerManager:
+  replicaCount: 1
+  # When enableFilterNamespace is true, only namespaces annotated with
+  # "chaos-mesh.org/inject": "enabled" can be targeted.
+  enableFilterNamespace: true
+
+chaosDaemon:
+  runtime: containerd
+  socketPath: /run/k3s/containerd/containerd.sock
+  # Required for container runtime communication and netns tc operations in local k3d.
+  privileged: true
