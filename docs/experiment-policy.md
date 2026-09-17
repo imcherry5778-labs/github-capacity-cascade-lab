@@ -273,7 +273,9 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
   conclusion; record the normalization limitation.
 - Every final matrix needs git_dirty=false, dropped iterations 0, scenario/pair/cleanup PASS and
   no secret/private path in selected files. make l07-verify is one full matrix, not three
-  repetitions; run it three times from a clean source before curation.
+  repetitions; run it three times from a clean source before curation. Smoke uses a
+  path-and-recovery contract and intentionally does not require load-dependent retry, shedding
+  or scale-up effects, so it is not final mitigation evidence.
 
 ## Reporting rules
 
