@@ -126,7 +126,7 @@ phase() {
   fi
 }
 discover() {
-  local ns="$1" pod="$2" dir="$3" dump cluster hcm retry_count retry_budget
+  local ns="$1" pod="$2" dir="$3" dump cluster hcm retry_count retry_budget down_total down_active up_total up_active overflow pending retry timeout
   dump="$dir/proxy-config-dump.json"
   kubectl exec --namespace "$ns" "$pod" -c istio-proxy -- pilot-agent request GET config_dump >"$dump"
   kubectl exec --namespace "$ns" "$pod" -c istio-proxy -- pilot-agent request GET server_info >"$dir/proxy-server-info.json"
@@ -140,7 +140,15 @@ discover() {
   jq '[..|objects|select(((.filter_chain_match?.destination_port? // "")|tostring)=="8080")|.filters[]?.typed_config?|select((."@type"? // "")|endswith("HttpConnectionManager"))]' "$dump" >"$dir/target-inbound-http-config.json"
   retry_count="$(jq '[..|objects|select(has("retry_policy"))]|length' "$dir/target-inbound-http-config.json")"; retry_budget="$(jq '[..|objects|.retry_policy?.num_retries? // empty]|max // 0' "$dir/target-inbound-http-config.json")"
   [[ "$retry_count" -eq 0 && "$retry_budget" -eq 0 ]] || return 1
-  jq -n --arg cluster "$cluster" --arg hcm "$hcm" --arg down_total "$(stat_name "$dir/proxy-stats-inventory.txt" "http.$hcm" '.downstream_rq_total')" --arg down_active "$(stat_name "$dir/proxy-stats-inventory.txt" "http.$hcm" '.downstream_rq_active')" --arg upstream_total "$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_total')" --arg upstream_active "$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_active')" --arg overflow "$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_active_overflow')" --arg pending "$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_pending_overflow')" --arg retry "$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_retry')" --arg timeout "$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_timeout')" '{cluster:$cluster,hcm_stat_prefix:$hcm,proxy_downstream_total:$down_total,proxy_downstream_active:$down_active,proxy_upstream_total:$upstream_total,proxy_upstream_active:$upstream_active,proxy_active_overflow:$overflow,proxy_pending_overflow:$pending,proxy_retry:$retry,proxy_timeout:$timeout}' >"$dir/proxy-metric-mapping.json"
+  down_total="$(stat_name "$dir/proxy-stats-inventory.txt" "http.$hcm" '.downstream_rq_total')" || return 1
+  down_active="$(stat_name "$dir/proxy-stats-inventory.txt" "http.$hcm" '.downstream_rq_active')" || return 1
+  up_total="$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_total')" || return 1
+  up_active="$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_active')" || return 1
+  overflow="$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_active_overflow')" || return 1
+  pending="$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_pending_overflow')" || return 1
+  retry="$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_retry')" || return 1
+  timeout="$(stat_name "$dir/proxy-stats-inventory.txt" "cluster.$cluster" '.upstream_rq_timeout')" || return 1
+  jq -n --arg cluster "$cluster" --arg hcm "$hcm" --arg down_total "$down_total" --arg down_active "$down_active" --arg upstream_total "$up_total" --arg upstream_active "$up_active" --arg overflow "$overflow" --arg pending "$pending" --arg retry "$retry" --arg timeout "$timeout" '{cluster:$cluster,hcm_stat_prefix:$hcm,proxy_downstream_total:$down_total,proxy_downstream_active:$down_active,proxy_upstream_total:$upstream_total,proxy_upstream_active:$upstream_active,proxy_active_overflow:$overflow,proxy_pending_overflow:$pending,proxy_retry:$retry,proxy_timeout:$timeout}' >"$dir/proxy-metric-mapping.json"
 }
 sample() {
   local scenario="$1" ns="$2" pod="$3" metrics="$4" stats_url="$5" map="$6" file="$7" step="${8:-}" p a h hp pods ends
@@ -155,6 +163,18 @@ sample() {
 }
 observe() { while [[ ! -e "$8" ]]; do sample "$1" "$2" "$3" "$4" "$5" "$6" "$7"; sleep "$SAMPLE_INTERVAL"; done; }
 idle() { for n in {1..80}; do proxy_stats "$1" "$2" "$4"; [[ "$(stat "$4" "$(jq -r .proxy_upstream_active "$3")")" -eq 0 && "$(stat "$4" "$(jq -r .proxy_downstream_active "$3")")" -eq 0 ]] && return 0; sleep .1; done; return 1; }
+probe_datapath() {
+  local scenario="$1" ns="$2" dir="$3" probe phase=""
+  probe="l07-datapath-$scenario"
+  kubectl run "$probe" --namespace "$LOAD_NS" --image="$K6_IMAGE_VALUE" --image-pull-policy=IfNotPresent --restart=Never --labels="capacity-cascade-lab/owner=l07,capacity-cascade-lab/scenario=$scenario" --command -- /bin/sh -c "wget -qO- http://l07-haproxy.$ns.svc.cluster.local:8080/readyz" >"$dir/datapath-probe-create.log"
+  for n in {1..120}; do phase="$(kubectl get pod "$probe" --namespace "$LOAD_NS" -o jsonpath='{.status.phase}' 2>/dev/null || true)"; [[ "$phase" == Succeeded || "$phase" == Failed ]] && break; sleep .25; done
+  kubectl get pod "$probe" --namespace "$LOAD_NS" -o json >"$dir/datapath-probe-pod.json"
+  kubectl logs "$probe" --namespace "$LOAD_NS" >"$dir/datapath-probe-response.txt" 2>"$dir/datapath-probe-logs-error.txt" || true
+  [[ "$phase" == Succeeded ]] || return 1
+  [[ "$(jq '[.spec.containers[]?,.spec.initContainers[]?|select(.name=="istio-proxy")]|length' "$dir/datapath-probe-pod.json")" -eq 0 ]] || return 1
+  jq -e '.status == "ready"' "$dir/datapath-probe-response.txt" >/dev/null || return 1
+  kubectl delete pod "$probe" --namespace "$LOAD_NS" --wait=true --timeout=60s >"$dir/datapath-probe-delete.log"
+}
 
 run_k6() {
   local scenario="$1" ns="$2" dir="$3" proxy_image="$4" cm job fqdn pod
@@ -227,6 +247,7 @@ contract() {
   desired="$(jq -s '[.[].hpa.desired_replicas]|max//0' "$samples")"; current="$(jq -s '[.[].hpa.current_replicas]|max//0' "$samples")"; overflow="$(jq -s '(.[-1].proxy.active_overflow//0)-(.[0].proxy.active_overflow//0)' "$samples")"; sessions="$(jq -s '(.[-1].haproxy.sessions_total//0)-(.[0].haproxy.sessions_total//0)' "$samples")"; h5="$(jq -s '(.[-1].haproxy.responses_5xx//0)-(.[0].haproxy.responses_5xx//0)' "$samples")"; denied="$(jq -s '(.[-1].haproxy.denied_requests//0)-(.[0].haproxy.denied_requests//0)' "$samples")"; final_active="$(jq -s '.[-1].proxy.upstream_active+.[-1].proxy.downstream_active' "$samples")"; final_sessions="$(jq -s '.[-1].haproxy.sessions_current' "$samples")"; final_queue="$(jq -s '.[-1].haproxy.queue_current' "$samples")"
   [[ "$dropped" -eq 0 && "$final_active" -eq 0 && "$final_sessions" -eq 0 && "$final_queue" -eq 0 ]] && pass=true
   if [[ "$ACTION" != smoke ]]; then
+    [[ "$overflow" -gt 0 ]] || pass=false
     [[ "$scenario" != retry-immediate && "$scenario" != retry-backoff || "$retries" -gt 0 && "$physical" -gt "$logical" ]] || pass=false
     [[ "$scenario" != shedding-429 || "$s429" -gt 0 && "$denied" -gt 0 ]] || pass=false
     [[ "$scenario" != scaling-aware || "$desired" -gt 1 && "$current" -gt 1 ]] || pass=false
@@ -255,7 +276,7 @@ run_scenario() {
     [[ "$scenario" != scaling-aware ]] || kubectl wait --for=condition=Available apiservice/v1beta2.custom.metrics.k8s.io --timeout=120s >"$dir/adapter-api.log"
   fi
   kubectl apply -f "$dir/hpa.yaml" >"$dir/hpa-apply.log"; kubectl get hpa auth-sim-scaling --namespace "$ns" -o json >"$dir/hpa-initial.json"; kubectl apply -f "$dir/haproxy.yaml" >"$dir/haproxy-apply.log"; kubectl rollout status deployment/l07-haproxy --namespace "$ns" --timeout=180s >"$dir/haproxy-rollout.log"
-  discover "$ns" "$pod" "$dir"
+  probe_datapath "$scenario" "$ns" "$dir"; discover "$ns" "$pod" "$dir"
   local admin_port metrics_port haproxy_port
   start_forward "$ns" pod/"$pod" 9090 "$dir/admin-forward.log" ADMIN_PID admin_port; app_url="http://127.0.0.1:$admin_port"
   start_forward "$ns" pod/"$pod" 8080 "$dir/metrics-forward.log" METRICS_PID metrics_port; metrics_url="http://127.0.0.1:$metrics_port"

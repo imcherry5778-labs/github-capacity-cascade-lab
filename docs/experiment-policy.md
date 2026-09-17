@@ -256,7 +256,9 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
 
 - L07 reuses the L06 data path, selected sidecar target 1, application latency 1000 ms, timeout
   2 s, HAProxy/proxy no-retry, one-second sample and final-idle recovery boundary. Each M1–M4
-  pair uses fresh namespaces and counters; do not subtract cumulative values across scenarios.
+  pair uses fresh namespaces and counters; do not subtract cumulative values across scenarios. A
+  non-injected HAProxy datapath probe must create the selected Envoy lazy stats before metric-name
+  discovery; an absent or ambiguous actual stat name is a failed run, never a zero-valued metric.
 - M1 compares bounded immediate client retry with bounded exponential backoff plus full jitter,
   keeping max attempts 3. Physical attempts, logical success/failure and p95 are all evidence;
   an unexpected result remains append-only raw evidence.
