@@ -441,9 +441,9 @@ flowchart LR
 ```
 
 - **Namespace Isolation & Blast Radius Boundaries**:
-  - Only two namespaces exist in L08: `capacity-cascade-l08-load` (for non-injected k6) and `capacity-cascade-l08-target` (containing both HAProxy and auth-sim). There is no separate proxy namespace.
-  - **Namespace boundary**: Chaos Mesh is installed via Helm with `controllerManager.enableFilterNamespace: true`. Only `capacity-cascade-l08-target` is annotated with `chaos-mesh.org/inject: "enabled"`, completely excluding the load generation namespace (`capacity-cascade-l08-load`) from Chaos Daemon interception.
-  - **Label selector boundary**: Within `capacity-cascade-l08-target`, HAProxy is protected from chaos injection via explicit label selection (`app.kubernetes.io/name: auth-sim`, `app.kubernetes.io/instance: auth-sim`). The runner strictly verifies via `verify_network_chaos_state` that only the auth-sim pod is targeted and HAProxy is excluded.
+  - L08 directly provisions two workload namespaces: `capacity-cascade-l08-load` (for non-injected k6) and `capacity-cascade-l08-target` (containing both HAProxy and auth-sim). There is no separate proxy namespace. System namespaces including `istio-system`, `chaos-mesh`, and `kube-system` exist separately in the cluster.
+  - **Namespace boundary**: Chaos Mesh is installed via Helm with `controllerManager.enableFilterNamespace: true`. Only `capacity-cascade-l08-target` is annotated with `chaos-mesh.org/inject: "enabled"`, completely excluding the workload load generation namespace (`capacity-cascade-l08-load`) from Chaos Daemon interception.
+  - **Label selector boundary**: Within `capacity-cascade-l08-target`, HAProxy is protected from chaos injection via explicit label selection (`app.kubernetes.io/name: auth-sim`, `app.kubernetes.io/instance: auth-sim`). Because the Istio sidecar and application container share the same Pod network namespace, NetworkChaos targets the `auth-sim` workload Pod. The runner strictly verifies via `verify_network_chaos_state` that only the `capacity-cascade-l08-target/auth-sim-*` Pod identity is targeted and HAProxy is excluded.
   - Dashboard and DNS chaos controllers are disabled (`dashboard.create: false`, `dnsServer.create: false`).
 - **Host Safety & Container Runtime Boundary**:
   - Host mutation by L08 runner: NONE. Host kernel modules (`iptable_filter`, `sch_netem`) are checked via read-only `/proc/modules` preflight without running privileged host modprobe containers. If missing, the runner fails closed.
@@ -456,8 +456,10 @@ flowchart LR
     invokes declarative deletion of the CR (`kubectl delete networkchaos ... --timeout=15s`), leaving 0 leftover CRs and 0 pods.
 - **Signal Correlation**:
   - Across 3 clean-source repetitions, the 25s fault window directly correlates with p95 duration jumping to ~1202ms,
-    HAProxy backend active sessions accumulating (peak 3-4), and 503 errors (47-50 total) before returning to 0 active
-    sessions upon recovery.
+    HAProxy backend active sessions accumulating (peak 3-4), and 503 errors (47-50 total; cumulative 5xx counter peak 22-33)
+    before returning to 0 active sessions upon recovery.
+  - Sidecar active overflow remained 0 (`fault_sidecar_overflow_peak: 0`), demonstrating that the 503 errors resulted
+    from fault-induced delay and backend timeout under continuous load rather than sidecar queue overflow.
   - Original evidence files and comparison metrics are documented in [L08 curated evidence](../results/curated/l08/README.md).
 
 ## Future architecture only

@@ -24,9 +24,9 @@ non-injected k6 Job (capacity-cascade-l08-load)
 ```
 
 - **Namespace Topology 및 격리 경계**:
-  - 클러스터에는 두 개의 네임스페이스만 존재한다: 부하 생성용 `capacity-cascade-l08-load`, 타겟 및 프록시용 `capacity-cascade-l08-target`. 별도의 `capacity-cascade-l08-proxy` 네임스페이스는 존재하지 않는다.
-  - **네임스페이스 격리 경계**: Chaos Mesh의 `controllerManager.enableFilterNamespace: true` 설정을 적용하고 `capacity-cascade-l08-target`에만 `chaos-mesh.org/inject: "enabled"` 어노테이션을 부여함으로써, `capacity-cascade-l08-load`를 Chaos Daemon의 조작 대상에서 원천 배제한다.
-  - **라벨 셀렉터 격리 경계**: 동일한 `capacity-cascade-l08-target` 네임스페이스 내에 위치한 HAProxy는 `NetworkChaos`의 라벨 셀렉터(`app.kubernetes.io/name: auth-sim`, `app.kubernetes.io/instance: auth-sim`)를 통해 주입 대상에서 엄격히 배제된다. 이는 runner의 `verify_network_chaos_state` 함수를 통해 주입 및 회복 시점에 단 하나의 auth-sim 컨테이너만 타겟팅되었음을 fail-closed 방식으로 검증한다.
+  - L08이 직접 생성하는 워크로드 네임스페이스는 부하 생성용 `capacity-cascade-l08-load`와 타겟 및 프록시가 배치된 `capacity-cascade-l08-target` 두 개다 (별도의 `capacity-cascade-l08-proxy` 네임스페이스는 생성하지 않음). Istio(`istio-system`), Chaos Mesh(`chaos-mesh`) 및 Kubernetes system 네임스페이스는 클러스터에 별도로 존재한다.
+  - **네임스페이스 격리 경계**: Chaos Mesh의 `controllerManager.enableFilterNamespace: true` 설정을 적용하고 `capacity-cascade-l08-target`에만 `chaos-mesh.org/inject: "enabled"` 어노테이션을 부여함으로써, 워크로드 부하 생성 네임스페이스(`capacity-cascade-l08-load`)를 Chaos Daemon의 조작 대상에서 원천 배제한다.
+  - **라벨 셀렉터 격리 경계**: 동일한 `capacity-cascade-l08-target` 네임스페이스 내에 위치한 HAProxy는 `NetworkChaos`의 라벨 셀렉터(`app.kubernetes.io/name: auth-sim`, `app.kubernetes.io/instance: auth-sim`)를 통해 주입 대상에서 엄격히 배제된다. NetworkChaos는 Pod를 타겟으로 동작하며, Istio sidecar와 auth-sim 애플리케이션 컨테이너는 같은 Pod 네트워크 네임스페이스를 공유하므로 주입 대상은 `auth-sim` 워크로드 Pod다. 러너는 `verify_network_chaos_state` 함수를 통해 주입 및 회복 시점에 오직 `capacity-cascade-l08-target/auth-sim-*` Pod identity 하나만 타겟팅되었음을 fail-closed 방식으로 검증한다.
 - **Host Kernel Safety Boundary**:
   - 러너에 의한 호스트 커널 변형은 전혀 없다 (`Host mutation by L08 runner: NONE`).
   - 필수 커널 모듈(`iptable_filter`, `sch_netem`)은 `/proc/modules`를 통해 호스트 레벨에서 읽기 전용(read-only)으로 검사하며, 부재 시 자동 로드(privileged docker run modprobe)를 시도하지 않고 즉시 fail-closed로 종료한다.
@@ -52,8 +52,9 @@ non-injected k6 Job (capacity-cascade-l08-load)
 | **Downstream HTTP 503 / Timeout** | 47 | 50 | 48 |
 | **HTTP Request Duration p95** | 1201.8 ms | 1201.7 ms | 1201.7 ms |
 | **Fault Window Duration (CR status)** | 25.061 s | 25.062 s | 25.057 s |
-| **Target Identity Verified** | true (`auth-sim` 1 Pod, HAProxy 0) | true (`auth-sim` 1 Pod, HAProxy 0) | true (`auth-sim` 1 Pod, HAProxy 0) |
-| **Fault HAProxy 5xx Peak (concurrency)** | 22 | 28 | 33 |
+| **Target Identity Verified** | true (`auth-sim` 1 Pod target, HAProxy 0) | true (`auth-sim` 1 Pod target, HAProxy 0) | true (`auth-sim` 1 Pod target, HAProxy 0) |
+| **Fault Sidecar Active Overflow Peak** | 0 | 0 | 0 |
+| **Fault window 중 HAProxy 누적 5xx counter 최대 관측값** | 22 | 28 | 33 |
 | **Final Active Sessions / Queue** | 0 / 0 | 0 / 0 | 0 / 0 |
 
 ---
@@ -71,13 +72,14 @@ non-injected k6 Job (capacity-cascade-l08-load)
 선언적 Chaos resource 적용 및 실제 주입 (Fault 시작, ~20s)
    - Chaos CR status: conditions[AllInjected]=True, Selected=True, AllRecovered=False
    - containerRecords[0].phase="Injected", containerRecords[0].id="capacity-cascade-l08-target/auth-sim-*"
-   - target identity 검증 통과 (HAProxy 주입 배제 확인)
+   - target identity 검증 통과 (auth-sim Pod 타겟, HAProxy 주입 배제 확인)
    - t_injected_utc 기록
    ↓
 Fault Window 동안 Signal 변화 (20s~45s)
    - 600ms network delay 주입으로 응답 지연 (p95 ~1202ms)
    - auth-sim 처리 지연으로 inbound istio-proxy (limit 1) 및 HAProxy 백엔드에 세션 누적 (sessions 3~4)
-   - 타임아웃 및 capacity cascade로 HAProxy downstream 503 발생 (누적 47~50건)
+   - fault-induced network delay 동안 HAProxy/backend request pressure와 타임아웃/503 발생 (누적 47~50건)
+   - (참고: 이 L08 실험에서는 sidecar active overflow peak = 0으로 관찰됨. 503은 sidecar queue 포화/overflow 기반의 capacity cascade가 아니라, 지속적 유입 부하 하에서 네트워크 지연으로 인한 요청 처리 시간 증가 및 클라이언트/프록시 타임아웃에 기인함)
    ↓
 Fault 종료 및 자동 회복 (Fault 종료, ~45s)
    - Chaos duration(25s) 만료
@@ -103,7 +105,7 @@ Chaos Resource 및 Cluster Cleanup
    - 대상 네임스페이스 `capacity-cascade-l08-target`에만 `chaos-mesh.org/inject: enabled` 어노테이션 적용.
    - `capacity-cascade-l08-load` 네임스페이스는 어노테이션을 미부여하여 Chaos Daemon의 tc/netem 조작 대상에서 원천 배제.
 2. **Label Selector 격리**:
-   - 동일 네임스페이스 내 HAProxy는 `selector.labelSelectors`를 통해 보호되며, `verify_network_chaos_state`를 통해 auth-sim 단일 Pod 외의 주입이 없음이 확증됨.
+   - 동일 네임스페이스 내 HAProxy는 `selector.labelSelectors`를 통해 보호되며, `verify_network_chaos_state`를 통해 `capacity-cascade-l08-target/auth-sim-*` Pod 외의 주입이 없음이 확증됨.
 3. **Host Safety**:
    - 호스트 커널 모듈에 대한 임의 변경을 금지하며, 읽기 전용 preflight 확인만 수행함.
 4. **최소 권한 및 공격 표면 최소화**:
