@@ -1,0 +1,97 @@
+{
+  "passed": true,
+  "no_retry": {
+    "passed": true,
+    "scenario": "cascade-no-retry",
+    "k6": {
+      "logical_requests": 219,
+      "physical_attempts": 219,
+      "retry_attempts": 0,
+      "logical_failure_rate": 0.6529680365296804,
+      "logical_p95_ms": 1003,
+      "dropped_iterations": 0,
+      "status": {
+        "200": 76,
+        "503": 143,
+        "504": 0
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1,
+      "workload_pod_count_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 143,
+      "downstream_delta": 219,
+      "upstream_delta": 76
+    },
+    "haproxy": {
+      "backend_sessions_delta": 219,
+      "backend_responses_5xx_delta": 143
+    },
+    "application": {
+      "token_delta": 76,
+      "admission_rejection_delta": 0
+    },
+    "sampling": {
+      "phases": [
+        "after",
+        "baseline",
+        "peak",
+        "recovery",
+        "stable"
+      ],
+      "recovery_idle": true
+    }
+  },
+  "retry": {
+    "passed": true,
+    "scenario": "cascade-retry",
+    "k6": {
+      "logical_requests": 220,
+      "physical_attempts": 513,
+      "retry_attempts": 293,
+      "logical_failure_rate": 0.6409090909090909,
+      "logical_p95_ms": 1004,
+      "dropped_iterations": 0,
+      "status": {
+        "200": 79,
+        "503": 141,
+        "504": 0
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1,
+      "workload_pod_count_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 434,
+      "downstream_delta": 513,
+      "upstream_delta": 79
+    },
+    "haproxy": {
+      "backend_sessions_delta": 513,
+      "backend_responses_5xx_delta": 434
+    },
+    "application": {
+      "token_delta": 79,
+      "admission_rejection_delta": 0
+    },
+    "sampling": {
+      "phases": [
+        "after",
+        "baseline",
+        "peak",
+        "recovery",
+        "stable"
+      ],
+      "recovery_idle": true
+    }
+  },
+  "comparison": {
+    "only_difference": "client retry policy",
+    "required": "retry adds physical attempts and increases selected sidecar overflow plus HAProxy backend sessions/5xx under the fixed logical schedule"
+  }
+}

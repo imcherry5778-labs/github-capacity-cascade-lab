@@ -12,7 +12,8 @@ evidence의 누적 index다. 각 learning unit은 source run, 설정, 측정 결
 | L03 — k3d and Helm Baseline | Kubernetes workload lifecycle, resource snapshot와 cleanup | Local exploratory evidence available | [L03](l03/README.md) |
 | L04 — Istio Sidecar and Proxy Metrics | Application/sidecar capacity boundary와 proxy overflow | Local exploratory evidence available | [L04](l04/README.md) |
 | L05 — HPA Blind Spot | Application-only CPU HPA와 selected sidecar capacity metric HPA의 decision boundary | 3 clean local repetitions curated | [L05](l05/README.md) |
-| L06+ | 후속 learning unit | 아직 curated evidence 없음 | — |
+| L06 — Full Capacity Cascade | Client retry-only comparison의 physical load와 sidecar/HAProxy pressure | 3 clean local repetitions curated | [L06](l06/README.md) |
+| L07+ | 후속 learning unit | 아직 curated evidence 없음 | — |
 
 Curated evidence도 단일 local run이면 portfolio final evidence나 production benchmark가
 아니다. Raw result는 기존 timestamp directory에 append-only로 남고, curated 파일은

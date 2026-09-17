@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "scenario": "cascade-retry",
+  "k6": {
+    "logical_requests": 219,
+    "physical_attempts": 508,
+    "retry_attempts": 289,
+    "logical_failure_rate": 0.6438356164383562,
+    "logical_p95_ms": 1004,
+    "dropped_iterations": 0,
+    "status": {
+      "200": 78,
+      "503": 141,
+      "504": 0
+    }
+  },
+  "hpa": {
+    "desired_replicas_max": 1,
+    "current_replicas_max": 1,
+    "workload_pod_count_max": 1
+  },
+  "sidecar": {
+    "active_overflow_delta": 430,
+    "downstream_delta": 508,
+    "upstream_delta": 78
+  },
+  "haproxy": {
+    "backend_sessions_delta": 508,
+    "backend_responses_5xx_delta": 430
+  },
+  "application": {
+    "token_delta": 78,
+    "admission_rejection_delta": 0
+  },
+  "sampling": {
+    "phases": [
+      "after",
+      "baseline",
+      "peak",
+      "recovery",
+      "stable"
+    ],
+    "recovery_idle": true
+  }
+}

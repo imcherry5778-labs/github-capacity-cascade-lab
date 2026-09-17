@@ -1,0 +1,71 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-16T17:54:07Z",
+            "involvedObject": {
+                "apiVersion": "autoscaling/v2",
+                "kind": "HorizontalPodAutoscaler",
+                "name": "auth-sim-scaling",
+                "namespace": "capacity-cascade-l06-no-retry",
+                "resourceVersion": "736",
+                "uid": "f2346709-bcea-478f-bdfd-5c8123542e80"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-16T17:54:07Z",
+            "message": "failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API",
+            "metadata": {
+                "creationTimestamp": "2026-09-16T17:54:07Z",
+                "name": "auth-sim-scaling.18d5dea9cc0fa9f6",
+                "namespace": "capacity-cascade-l06-no-retry",
+                "resourceVersion": "789",
+                "uid": "2b4d24de-efa2-499a-b88d-93c837427754"
+            },
+            "reason": "FailedGetContainerResourceMetric",
+            "reportingComponent": "horizontal-pod-autoscaler",
+            "reportingInstance": "",
+            "source": {
+                "component": "horizontal-pod-autoscaler"
+            },
+            "type": "Warning"
+        },
+        {
+            "apiVersion": "v1",
+            "count": 1,
+            "eventTime": null,
+            "firstTimestamp": "2026-09-16T17:54:07Z",
+            "involvedObject": {
+                "apiVersion": "autoscaling/v2",
+                "kind": "HorizontalPodAutoscaler",
+                "name": "auth-sim-scaling",
+                "namespace": "capacity-cascade-l06-no-retry",
+                "resourceVersion": "736",
+                "uid": "f2346709-bcea-478f-bdfd-5c8123542e80"
+            },
+            "kind": "Event",
+            "lastTimestamp": "2026-09-16T17:54:07Z",
+            "message": "invalid metrics (1 invalid out of 1), first error is: failed to get auth-sim container metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API",
+            "metadata": {
+                "creationTimestamp": "2026-09-16T17:54:07Z",
+                "name": "auth-sim-scaling.18d5dea9cc2dc1d6",
+                "namespace": "capacity-cascade-l06-no-retry",
+                "resourceVersion": "791",
+                "uid": "ff8adfc6-7bc8-4d06-99da-cfab84c7f310"
+            },
+            "reason": "FailedComputeMetricsReplicas",
+            "reportingComponent": "horizontal-pod-autoscaler",
+            "reportingInstance": "",
+            "source": {
+                "component": "horizontal-pod-autoscaler"
+            },
+            "type": "Warning"
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

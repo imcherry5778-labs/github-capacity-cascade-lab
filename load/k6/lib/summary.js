@@ -51,6 +51,7 @@ export function createSummaryHandler(experiment) {
       logical_id_namespace: experiment.logicalIdNamespace || null,
       logical_rate: experiment.logicalRate,
       duration: experiment.duration,
+      workload_stages: experiment.workloadStages || null,
       request_timeout: experiment.requestTimeout || REQUEST_TIMEOUT,
       fault: experiment.fault,
       application_fault: experiment.applicationFault || experiment.fault,
@@ -58,6 +59,7 @@ export function createSummaryHandler(experiment) {
       network_toxic: experiment.networkToxic || null,
       envoy_proxy: experiment.envoyProxy || null,
       retry_policy: experiment.retryPolicy,
+      retry_source: experiment.retrySource || 'unspecified',
       max_attempts: experiment.maxAttempts,
     };
 
@@ -106,18 +108,20 @@ ${renderDownstreamStatusRows(values)}
 - Logical ID namespace: ${values.experiment.logicalIdNamespace || 'not specified'}
 - Logical rate: ${values.experiment.logicalRate === null ? 'not applicable' : `${values.experiment.logicalRate} ops/s`}
 - Duration: ${values.experiment.duration}
+- Workload stages: ${formatObject(values.experiment.workloadStages)}
 - Request timeout: ${values.experiment.requestTimeout || REQUEST_TIMEOUT}
 - Fault: latency_ms=${values.experiment.fault.latency_ms}, error_rate=${values.experiment.fault.error_rate}, max_in_flight=${values.experiment.fault.max_in_flight}, seed=${values.experiment.fault.seed}
 - Proxy capacity: ${formatObject(values.experiment.proxyCapacity)}
 - Network toxic: ${formatObject(values.experiment.networkToxic)}
 - Envoy proxy: ${formatObject(values.experiment.envoyProxy)}
 - Retry policy: ${values.experiment.retryPolicy}
+- Retry source: ${values.experiment.retrySource || 'unspecified'}
 - Max attempts: ${values.experiment.maxAttempts}
 `;
 }
 
 function renderDownstreamStatusRows(values) {
-  if (values.phase !== 'L02' && values.phase !== 'L04' && values.phase !== 'L05') {
+  if (values.phase !== 'L02' && values.phase !== 'L04' && values.phase !== 'L05' && values.phase !== 'L06') {
     return '';
   }
   const counts = values.downstreamStatusCounts;

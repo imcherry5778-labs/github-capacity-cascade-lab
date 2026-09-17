@@ -1,0 +1,72 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"capacity-cascade-lab/owner":"l06","capacity-cascade-lab/policy":"blind-application-cpu"},"name":"auth-sim-scaling","namespace":"capacity-cascade-l06-no-retry"},"spec":{"behavior":{"scaleDown":{"policies":[{"periodSeconds":60,"type":"Pods","value":1}],"selectPolicy":"Max","stabilizationWindowSeconds":300},"scaleUp":{"policies":[{"periodSeconds":15,"type":"Pods","value":4}],"selectPolicy":"Max","stabilizationWindowSeconds":0}},"maxReplicas":4,"metrics":[{"containerResource":{"container":"auth-sim","name":"cpu","target":{"averageUtilization":80,"type":"Utilization"}},"type":"ContainerResource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"auth-sim"}}}
+  creationTimestamp: "2026-09-16T17:47:37Z"
+  labels:
+    capacity-cascade-lab/owner: l06
+    capacity-cascade-lab/policy: blind-application-cpu
+  name: auth-sim-scaling
+  namespace: capacity-cascade-l06-no-retry
+  resourceVersion: "863"
+  uid: 86941de9-23e1-49dc-bf40-7879282c3d65
+spec:
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 1
+      selectPolicy: Max
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      policies:
+      - periodSeconds: 15
+        type: Pods
+        value: 4
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+  maxReplicas: 4
+  metrics:
+  - containerResource:
+      container: auth-sim
+      name: cpu
+      target:
+        averageUtilization: 80
+        type: Utilization
+    type: ContainerResource
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: auth-sim
+status:
+  conditions:
+  - lastTransitionTime: "2026-09-16T17:47:52Z"
+    message: recommended size matches current size
+    reason: ReadyForNewScale
+    status: "True"
+    type: AbleToScale
+  - lastTransitionTime: "2026-09-16T17:48:22Z"
+    message: the HPA was able to successfully calculate a replica count from cpu container
+      resource utilization (percentage of request)
+    reason: ValidMetricFound
+    status: "True"
+    type: ScalingActive
+  - lastTransitionTime: "2026-09-16T17:48:22Z"
+    message: the desired count is within the acceptable range
+    reason: DesiredWithinRange
+    status: "False"
+    type: ScalingLimited
+  currentMetrics:
+  - containerResource:
+      container: auth-sim
+      current:
+        averageUtilization: 8
+        averageValue: 2m
+      name: cpu
+    type: ContainerResource
+  currentReplicas: 1
+  desiredReplicas: 1

@@ -352,9 +352,46 @@ proxy active-overflow가 `336`, `336`, `337`에 도달했다. Aware는 actual Po
 observation scope가 scaling blind spot의 한 설명일 수 있다는 local inference만 지원한다. GitHub의
 metric, HPA behavior, sidecar mechanism/value, topology나 production tuning evidence는 아니다.
 
+## L06 full capacity cascade
+
+L06는 L05 blind HPA를 유지하되, 이를 GitHub topology라고 주장하지 않는 최소 local path 앞에
+HAProxy와 non-injected k6 Job을 둔다. HAProxy와 selected inbound proxy retry를 모두 끈 뒤
+client retry policy만 바꾼다. HAProxy backend `maxconn 100`은 local process bound이며
+intentionally constrained component가 아니다. HAProxy stats는 통과 traffic의 backend session
+volume과 전달된 5xx를 관찰할 뿐 local HAProxy saturation을 판정하지 않는다. 모든
+component/version/target은 `LAB_IMPLEMENTATION`이다.
+
+```mermaid
+flowchart LR
+    K[non-injected k6 Job] --> H[HAProxy: retries 0]
+    H --> S[auth-sim ClusterIP :8080]
+    S --> X[injected inbound istio-proxy target 1]
+    X --> A[auth-sim latency 1000 ms]
+    A --> C[auth-sim CPU]
+    C --> B[blind HPA: ContainerResource CPU]
+    B --> A
+    K -. only variable: max attempts 1 or 3 .-> H
+```
+
+The `ramping-arrival-rate` workload holds stable `1/s` for `20 s`, linearly ramps from
+`1/s` to peak target `4/s` over `60 s`, then linearly ramps from `4/s` to recovery target
+`1/s` over `20 s`. The runner samples k6, HAProxy, selected sidecar, application, HPA, Pod
+and endpoint state once per second, and accepts recovery only after the final sample returns
+selected sidecar active requests plus HAProxy queue/sessions to zero. This is a final-idle
+criterion, not a measured comparison of retry recovery time. Metrics port-forward is an
+observation path, not the workload path; its recorded selected-proxy downstream delta is zero.
+
+Three clean-source pairs show 219–220 no-retry physical attempts versus 508–513 bounded-immediate
+retry physical attempts, with selected sidecar active-overflow 143–144 versus 430–434. This is
+a local fixed-condition mechanism observation only. HAProxy-observed backend session/5xx deltas
+describe propagated traffic, not HAProxy saturation. It does not prove GitHub's HAProxy/Istio/
+ClusterIP topology, retry algorithm, HPA policy, production capacity, or a general retry policy.
+The raw-selection details and individual timestamped files are in
+[L06 curated evidence](../results/curated/l06/README.md).
+
 ## Future architecture only
 
-L06+의 retry/cascade, Chaos Mesh와 AKS 질문은 별도 scope와 evidence 설계 뒤에만 연결한다.
+L07+ mitigation, Chaos Mesh와 AKS 질문은 별도 scope와 evidence 설계 뒤에만 연결한다.
 Gateway, Ambient/CNI, Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing과 production tuning은
-L05 범위가 아니다. 이 repetition set은 production benchmark나 GitHub topology reproduction이 아닌
+L06 범위가 아니다. 이 repetition set은 production benchmark나 GitHub topology reproduction이 아닌
 local exploratory evidence다.

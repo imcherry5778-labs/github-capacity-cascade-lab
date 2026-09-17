@@ -1,0 +1,64 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L06",
+  "classification": "local exploratory evidence",
+  "scenario_mode": "pair",
+  "started_at_utc": "2026-09-16T17:39:51Z",
+  "git_commit": "a85026bd032e13f714279890c83c7303e1a2eec0",
+  "git_dirty": false,
+  "cluster": {
+    "name": "capacity-cascade-l06",
+    "servers": 1,
+    "agents": 0,
+    "k3s_image": "rancher/k3s:v1.35.5-k3s1",
+    "api_exposure": "dynamic loopback port"
+  },
+  "istio": {
+    "version": "1.30.4",
+    "chart_repository": "https://blob.istio.io/istio-release/charts",
+    "image_hub": "docker.io/istio",
+    "install": "pinned Helm istio-base then istiod; no gateway or CNI"
+  },
+  "images": {
+    "auth_sim": "capacity-cascade/auth-sim:l06-a85026bd032e",
+    "haproxy": "haproxy:3.2.23-alpine",
+    "k6": "grafana/k6:2.2.0"
+  },
+  "topology": "non-injected k6 Job -> HAProxy -> ClusterIP Service -> inbound istio-proxy -> auth-sim",
+  "comparison": {
+    "only_difference": "client retry policy",
+    "no_retry": {
+      "client_retry": "none",
+      "max_attempts": 1
+    },
+    "retry": {
+      "client_retry": "bad-immediate-retry",
+      "max_attempts": 3
+    },
+    "haproxy_retry": "off (retries 0, no redispatch)",
+    "envoy_retry": "off (selected-version inbound EnvoyFilter)",
+    "sidecar_active_request_target": 1,
+    "blind_hpa_metric": "ContainerResource auth-sim CPU utilization 80%",
+    "application_latency_ms": 1000,
+    "request_timeout": "2s",
+    "sampling_interval": "1s",
+    "workload_stages": [
+      {
+        "phase": "stable",
+        "rate": 1,
+        "duration": "20s"
+      },
+      {
+        "phase": "peak",
+        "rate": 4,
+        "duration": "60s"
+      },
+      {
+        "phase": "recovery",
+        "rate": 1,
+        "duration": "20s"
+      }
+    ]
+  },
+  "recovery_criterion": "After peak, selected sidecar active requests and HAProxy current queue/sessions return to zero in a timestamped final sample."
+}
