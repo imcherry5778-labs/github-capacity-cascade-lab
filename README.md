@@ -453,15 +453,17 @@ Retry Amplification = Physical Attempts / Logical Requests
 
 ## Results — Local evidence
 
-L05와 L06는 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
+L05, L06, L07은 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
 implementation verification이며 portfolio final evidence, production benchmark 또는
 machine-independent performance conclusion은 아니다. 최종 portfolio comparison은 L10에서
 별도로 구성한다.
 
-## Mitigations — Planned
+## Mitigations — Local evidence
 
-Retry budget, capacity-aware scaling, load shedding, progressive recovery 비교는 후속 단계의
-`Planned` 작업이다.
+L07은 retry backoff/jitter, local load shedding, capacity-aware scaling, gradual ramp-up을
+fixed local `LAB_IMPLEMENTATION` 조건에서 비교했다. 이는 GitHub exact production mitigation
+재현이나 production recommendation이 아니며, 상세 결과와 경계는
+[L07 curated evidence](results/curated/l07/README.md)에 있다.
 
 ## Azure validation — Planned
 
