@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: l07-haproxy-config
+  namespace: capacity-cascade-l07-target
+  labels:
+    capacity-cascade-lab/owner: l07
+data:
+  haproxy.cfg: |
+    global
+        log stdout format raw local0
+        maxconn 200
+
+    defaults
+        mode http
+        log global
+        option httplog
+        option http-keep-alive
+        retries 0
+        no option redispatch
+        timeout connect 1s
+        timeout client 3s
+        timeout server 3s
+        timeout queue 1s
+
+    resolvers kubernetes
+        parse-resolv-conf
+        hold valid 10s
+
+    frontend public
+        bind :8080
+        # LAB_IMPLEMENTATION: per-source 1s request rate over 2 is rejected as 429.
+        # This is a local protection policy, not GitHub's undisclosed blocking mechanism.
+        stick-table type ip size 100k expire 1s store http_req_rate(1s)
+        http-request track-sc0 src
+        http-request deny deny_status 429 if { sc_http_req_rate(0) gt 2 }
+        default_backend auth_sim
+
+    frontend stats
+        bind :8404
+        stats enable
+        stats uri /stats
+        stats show-legends
+
+    backend auth_sim
+        # Unchanged process bound; shedding is the only changed variable in M2.
+        server auth-sim AUTH_SIM_SERVICE_FQDN:8080 check resolvers kubernetes init-addr last,libc,none maxconn 100
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l07-haproxy
+  namespace: capacity-cascade-l07-target
+  labels:
+    app.kubernetes.io/name: l07-haproxy
+    capacity-cascade-lab/owner: l07
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: l07-haproxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: l07-haproxy
+        capacity-cascade-lab/owner: l07
+        sidecar.istio.io/inject: "false"
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 99, runAsGroup: 99}
+      containers:
+        - name: haproxy
+          image: HAPROXY_IMAGE
+          imagePullPolicy: IfNotPresent
+          args: ["-W", "-db", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+          ports:
+            - {name: public, containerPort: 8080, protocol: TCP}
+            - {name: stats, containerPort: 8404, protocol: TCP}
+          readinessProbe:
+            httpGet: {path: /stats, port: stats}
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          volumeMounts:
+            - {name: config, mountPath: /usr/local/etc/haproxy/haproxy.cfg, subPath: haproxy.cfg, readOnly: true}
+      volumes:
+        - name: config
+          configMap: {name: l07-haproxy-config}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: l07-haproxy
+  namespace: capacity-cascade-l07-target
+  labels:
+    capacity-cascade-lab/owner: l07
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: l07-haproxy
+  ports:
+    - {name: public, port: 8080, targetPort: public, protocol: TCP}
+    - {name: stats, port: 8404, targetPort: stats, protocol: TCP}

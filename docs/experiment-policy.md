@@ -252,6 +252,29 @@ timestamp directory에 둔다. 단일 성공 run은 `local exploratory result`�
   proxy/retry/HPA implementation, incident RPS/10x, production capacity 또는 universal retry
   tuning recommendation으로 확장하지 않는다.
 
+### L07 RCA mitigations
+
+- L07 reuses the L06 data path, selected sidecar target 1, application latency 1000 ms, timeout
+  2 s, HAProxy/proxy no-retry, one-second sample and final-idle recovery boundary. Each M1–M4
+  pair uses fresh namespaces and counters; do not subtract cumulative values across scenarios.
+- M1 compares bounded immediate client retry with bounded exponential backoff plus full jitter,
+  keeping max attempts 3. Physical attempts, logical success/failure and p95 are all evidence;
+  an unexpected result remains append-only raw evidence.
+- M2 keeps client retry disabled and changes only HAProxy forwarding versus a local per-source
+  one-second rate threshold 2/HTTP 429 admission policy. Record rejection count, sidecar
+  overflow, user outcome, HAProxy propagation and final idle. It is neither a GitHub blocking
+  implementation claim nor a HAProxy-saturation test.
+- M3 compares the L06 auth-sim CPU ContainerResource HPA with the L05 Pods
+  sidecar_active_requests custom-metric HPA only. The adapter/exporter observation path,
+  HPA min/max/behavior, workload path and retry are fixed. Actual custom metric, HPA
+  desired/current, Ready Pod/Endpoint, overflow and user result are required evidence.
+- M4 fixes start/end 1/s, peak 4/s, duration 100s and intended 220 logical requests. It changes
+  steep/gradual arrival shape only. If raw logical counts differ, overflow total alone is not a
+  conclusion; record the normalization limitation.
+- Every final matrix needs git_dirty=false, dropped iterations 0, scenario/pair/cleanup PASS and
+  no secret/private path in selected files. make l07-verify is one full matrix, not three
+  repetitions; run it three times from a clean source before curation.
+
 ## Reporting rules
 
 - 측정하지 않은 값은 결과로 작성하지 않는다.

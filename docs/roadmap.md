@@ -115,7 +115,7 @@
 - **Done:** 최소 3회 반복된 동일 조건 비교와 부작용/한계가 기록된다.
 - **Non-goals:** GitHub의 실제 mitigation code 또는 exact setting 복제.
 - **Dependencies:** L06.
-- **Status:** Planned.
+- **Status:** Current — implementation and all-path smoke are verified; three clean-source fixed-condition matrices and curated evidence remain required for Complete.
 
 ## L08 — Chaos Mesh Reproduction
 

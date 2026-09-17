@@ -59,7 +59,7 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Completed through L06 — next L07
+## Completed through L06 — L07 implementation current
 
 현재 완료된 구현 범위는 **L06 — Full Capacity Cascade**까지다. L04는 L00/L01/L02의
 logical/physical/retry 의미와 L03 Kubernetes lifecycle을 바꾸지 않고, application과 inbound
@@ -137,8 +137,10 @@ flowchart TD
     K --> E[local evidence]
 ```
 
-L00–L06는 completed foundation이다. 상세 topology와 단계별 plane 경계는
-[architecture](docs/architecture.md)에 있다. 다음 mitigation comparison은 L07 범위다.
+L00–L06는 completed foundation이다. L07은 L06 path를 유지한 one-variable M1 retry timing,
+M2 local load shedding, M3 capacity-aware scaling, M4 gradual-ramp matrix를 구현했고 all-path
+smoke를 통과했다. Clean-source full-matrix repetitions과 curated evidence가 완료되기 전에는
+Current 상태다. 상세 topology와 boundary는 [architecture](docs/architecture.md)에 있다.
 
 ## Local quick start
 
@@ -433,7 +435,7 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 ## Learning roadmap
 
 L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L06까지는 completed
-foundation이고 다음 단계는 **L07 — RCA Mitigations** (`Planned`)다.
+foundation이고 L07 — RCA Mitigations는 clean-source final repetition을 준비 중인 Current 단계다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -477,6 +479,6 @@ preflight와 승인 경계를 거쳐 검증한다.
 - Completed foundation: L04 — Istio Sidecar and Proxy Metrics (implementation verified; local exploratory evidence)
 - Completed foundation: L05 — HPA Blind Spot (implementation verified; 3 clean local repetitions)
 - Completed foundation: L06 — Full Capacity Cascade (implementation verified; 3 clean local repetitions)
-- Next: L07 — RCA Mitigations (`Planned`)
+- Current: L07 — RCA Mitigations (implementation and all-path smoke verified; final repetitions pending)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

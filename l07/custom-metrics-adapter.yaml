@@ -1,0 +1,94 @@
+# Reuses the bounded L05 adapter mechanism for the L07 scaling-policy pair only.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: l07-custom-metrics-adapter
+  namespace: capacity-cascade-l07-target
+  labels: {capacity-cascade-lab/owner: l07}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: l07-custom-metrics-adapter
+  namespace: capacity-cascade-l07-target
+  labels: {capacity-cascade-lab/owner: l07}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: l07-custom-metrics-adapter
+  namespace: capacity-cascade-l07-target
+  labels: {capacity-cascade-lab/owner: l07}
+subjects:
+  - kind: ServiceAccount
+    name: l07-custom-metrics-adapter
+    namespace: capacity-cascade-l07-target
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: l07-custom-metrics-adapter
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l07-custom-metrics-adapter
+  namespace: capacity-cascade-l07-target
+  labels: {app.kubernetes.io/name: l07-custom-metrics-adapter, capacity-cascade-lab/owner: l07}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: l07-custom-metrics-adapter}
+  template:
+    metadata:
+      annotations: {sidecar.istio.io/inject: "false"}
+      labels: {app.kubernetes.io/name: l07-custom-metrics-adapter, capacity-cascade-lab/owner: l07, sidecar.istio.io/inject: "false"}
+    spec:
+      serviceAccountName: l07-custom-metrics-adapter
+      securityContext: {runAsNonRoot: true, runAsUser: 65532, runAsGroup: 65532}
+      containers:
+        - name: adapter
+          image: AUTH_SIM_IMAGE
+          imagePullPolicy: Never
+          command: ["/l05-custom-metrics-adapter"]
+          args: ["--target-namespace=TARGET_NAMESPACE", "--pod-selector=app.kubernetes.io/name=auth-sim,app.kubernetes.io/instance=auth-sim"]
+          ports: [{name: https, containerPort: 8443, protocol: TCP}]
+          readinessProbe:
+            httpGet: {scheme: HTTPS, path: /healthz, port: https}
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          resources:
+            requests: {cpu: 10m, memory: 32Mi}
+            limits: {cpu: 100m, memory: 128Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: l07-custom-metrics-adapter
+  namespace: capacity-cascade-l07-target
+  labels: {capacity-cascade-lab/owner: l07}
+spec:
+  selector: {app.kubernetes.io/name: l07-custom-metrics-adapter}
+  ports: [{name: https, port: 443, targetPort: https, protocol: TCP}]
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1beta2.custom.metrics.k8s.io
+  labels: {capacity-cascade-lab/owner: l07}
+spec:
+  group: custom.metrics.k8s.io
+  version: v1beta2
+  groupPriorityMinimum: 100
+  versionPriority: 100
+  insecureSkipTLSVerify: true
+  service: {name: l07-custom-metrics-adapter, namespace: capacity-cascade-l07-target, port: 443}
