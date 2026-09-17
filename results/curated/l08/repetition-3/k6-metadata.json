@@ -1,0 +1,52 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L08",
+  "phase": "L08",
+  "scenario": "chaos-network-delay",
+  "started_at_utc": "2026-09-17T18:09:43Z",
+  "git_commit": "c1c79d6a7ce4cd500dd00109fc48f8b78fbc1665",
+  "git_dirty": false,
+  "go_version": "unknown",
+  "k6_version": "unknown",
+  "os": "unknown",
+  "architecture": "unknown",
+  "tool_versions": {
+    "go": "unknown",
+    "k6": "unknown",
+    "docker": "not-used",
+    "docker_compose": "not-used",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "not-used",
+    "envoy_server": "not-used"
+  },
+  "image_tags": null,
+  "base_url": "http://l08-haproxy.capacity-cascade-l08-target.svc.cluster.local:8080",
+  "request_path": "non-injected k6 Job -> HAProxy -> ClusterIP Service :8080 -> target Pod istio-proxy -> auth-sim",
+  "logical_id_namespace": "l08-chaos",
+  "logical_rate": 3,
+  "duration": "70s",
+  "workload_stages": null,
+  "request_timeout": "2s",
+  "fault": {
+    "type": "NetworkChaos",
+    "action": "delay",
+    "target": "auth-sim",
+    "latency": "600ms",
+    "duration": "25s"
+  },
+  "application_fault": {
+    "latency_ms": 0,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": {
+    "mechanism": "Sidecar ingress connectionPool http2MaxRequests",
+    "target": 1
+  },
+  "network_toxic": null,
+  "envoy_proxy": null,
+  "retry_policy": "none",
+  "retry_source": "none",
+  "max_attempts": 1
+}

@@ -426,7 +426,42 @@ by one request. These are local observations, not GitHub mitigation facts or gen
 recommendations. The original selected files and exact values are in
 [L07 curated evidence](../results/curated/l07/README.md).
 
+## L08 Chaos Mesh reproduction
+
+L08 migrates previously runner-controlled or synthetic fault injection to a declarative, time-controlled
+Kubernetes resource using Chaos Mesh `2.8.4` while maintaining strict blast radius boundaries.
+
+```mermaid
+flowchart LR
+    K[non-injected k6 Job] -->|ClusterIP Service| H[HAProxy retries 0]
+    H -->|ClusterIP Service :8080| S[inbound istio-proxy http2MaxRequests 1]
+    S --> A[auth-sim]
+    CM[Chaos Controller Manager] -.->|declarative NetworkChaos| CD[privileged chaos-daemon]
+    CD ==>|sch_netem tc delay 600ms| A
+```
+
+- **Namespace Isolation & Blast Radius**:
+  - Chaos Mesh is installed via Helm with `controllerManager.enableFilterNamespace: true`.
+  - Only `capacity-cascade-l08-target` is annotated with `chaos-mesh.org/inject: "enabled"`.
+  - The load generation namespace (`capacity-cascade-l08-load`) and proxy namespace (`capacity-cascade-l08-proxy`)
+    remain unannotated and excluded from Chaos Daemon interception.
+  - Dashboard and DNS chaos controllers are disabled (`dashboard.create: false`, `dnsServer.create: false`).
+- **Container Runtime Boundary**:
+  - K3s `rancher/k3s:v1.35.5-k3s1` containerd socket `/run/k3s/containerd/containerd.sock` is explicitly configured.
+- **Fail-Closed Verification & Lifecycle**:
+  - Injection proof is derived directly from the NetworkChaos CR status (`conditions[AllInjected]=True`,
+    `Selected=True`, and `containerRecords[].phase="Injected"`).
+  - Recovery proof is confirmed when `containerRecords[].phase="Recovered"`.
+  - Abort safety is verified via `make l08-abort-smoke`: a SIGINT/exit signal during active injection immediately
+    invokes declarative deletion of the CR (`kubectl delete -f ... --wait=true`), leaving 0 leftover CRs and 0 pods.
+- **Signal Correlation**:
+  - Across 3 clean-source repetitions, the 25s fault window directly correlates with p95 duration jumping to ~1201ms,
+    HAProxy backend active sessions accumulating (peak 3-4), and 503 errors (25-44 total) before returning to 0 active
+    sessions upon recovery.
+  - Original evidence files and comparison metrics are documented in [L08 curated evidence](../results/curated/l08/README.md).
+
 ## Future architecture only
 
-Chaos Mesh와 AKS 질문은 L07 evidence contract 뒤에만 연결한다. Gateway, Ambient/CNI,
-Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing과 production tuning은 L07 범위가 아니다.
+Azure AKS validation (L09) and Portfolio/Demo packaging (L10) are connected after L08. Gateway, Ambient/CNI,
+Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing and production tuning are not in L08 scope.
+

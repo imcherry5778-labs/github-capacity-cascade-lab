@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "conditions": {
+    "chaos_installed": true,
+    "namespace_filtering_enabled": true,
+    "containerd_socket_verified": true,
+    "pre_fault_healthy": true,
+    "fault_injected": true,
+    "fault_effect_observed": true,
+    "fault_recovered": true,
+    "post_fault_recovered": true,
+    "dropped_iterations_zero": true,
+    "chaos_resource_deleted": true
+  },
+  "timeline": {
+    "fault_injected_utc": "2026-09-17T18:05:22.880Z",
+    "fault_recovered_utc": "2026-09-17T18:05:47.937Z"
+  },
+  "measurements": {
+    "logical_requests": 211,
+    "physical_attempts": 211,
+    "downstream_200": 186,
+    "downstream_503": 25,
+    "http_req_duration_p95_ms": 1201.7189535,
+    "fault_sidecar_overflow_peak": 0,
+    "fault_haproxy_5xx_peak": 20
+  }
+}

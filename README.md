@@ -59,15 +59,18 @@ flowchart LR
     G --> H[Retries add more load]
 ```
 
-## Completed through L07
+## Completed through L08
 
-현재 완료된 구현 범위는 **L07 — RCA Mitigations**까지다. L04는 L00/L01/L02의
+현재 완료된 구현 범위는 **L08 — Chaos Mesh Reproduction**까지다. L04는 L00/L01/L02의
 logical/physical/retry 의미와 L03 Kubernetes lifecycle을 바꾸지 않고, application과 inbound
 sidecar의 capacity boundary를 별도로 관찰했다. L05는 그 local boundary를 다시 설계하지 않고,
 같은 constrained inbound sidecar 조건에서 HPA가 보는 대상만 바꿔 scaling decision을 비교했다.
 L06는 L05 blind HPA를 고정한 채 HAProxy와 non-injected k6를 앞에 연결하고, client retry만
 바꿔 physical attempt, selected sidecar overflow, HAProxy가 관찰한 backend session/전달된 5xx
-volume의 차이를 관찰한다. L06의 HAProxy는 의도적으로 constrained component가 아니다.
+volume의 차이를 관찰한다. L07은 L06 경로에서 네 가지 RCA mitigation 방향(retry backoff, shedding,
+scaling aware, gradual ramp)을 독립적으로 분리 비교했다. L08은 수동/러너 제어 fault를 선언적이고
+시간 제어 가능한 Chaos Mesh 2.8.4의 `NetworkChaos` 리소스로 전환하여 fault window와 신호 변화를
+정렬하고 안전한 abort와 격리된 cleanup을 입증했다.
 
 - Go 1.26 `net/http` 기반 `auth-sim`
 - loopback 기본값을 가진 public/admin server 분리
@@ -422,6 +425,16 @@ k6/HAProxy/proxy/application/HPA/Pod/endpoint samples를 남긴다. 현재
 [L06 curated evidence](results/curated/l06/README.md)는 clean-source fixed-condition pair 세
 개에서 판정에 필요한 원문만 byte-for-byte로 선별한다.
 
+L07 실행은 `results/rca-mitigations/<UTC timestamp>/` 아래에 M1–M4 matrix의 개별 시나리오별
+k6 summary, HAProxy before/after CSV, timestamped samples, HPA 및 selected proxy 통계를 남긴다.
+[L07 curated evidence](results/curated/l07/README.md)는 clean-source 3개 matrix에서 판정에
+필요한 원문을 byte-for-byte로 선별 보존한다.
+
+L08 실행은 `results/chaos-mesh/<UTC timestamp>/` 아래에 metadata, contract, cleanup, k6 summary,
+timestamped samples, 선언적 NetworkChaos 리소스 스냅샷(applied/active/recovered), proxy metric
+mapping, HAProxy before/after 통계를 남긴다. [L08 curated evidence](results/curated/l08/README.md)는
+clean-source 3회 반복 실행에서 판정에 필요한 원문을 byte-for-byte로 선별 보존한다.
+
 ## Application metrics
 
 `GET /metrics`는 다음 low-cardinality metric을 노출한다.
@@ -436,8 +449,8 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L07까지는 completed
-foundation이며 L08 이후는 planned 단계다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L08까지는 completed
+foundation이며 L09 이후는 planned 단계다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
