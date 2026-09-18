@@ -279,6 +279,27 @@ do_provision() {
   printf '=== L09 Provision: Azure AKS Cluster ===\n'
   ensure_providers_registered
 
+  # Quota Hard Gate
+  printf 'Checking Quota Hard Gate in %s...\n' "${APPROVED_LOCATION}"
+  local cores_limit dsv5_limit
+  cores_limit="$(az vm list-usage -l "${APPROVED_LOCATION}" --query "[?name.value=='cores'].limit | [0]" -o tsv)"
+  dsv5_limit="$(az vm list-usage -l "${APPROVED_LOCATION}" --query "[?name.value=='standardDSv5Family'].limit | [0]" -o tsv)"
+  if (( cores_limit < 4 || dsv5_limit < 4 )); then
+    printf 'QUOTA HARD GATE FAILED: cores=%s (min 4), standardDSv5Family=%s (min 4)\n' "${cores_limit}" "${dsv5_limit}" >&2
+    exit 1
+  fi
+  printf 'Quota Hard Gate PASSED: cores limit=%s, standardDSv5Family limit=%s\n' "${cores_limit}" "${dsv5_limit}"
+
+  # Version Hard Gate
+  printf 'Checking Version Hard Gate in %s...\n' "${APPROVED_LOCATION}"
+  local ver_avail
+  ver_avail="$(az aks get-versions -l "${APPROVED_LOCATION}" --query "values[?version=='1.35'].patchVersions | [0] | keys(@) | contains(@, '${APPROVED_KUBERNETES_VERSION}')" -o tsv)"
+  if [[ "${ver_avail}" != "true" ]]; then
+    printf 'VERSION HARD GATE FAILED: Kubernetes %s is not available in %s\n' "${APPROVED_KUBERNETES_VERSION}" "${APPROVED_LOCATION}" >&2
+    exit 1
+  fi
+  printf 'Version Hard Gate PASSED: Kubernetes %s is available GA in %s\n' "${APPROVED_KUBERNETES_VERSION}" "${APPROVED_LOCATION}"
+
   # Check if resource group already exists (fail closed)
   if az group exists --name "${RESOURCE_GROUP}" 2>/dev/null | grep -q true; then
     printf 'Refusing to overwrite existing Resource Group: %s\n' "${RESOURCE_GROUP}" >&2
@@ -306,12 +327,15 @@ do_provision() {
   acr_login_server="$(az acr show --name "${ACR_NAME}" --resource-group "${RESOURCE_GROUP}" --query loginServer -o tsv)"
   printf 'ACR Login Server: %s\n' "${acr_login_server}"
 
-  printf 'Building and delivering auth-sim image to ACR: %s/auth-sim:%s...\n' "${acr_login_server}" "${IMAGE_TAG}"
-  az acr build --registry "${ACR_NAME}" --image "auth-sim:${IMAGE_TAG}" . >"${result_dir}/acr-build.log" 2>&1
+  printf 'Building auth-sim image locally: %s/auth-sim:%s...\n' "${acr_login_server}" "${IMAGE_TAG}"
+  docker build --tag "${acr_login_server}/auth-sim:${IMAGE_TAG}" . >"${result_dir}/auth-sim-docker-build.log" 2>&1
 
-  printf 'Importing k6 and HAProxy images to ACR for reliable offline delivery...\n'
-  az acr import --name "${ACR_NAME}" --source "${K6_IMAGE_VALUE}" --image "${K6_IMAGE_VALUE}" --force >/dev/null 2>&1 || true
-  az acr import --name "${ACR_NAME}" --source "${HAPROXY_IMAGE_VALUE}" --image "${HAPROXY_IMAGE_VALUE}" --force >/dev/null 2>&1 || true
+  printf 'Pushing auth-sim image to ACR via ephemeral credentials...\n'
+  local temp_docker_config
+  temp_docker_config="$(mktemp -d "${runtime_root}/docker.XXXXXX")"
+  DOCKER_CONFIG="${temp_docker_config}" az acr login --name "${ACR_NAME}" >/dev/null 2>&1
+  DOCKER_CONFIG="${temp_docker_config}" docker push "${acr_login_server}/auth-sim:${IMAGE_TAG}" >"${result_dir}/acr-push.log" 2>&1
+  rm -rf "${temp_docker_config}"
 
   printf 'Creating AKS Managed Cluster: %s...\n' "${CLUSTER_NAME}"
   printf '  - Tier: %s\n' "${APPROVED_AKS_TIER}"
