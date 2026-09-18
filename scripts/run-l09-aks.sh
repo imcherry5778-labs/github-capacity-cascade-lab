@@ -256,7 +256,7 @@ cleanup_cloud_resources() {
 }
 
 ensure_providers_registered() {
-  printf '--- Ensuring Resource Providers are Registered ---\n'
+  printf '%s\n' '--- Ensuring Resource Providers are Registered ---'
   for p in Microsoft.ContainerService Microsoft.ContainerRegistry; do
     local state
     state="$(az provider show --namespace "${p}" --query registrationState -o tsv 2>/dev/null || printf 'Unknown')"
