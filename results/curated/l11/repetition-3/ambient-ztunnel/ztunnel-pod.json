@@ -1,0 +1,471 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "annotations": {
+            "prometheus.io/port": "15020",
+            "prometheus.io/scrape": "true",
+            "sidecar.istio.io/inject": "false"
+        },
+        "creationTimestamp": "2026-09-18T16:05:02Z",
+        "generateName": "ztunnel-",
+        "generation": 1,
+        "labels": {
+            "app": "ztunnel",
+            "app.kubernetes.io/instance": "ztunnel",
+            "app.kubernetes.io/managed-by": "Helm",
+            "app.kubernetes.io/name": "ztunnel",
+            "app.kubernetes.io/part-of": "istio",
+            "app.kubernetes.io/version": "1.30.4",
+            "controller-revision-hash": "b55c7d6f5",
+            "helm.sh/chart": "ztunnel-1.30.4",
+            "istio.io/dataplane-mode": "none",
+            "pod-template-generation": "1",
+            "sidecar.istio.io/inject": "false"
+        },
+        "name": "ztunnel-hbvfn",
+        "namespace": "istio-system",
+        "ownerReferences": [
+            {
+                "apiVersion": "apps/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "DaemonSet",
+                "name": "ztunnel",
+                "uid": "58b94389-908d-4ab3-af78-059d9ef3500a"
+            }
+        ],
+        "resourceVersion": "675",
+        "uid": "85216f67-ec0b-4249-b83b-b5300f8a057c"
+    },
+    "spec": {
+        "affinity": {
+            "nodeAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                        {
+                            "matchFields": [
+                                {
+                                    "key": "metadata.name",
+                                    "operator": "In",
+                                    "values": [
+                                        "k3d-capacity-cascade-l11-server-0"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "containers": [
+            {
+                "args": [
+                    "proxy",
+                    "ztunnel"
+                ],
+                "env": [
+                    {
+                        "name": "CA_ADDRESS",
+                        "value": "istiod.istio-system.svc:15012"
+                    },
+                    {
+                        "name": "XDS_ADDRESS",
+                        "value": "istiod.istio-system.svc:15012"
+                    },
+                    {
+                        "name": "RUST_LOG",
+                        "value": "info"
+                    },
+                    {
+                        "name": "RUST_BACKTRACE",
+                        "value": "1"
+                    },
+                    {
+                        "name": "ISTIO_META_CLUSTER_ID",
+                        "value": "Kubernetes"
+                    },
+                    {
+                        "name": "INPOD_ENABLED",
+                        "value": "true"
+                    },
+                    {
+                        "name": "TERMINATION_GRACE_PERIOD_SECONDS",
+                        "value": "30"
+                    },
+                    {
+                        "name": "POD_NAME",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "metadata.name"
+                            }
+                        }
+                    },
+                    {
+                        "name": "POD_NAMESPACE",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "metadata.namespace"
+                            }
+                        }
+                    },
+                    {
+                        "name": "NODE_NAME",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "spec.nodeName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "INSTANCE_IP",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "status.podIP"
+                            }
+                        }
+                    },
+                    {
+                        "name": "SERVICE_ACCOUNT",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "spec.serviceAccountName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "ZTUNNEL_CPU_LIMIT",
+                        "valueFrom": {
+                            "resourceFieldRef": {
+                                "divisor": "1",
+                                "resource": "limits.cpu"
+                            }
+                        }
+                    }
+                ],
+                "image": "registry.istio.io/release/ztunnel:1.30.4",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "istio-proxy",
+                "ports": [
+                    {
+                        "containerPort": 15020,
+                        "name": "ztunnel-stats",
+                        "protocol": "TCP"
+                    }
+                ],
+                "readinessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                        "path": "/healthz/ready",
+                        "port": 15021,
+                        "scheme": "HTTP"
+                    },
+                    "periodSeconds": 10,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "resources": {
+                    "requests": {
+                        "cpu": "200m",
+                        "memory": "512Mi"
+                    }
+                },
+                "securityContext": {
+                    "allowPrivilegeEscalation": true,
+                    "capabilities": {
+                        "add": [
+                            "NET_ADMIN",
+                            "SYS_ADMIN",
+                            "NET_RAW"
+                        ],
+                        "drop": [
+                            "ALL"
+                        ]
+                    },
+                    "privileged": false,
+                    "readOnlyRootFilesystem": true,
+                    "runAsGroup": 1337,
+                    "runAsNonRoot": false,
+                    "runAsUser": 0
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/istio",
+                        "name": "istiod-ca-cert"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/tokens",
+                        "name": "istio-token"
+                    },
+                    {
+                        "mountPath": "/var/run/ztunnel",
+                        "name": "cni-ztunnel-sock-dir"
+                    },
+                    {
+                        "mountPath": "/tmp",
+                        "name": "tmp"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-xnsvv",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "k3d-capacity-cascade-l11-server-0",
+        "nodeSelector": {
+            "kubernetes.io/os": "linux"
+        },
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 2000001000,
+        "priorityClassName": "system-node-critical",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "ztunnel",
+        "serviceAccountName": "ztunnel",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoSchedule",
+                "operator": "Exists"
+            },
+            {
+                "key": "CriticalAddonsOnly",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoExecute",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/disk-pressure",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/memory-pressure",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/pid-pressure",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/unschedulable",
+                "operator": "Exists"
+            }
+        ],
+        "volumes": [
+            {
+                "name": "istio-token",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "audience": "istio-ca",
+                                "expirationSeconds": 43200,
+                                "path": "istio-token"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "configMap": {
+                    "defaultMode": 420,
+                    "name": "istio-ca-root-cert"
+                },
+                "name": "istiod-ca-cert"
+            },
+            {
+                "hostPath": {
+                    "path": "/var/run/ztunnel",
+                    "type": "DirectoryOrCreate"
+                },
+                "name": "cni-ztunnel-sock-dir"
+            },
+            {
+                "emptyDir": {},
+                "name": "tmp"
+            },
+            {
+                "name": "kube-api-access-xnsvv",
+                "projected": {
+                    "defaultMode": 420,
+                    "sources": [
+                        {
+                            "serviceAccountToken": {
+                                "expirationSeconds": 3607,
+                                "path": "token"
+                            }
+                        },
+                        {
+                            "configMap": {
+                                "items": [
+                                    {
+                                        "key": "ca.crt",
+                                        "path": "ca.crt"
+                                    }
+                                ],
+                                "name": "kube-root-ca.crt"
+                            }
+                        },
+                        {
+                            "downwardAPI": {
+                                "items": [
+                                    {
+                                        "fieldRef": {
+                                            "apiVersion": "v1",
+                                            "fieldPath": "metadata.namespace"
+                                        },
+                                        "path": "namespace"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T16:05:10Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T16:05:02Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T16:05:10Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T16:05:10Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T16:05:02Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "allocatedResources": {
+                    "cpu": "200m",
+                    "memory": "512Mi"
+                },
+                "containerID": "containerd://f5d9dcaff8c12608befd401043fbe66fe6a860dccef4713dc7bd49714f80c82c",
+                "image": "registry.istio.io/release/ztunnel:1.30.4",
+                "imageID": "registry.istio.io/release/ztunnel@sha256:090ca2d66460f0ce78b062380b9b9c7e3a8e1e678057f55cf3397eb28e5df6e9",
+                "lastState": {},
+                "name": "istio-proxy",
+                "ready": true,
+                "resources": {
+                    "requests": {
+                        "cpu": "200m",
+                        "memory": "512Mi"
+                    }
+                },
+                "restartCount": 0,
+                "started": true,
+                "state": {
+                    "running": {
+                        "startedAt": "2026-09-18T16:05:10Z"
+                    }
+                },
+                "user": {
+                    "linux": {
+                        "gid": 1337,
+                        "supplementalGroups": [
+                            1337
+                        ],
+                        "uid": 0
+                    }
+                },
+                "volumeMounts": [
+                    {
+                        "mountPath": "/var/run/secrets/istio",
+                        "name": "istiod-ca-cert"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/tokens",
+                        "name": "istio-token"
+                    },
+                    {
+                        "mountPath": "/var/run/ztunnel",
+                        "name": "cni-ztunnel-sock-dir"
+                    },
+                    {
+                        "mountPath": "/tmp",
+                        "name": "tmp"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "kube-api-access-xnsvv",
+                        "readOnly": true,
+                        "recursiveReadOnly": "Disabled"
+                    }
+                ]
+            }
+        ],
+        "hostIP": "172.18.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.18.0.2"
+            }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.42.0.6",
+        "podIPs": [
+            {
+                "ip": "10.42.0.6"
+            }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-18T16:05:02Z"
+    }
+}

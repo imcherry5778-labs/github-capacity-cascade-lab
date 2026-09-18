@@ -1,0 +1,9 @@
+{
+  "scenario": "sidecar",
+  "workload_replicas_target": 2,
+  "workload_pod_count": 2,
+  "proxy_container_count": 2,
+  "node_local_daemonset_ready_pods_before_scale": 2,
+  "node_local_daemonset_ready_pods_after_scale": 2,
+  "note": "node-local Istio CNI/ztunnel DaemonSet pod count is tied to node count (1 node in this cluster), not to workload replica count; sidecar proxy_container_count is tied 1:1 to workload_pod_count"
+}

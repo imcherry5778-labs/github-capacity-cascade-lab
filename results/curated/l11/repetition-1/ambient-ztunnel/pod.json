@@ -1,0 +1,234 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "annotations": {
+            "ambient.istio.io/redirection": "enabled"
+        },
+        "creationTimestamp": "2026-09-18T15:59:06Z",
+        "generateName": "auth-sim-ambient-d495ff57-",
+        "generation": 1,
+        "labels": {
+            "app.kubernetes.io/instance": "auth-sim-ambient",
+            "app.kubernetes.io/name": "auth-sim",
+            "pod-template-hash": "d495ff57"
+        },
+        "name": "auth-sim-ambient-d495ff57-x6k54",
+        "namespace": "capacity-cascade-l11-ambient",
+        "ownerReferences": [
+            {
+                "apiVersion": "apps/v1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "ReplicaSet",
+                "name": "auth-sim-ambient-d495ff57",
+                "uid": "5432eaa6-a155-47c6-acd2-492a2c3f360b"
+            }
+        ],
+        "resourceVersion": "926",
+        "uid": "56160662-5827-40ab-8b73-ff89c5ac3476"
+    },
+    "spec": {
+        "automountServiceAccountToken": false,
+        "containers": [
+            {
+                "env": [
+                    {
+                        "name": "LAB_PUBLIC_ADDR",
+                        "value": "0.0.0.0:8080"
+                    },
+                    {
+                        "name": "LAB_ADMIN_ADDR",
+                        "value": "0.0.0.0:9090"
+                    },
+                    {
+                        "name": "LAB_ADMIN_TOKEN",
+                        "valueFrom": {
+                            "secretKeyRef": {
+                                "key": "token",
+                                "name": "auth-sim-admin"
+                            }
+                        }
+                    }
+                ],
+                "image": "capacity-cascade/auth-sim:l11-00d6b81af23f",
+                "imagePullPolicy": "Never",
+                "livenessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                        "path": "/healthz",
+                        "port": "public",
+                        "scheme": "HTTP"
+                    },
+                    "initialDelaySeconds": 2,
+                    "periodSeconds": 5,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "name": "auth-sim",
+                "ports": [
+                    {
+                        "containerPort": 8080,
+                        "name": "public",
+                        "protocol": "TCP"
+                    },
+                    {
+                        "containerPort": 9090,
+                        "name": "admin",
+                        "protocol": "TCP"
+                    }
+                ],
+                "readinessProbe": {
+                    "failureThreshold": 15,
+                    "httpGet": {
+                        "path": "/readyz",
+                        "port": "public",
+                        "scheme": "HTTP"
+                    },
+                    "initialDelaySeconds": 1,
+                    "periodSeconds": 2,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "resources": {
+                    "limits": {
+                        "cpu": "250m",
+                        "memory": "128Mi"
+                    },
+                    "requests": {
+                        "cpu": "25m",
+                        "memory": "32Mi"
+                    }
+                },
+                "securityContext": {
+                    "allowPrivilegeEscalation": false,
+                    "runAsGroup": 65532,
+                    "runAsNonRoot": true,
+                    "runAsUser": 65532
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File"
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "k3d-capacity-cascade-l11-server-0",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "default",
+        "serviceAccountName": "default",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists",
+                "tolerationSeconds": 300
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T15:59:07Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodReadyToStartContainers"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T15:59:06Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T15:59:07Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T15:59:07Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "ContainersReady"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2026-09-18T15:59:06Z",
+                "observedGeneration": 1,
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "allocatedResources": {
+                    "cpu": "25m",
+                    "memory": "32Mi"
+                },
+                "containerID": "containerd://662cb6a83d290d43bcd8f4f8b522ec36e745add7fe5ed1300389943230a1024c",
+                "image": "docker.io/capacity-cascade/auth-sim:l11-00d6b81af23f",
+                "imageID": "sha256:913b7a17989e47b7bc9643f583b8834625b730756cdef8f8d6dd428654d7192c",
+                "lastState": {},
+                "name": "auth-sim",
+                "ready": true,
+                "resources": {
+                    "limits": {
+                        "cpu": "250m",
+                        "memory": "128Mi"
+                    },
+                    "requests": {
+                        "cpu": "25m",
+                        "memory": "32Mi"
+                    }
+                },
+                "restartCount": 0,
+                "started": true,
+                "state": {
+                    "running": {
+                        "startedAt": "2026-09-18T15:59:06Z"
+                    }
+                },
+                "user": {
+                    "linux": {
+                        "gid": 65532,
+                        "supplementalGroups": [
+                            65532
+                        ],
+                        "uid": 65532
+                    }
+                }
+            }
+        ],
+        "hostIP": "172.18.0.2",
+        "hostIPs": [
+            {
+                "ip": "172.18.0.2"
+            }
+        ],
+        "observedGeneration": 1,
+        "phase": "Running",
+        "podIP": "10.42.0.12",
+        "podIPs": [
+            {
+                "ip": "10.42.0.12"
+            }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2026-09-18T15:59:06Z"
+    }
+}

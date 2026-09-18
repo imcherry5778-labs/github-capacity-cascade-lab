@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "scenario": "ambient-ztunnel",
+  "pod_ready_1_of_1": true,
+  "no_sidecar_container": true,
+  "ambient_enrolled": true,
+  "application_metrics_ztunnel_bypass": true,
+  "k6": {
+    "logical_requests": 80,
+    "physical_attempts": 80,
+    "retry_attempts": 0,
+    "logical_failure_rate": 0,
+    "status_200": 80,
+    "status_503": 0,
+    "status_504": 0
+  },
+  "ztunnel": {
+    "tcp_connections_opened_delta": 80,
+    "tcp_connections_closed_delta": 80,
+    "tcp_sent_bytes_delta": 25740,
+    "tcp_received_bytes_delta": 21990
+  },
+  "application": {
+    "token_delta": 80,
+    "admission_rejection_delta": 0
+  },
+  "sample_count": 20,
+  "during_sample_count": 18,
+  "visible_signal_type": "ztunnel-tcp-l4",
+  "proxy_ownership_scope": "node-local (1 ztunnel Pod per node, shared across all ambient workload Pods on that node)"
+}

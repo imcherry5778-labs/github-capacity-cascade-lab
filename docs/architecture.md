@@ -469,7 +469,86 @@ observed spend are all curated. [Roadmap](roadmap.md) holds the authoritative st
 [L09 curated evidence](../results/curated/l09/README.md) holds its own architecture, measured
 comparison, destroy contract and cost observation. L10 (Portfolio/Demo packaging)
 connects L00–L09 evidence into one reviewable package without adding new topology; see
-[portfolio](portfolio.md) and [demo runbook](demo-runbook.md). Gateway, Ambient/CNI,
+[portfolio](portfolio.md) and [demo runbook](demo-runbook.md). Gateway (waypoint), Gateway API,
 Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing and production tuning remain out of scope
-through L10.
+through L10 and through the L11 Optional Extension below.
+
+## L11 Sidecar vs Ambient ztunnel Comparison
+
+L11 is an Optional Extension built after L00–L10 Core. It does not saturate anything or judge
+which architecture is better; it holds the L00–L06 fixed workload constant and changes only the
+destination proxy placement, then records what becomes observable.
+
+```mermaid
+flowchart LR
+    B[local auth-sim image build] --> I[k3d image import]
+    H[Helm istio-base] --> D[Helm istiod profile=ambient]
+    D --> C[Helm istio-cni profile=ambient, platform=k3d]
+    C --> Z[Helm ztunnel]
+    K[non-injected pinned k6 Job] --> S1[ClusterIP Service: sidecar namespace]
+    K --> S2[ClusterIP Service: ambient namespace]
+    S1 --> P1[Pod-local istio-proxy inbound listener/cluster]
+    P1 --> A1[auth-sim :8080]
+    S2 --> Zt[destination node-local ztunnel]
+    Zt --> A2[auth-sim :8080, no Pod-local proxy]
+    R[L11 runner] -->|loopback port-forward, kubectl exec| P1
+    R -->|loopback port-forward :15020 /stats/prometheus, kubectl logs| Zt
+```
+
+This is `LAB_IMPLEMENTATION`. L11 reuses the same auth-sim chart, the same pinned Istio
+`1.30.4`, and the same k3s `v1.35.5-k3s1` server-1/agent-0 baseline as L03–L06. It installs the
+minimal ambient data plane — pinned Helm `istio-base` → `istiod` (`profile=ambient`) →
+`istio-cni` (`profile=ambient`, `global.platform=k3d`) → `ztunnel` — with no waypoint and no
+Gateway API CRD. Preflight against the actual pinned 1.30.4 chart found that its bundled k3d
+platform override sets `cniBinDir: /bin`, which does not match this lab's actual
+`rancher/k3s:v1.35.5-k3s1` node (kubelet looks for CNI plugins in
+`/var/lib/rancher/k3s/data/cni`); `l11/cni-ambient-values.yaml` overrides `cni.cniBinDir`
+explicitly to the value observed on the node rather than trusting the chart's bundled profile or
+copying a newer-version doc example. Installing without the Gateway API CRD left `istiod` Ready
+in all three curated repetitions (`gateway-api-crd-present=false`), matching what the pinned
+chart templates actually declare (RBAC read permissions only, no capability gate).
+
+Two target namespaces share one cluster: `capacity-cascade-l11-sidecar` carries
+`istio-injection=enabled` (automatic sidecar injection, no `kind: Sidecar` capacity CR), and
+`capacity-cascade-l11-ambient` carries `istio.io/dataplane-mode=ambient` (no sidecar). A
+non-injected `capacity-cascade-l11-load` namespace sends the same fixed k6 workload (20 ops/s,
+4 s, 250 ms application latency, no client retry, `noConnectionReuse`) at both targets over their
+own `ClusterIP` Service. Neither scenario carries an artificial capacity constraint — the intended
+comparison variable is destination proxy placement only, not saturation.
+
+Sidecar observation reuses L04's technique: selected inbound HTTP downstream/upstream Envoy
+counters (via `pilot-agent request GET stats`) and an `EnvoyFilter` virtual-host replacement,
+scoped to `SIDECAR_INBOUND` and the workload selector, that removes the selected 1.30.4 build's
+generated inbound retry policy (`l11/retry-disabled-sidecar.yaml`, independent from L04's own
+file). Ambient observation cannot use any of that — ztunnel does not terminate HTTP, so there is
+no HTTP request counter to read. Instead the runner port-forwards to the single node-local
+`ztunnel` Pod's `:15020 /stats/prometheus` endpoint, discovers which `destination_workload=`/
+`destination_service=` label actually appears for this workload in the live exposition (never
+hardcoded), and reads `istio_tcp_connections_opened_total`, `_closed_total`,
+`istio_tcp_sent_bytes_total` and `_received_bytes_total` deltas. It also captures ztunnel's
+default `access: connection complete` log line per finished connection as corroborating evidence
+— across the curated runs those lines showed `direction="inbound"`, the correct
+`dst.workload`/`dst.service`, a `duration` matching the injected 250 ms latency, and no
+`src.workload`/`src.identity` (the k6 load generator is a plain out-of-mesh TCP client; ztunnel
+does not know its identity). Both scenarios proved that a direct Pod metrics scrape does not
+itself move the target proxy's counters (sidecar downstream / ztunnel opened), keeping the
+observation path separate from the workload data path.
+
+A topology-only observation (no HPA) scales each workload Deployment from 1 to 2 replicas and
+counts objects. Sidecar's `istio-proxy` container count doubles 1:1 with workload Pods (Pod-local
+lifecycle coupling); the node-local Istio CNI and ztunnel DaemonSet ready-Pod count stays at the
+node count (1 in this single-node cluster) in both scenarios, unaffected by the workload replica
+count. This matches the official per-Pod-sidecar / per-node-ztunnel architecture and this run's
+actual measured topology; it does not measure blast radius or failure-domain size, which would
+require fault injection that L11 explicitly does not perform.
+
+Across three clean-source repetitions, both scenarios showed `logical_requests ==
+physical_attempts`, zero client/proxy retries, zero HTTP 503s and zero application admission
+rejections. Sidecar's selected downstream/upstream Envoy counter delta matched the logical
+request count exactly; ambient's ztunnel TCP `opened`/`closed` delta also matched it exactly, with
+`opened == closed` (every connection closed cleanly). The sidecar and ztunnel counters are
+different observation units — one is a Pod-local HTTP L7 request count, the other a node-local
+TCP L4 connection/byte count — and are recorded as `NON-EQUIVALENT`, not as a capacity
+comparison. See [L11 curated evidence](../results/curated/l11/README.md) for the full per-run
+tables, the retry-disable proof, the ztunnel metric/log evidence and the stated limitations.
 

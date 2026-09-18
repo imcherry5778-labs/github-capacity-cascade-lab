@@ -1,0 +1,32 @@
+{
+  "source_commit": "00d6b81af23fe6d6bc696f3608c8b9e31d458362",
+  "auth_sim_image": "capacity-cascade/auth-sim:l11-00d6b81af23f",
+  "k3s_image": "rancher/k3s:v1.35.5-k3s1",
+  "istio_version": "1.30.4",
+  "replicas": 1,
+  "application_fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "workload": {
+    "logical_rate": 20,
+    "duration": "4s",
+    "request_timeout": "1s",
+    "logical_id_namespace": "l11-sidecar-ambient-pair",
+    "client_retry": "none",
+    "max_attempts": 1
+  },
+  "observation": {
+    "sidecar_method": "pilot-agent actual stats plus direct application metrics",
+    "ambient_method": "ztunnel /stats/prometheus plus direct application metrics plus ztunnel access log",
+    "sampling_interval": "0.5s"
+  },
+  "only_difference": {
+    "field": "destination proxy placement",
+    "sidecar": "Pod-local istio-proxy (Envoy)",
+    "ambient": "node-local ztunnel (Rust, L3/L4 only)"
+  },
+  "capacity_parity": "NON-EQUIVALENT by design (no artificial constraint on either side; different control points)"
+}

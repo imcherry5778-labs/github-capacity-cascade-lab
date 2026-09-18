@@ -167,7 +167,10 @@
 - **Done:** 같은 조건의 evidence와 적용 한계를 제시한다.
 - **Non-goals:** 어느 architecture가 보편적으로 우월하다는 결론, 현재 L00 scope 확대.
 - **Dependencies:** L04–L10.
-- **Status:** Optional / Planned.
+- **Status:** Optional Extension — Complete. 동일 fixed workload(20 ops/s, 4 s, no artificial
+  capacity constraint)에서 Pod-local sidecar와 node-local ztunnel-only ambient를 waypoint
+  없이 비교했다. 3 clean local repetitions curated; [architecture](architecture.md#l11-sidecar-vs-ambient-ztunnel-comparison)와
+  [curated evidence](../results/curated/l11/README.md) 참고.
 
 ## L12 — External DevOps Delivery Continuity Extension
 

@@ -1,0 +1,6 @@
+{
+  "selected_filter": "destination_workload=\"auth-sim-ambient\"",
+  "metrics_endpoint": "/stats/prometheus",
+  "port": 15020,
+  "selection_method": "grep actual inventory for destination_workload= or destination_service= substring matching this release/namespace; never hardcoded"
+}

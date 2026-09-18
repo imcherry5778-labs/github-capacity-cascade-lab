@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "mode": "pair",
+  "scenario_contracts_passed": true,
+  "pair_comparison_applicable": true,
+  "same_fixed_workload_condition": true,
+  "no_numeric_capacity_equivalence_claimed": true,
+  "cleanup_passed": true
+}

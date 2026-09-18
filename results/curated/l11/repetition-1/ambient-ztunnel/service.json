@@ -1,0 +1,50 @@
+{
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+        "annotations": {
+            "meta.helm.sh/release-name": "auth-sim-ambient",
+            "meta.helm.sh/release-namespace": "capacity-cascade-l11-ambient"
+        },
+        "creationTimestamp": "2026-09-18T15:59:05Z",
+        "labels": {
+            "app.kubernetes.io/instance": "auth-sim-ambient",
+            "app.kubernetes.io/managed-by": "Helm",
+            "app.kubernetes.io/name": "auth-sim",
+            "app.kubernetes.io/version": "l03",
+            "helm.sh/chart": "auth-sim-0.1.0"
+        },
+        "name": "auth-sim-ambient",
+        "namespace": "capacity-cascade-l11-ambient",
+        "resourceVersion": "902",
+        "uid": "694a05a9-5002-4ca8-a20d-c561964d9536"
+    },
+    "spec": {
+        "clusterIP": "10.43.86.153",
+        "clusterIPs": [
+            "10.43.86.153"
+        ],
+        "internalTrafficPolicy": "Cluster",
+        "ipFamilies": [
+            "IPv4"
+        ],
+        "ipFamilyPolicy": "SingleStack",
+        "ports": [
+            {
+                "name": "public",
+                "port": 8080,
+                "protocol": "TCP",
+                "targetPort": "public"
+            }
+        ],
+        "selector": {
+            "app.kubernetes.io/instance": "auth-sim-ambient",
+            "app.kubernetes.io/name": "auth-sim"
+        },
+        "sessionAffinity": "None",
+        "type": "ClusterIP"
+    },
+    "status": {
+        "loadBalancer": {}
+    }
+}
