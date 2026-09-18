@@ -13,8 +13,8 @@ evidence의 누적 index다. 각 learning unit은 source run, 설정, 측정 결
 | L04 — Istio Sidecar and Proxy Metrics | Application/sidecar capacity boundary와 proxy overflow | Local exploratory evidence available | [L04](l04/README.md) |
 | L05 — HPA Blind Spot | Application-only CPU HPA와 selected sidecar capacity metric HPA의 decision boundary | 3 clean local repetitions curated | [L05](l05/README.md) |
 | L06 — Full Capacity Cascade | Client retry-only comparison의 physical load와 sidecar/HAProxy pressure | 3 clean local repetitions curated | [L06](l06/README.md) |
-| L07 — Chaos Mesh Reproduction | Chaos Mesh experiment와 scheduled fault | 3 clean local repetitions curated | [L07](l07/README.md) |
-| L08 — Toxiproxy Reproduction | Toxiproxy network delay/limit baseline | 3 clean local repetitions curated | [L08](l08/README.md) |
+| L07 — RCA Mitigations | M1–M4 retry backoff, load shedding, capacity-aware scaling, gradual ramp trade-off 비교 | 3 clean local repetitions curated | [L07](l07/README.md) |
+| L08 — Chaos Mesh Reproduction | 선언적 NetworkChaos fault window와 신호 상관, abort/cleanup 안전성 | 3 clean local repetitions curated | [L08](l08/README.md) |
 | L09 — Azure AKS Validation | Managed Kubernetes (Azure AKS) 환경에서의 capacity-cascade 보존성 검증 | 3 clean cloud repetitions curated | [L09](l09/README.md) |
 
 Curated evidence도 단일 local run이면 portfolio final evidence나 production benchmark가
