@@ -207,12 +207,12 @@ do_cost() {
         grouping: [
           {
             type: "Dimension",
-            name: "ResourceGroupName"
+            name: "ResourceGroup"
           }
         ],
         filter: {
           dimensions: {
-            name: "ResourceGroupName",
+            name: "ResourceGroup",
             operator: "In",
             values: [$prg, $nrg]
           }
@@ -231,7 +231,8 @@ do_cost() {
     if az rest --method post \
       --uri "https://management.azure.com/subscriptions/${sub_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01" \
       --headers "Content-Type=application/json" "ClientType=github-capacity-cascade-lab" \
-      --body "${query_payload}" > "${raw_response}" 2> "${http_err_file}"; then
+      --body "${query_payload}" \
+      --verbose > "${raw_response}" 2> "${http_err_file}"; then
       api_success=1
       rm -f "${http_err_file}"
       break
@@ -239,8 +240,13 @@ do_cost() {
       api_err="$(cat "${http_err_file}" 2>/dev/null || true)"
       rm -f "${http_err_file}"
       if [[ "${api_err}" =~ 429 ]]; then
-        printf 'Cost Management API throttled (429). Retrying in 16s (attempt %d/%d)...\n' "${attempt}" "${max_attempts}" >&2
-        sleep 16
+        local retry_secs
+        retry_secs="$(printf '%s\n' "${api_err}" | grep -iE 'retry-after' | grep -oE '[0-9]+' | head -n1 || true)"
+        if [[ -z "${retry_secs}" || "${retry_secs}" -le 0 ]]; then
+          retry_secs=16
+        fi
+        printf 'Cost Management API throttled (429). Retrying after %ds (attempt %d/%d)...\n' "${retry_secs}" "${attempt}" "${max_attempts}" >&2
+        sleep "${retry_secs}"
         ((attempt++))
       else
         printf 'Cost Management API query failed: %s\n' "${api_err}" >&2
@@ -259,6 +265,18 @@ do_cost() {
   "queried_at_utc": "${now_utc}"
 }
 EOF
+    return 1
+  fi
+
+  # Fail-closed validation of required response columns
+  local has_pretax has_rg has_curr
+  has_pretax="$(jq -r '.properties.columns | map(.name) | index("PreTaxCost") // empty' "${raw_response}" 2>/dev/null || true)"
+  has_rg="$(jq -r '.properties.columns | map(.name) | index("ResourceGroup") // empty' "${raw_response}" 2>/dev/null || true)"
+  has_curr="$(jq -r '.properties.columns | map(.name) | index("Currency") // empty' "${raw_response}" 2>/dev/null || true)"
+
+  if [[ -z "${has_pretax}" || -z "${has_rg}" || -z "${has_curr}" ]]; then
+    printf 'Error: Cost Management API response missing required columns (PreTaxCost, ResourceGroup, Currency).\n' >&2
+    printf 'Observed columns: %s\n' "$(jq -c '.properties.columns // empty' "${raw_response}" 2>/dev/null || printf 'unknown')" >&2
     return 1
   fi
 
@@ -291,7 +309,7 @@ EOF
       ($p.columns | map(.name)) as $cols |
       ($cols | index("PreTaxCost")) as $cost_idx |
       ($cols | index("Currency")) as $curr_idx |
-      ($cols | index("ResourceGroupName")) as $rg_idx |
+      ($cols | index("ResourceGroup")) as $rg_idx |
       ($p.rows | map(.[$curr_idx]) | unique) as $currencies |
       if ($currencies | length) > 1 then
         {
