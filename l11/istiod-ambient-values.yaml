@@ -1,0 +1,17 @@
+# L11은 waypoint 없는 ztunnel-only ambient control plane만 필요하다.
+# `profile: ambient`는 pinned 1.30.4 istiod chart의 files/profile-ambient.yaml을 병합해
+# PILOT_ENABLE_AMBIENT=true, ISTIO_META_ENABLE_HBONE=true, distroless variant를 켠다.
+profile: ambient
+
+pilot:
+  autoscaleEnabled: false
+  replicaCount: 1
+
+meshConfig:
+  defaultConfig:
+    # L11 sidecar scenario도 L04와 같은 bounded HTTP request-pressure stats subset을 쓴다.
+    # Ambient ztunnel-only workload는 이 sidecar proxyStatsMatcher의 영향을 받지 않는다.
+    proxyStatsMatcher:
+      inclusionRegexps:
+        - ".*downstream_rq_(total|active|5xx)$"
+        - ".*upstream_rq_(total|active|pending_active|active_overflow|pending_overflow|retry|timeout)$"

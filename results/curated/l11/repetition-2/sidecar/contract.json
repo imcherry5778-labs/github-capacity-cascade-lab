@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "scenario": "sidecar",
+  "pod_ready_2_of_2": true,
+  "automatic_injection": true,
+  "application_metrics_proxy_bypass": true,
+  "k6": {
+    "logical_requests": 80,
+    "physical_attempts": 80,
+    "retry_attempts": 0,
+    "logical_failure_rate": 0,
+    "status_200": 80,
+    "status_503": 0,
+    "status_504": 0
+  },
+  "proxy": {
+    "downstream_delta": 80,
+    "downstream_5xx_delta": 0,
+    "upstream_delta": 80,
+    "retry_delta": 0,
+    "timeout_delta": 0,
+    "inbound_route_retry_budget_max": 0
+  },
+  "application": {
+    "token_delta": 80,
+    "admission_rejection_delta": 0
+  },
+  "sample_count": 17,
+  "during_sample_count": 15,
+  "visible_signal_type": "sidecar-http-l7",
+  "proxy_ownership_scope": "Pod-local (1 istio-proxy container per workload Pod)"
+}

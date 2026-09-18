@@ -1,0 +1,56 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L11",
+  "phase": "L11",
+  "scenario": "sidecar",
+  "started_at_utc": "2026-09-18T16:03:50Z",
+  "git_commit": "00d6b81af23fe6d6bc696f3608c8b9e31d458362",
+  "git_dirty": false,
+  "go_version": "not-used",
+  "k6_version": "grafana/k6:2.2.0",
+  "os": "linux-container",
+  "architecture": "amd64",
+  "tool_versions": {
+    "go": "not-used",
+    "k6": "grafana/k6:2.2.0",
+    "docker": "not-used",
+    "docker_compose": "not-used",
+    "haproxy_server": "not-used",
+    "toxiproxy_server": "not-used",
+    "envoy_server": "not-used"
+  },
+  "image_tags": {
+    "auth_sim": "capacity-cascade/auth-sim:l11-00d6b81af23f",
+    "k6": "grafana/k6:2.2.0",
+    "dataplane_proxy": "registry.istio.io/release/proxyv2:1.30.4-distroless"
+  },
+  "base_url": "http://auth-sim-sidecar.capacity-cascade-l11-sidecar.svc.cluster.local:8080",
+  "request_path": "non-injected k6 Job -> ClusterIP Service :8080 -> target Pod istio-proxy -> auth-sim",
+  "logical_id_namespace": "l11-sidecar-ambient-pair",
+  "logical_rate": 20,
+  "duration": "4s",
+  "workload_stages": null,
+  "request_timeout": "1s",
+  "fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "application_fault": {
+    "latency_ms": 250,
+    "error_rate": 0,
+    "max_in_flight": 0,
+    "seed": 17082026
+  },
+  "proxy_capacity": {
+    "observation_unit": "sidecar-http-l7",
+    "mechanism": "Pod-local istio-proxy inbound HTTP downstream/upstream counters",
+    "note": "No artificial capacity constraint in L11; this is a visibility/ownership baseline, not a saturation target."
+  },
+  "network_toxic": null,
+  "envoy_proxy": null,
+  "retry_policy": "none",
+  "retry_source": "unspecified",
+  "max_attempts": 1
+}

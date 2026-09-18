@@ -469,8 +469,9 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L09까지는 completed
 foundation이며, L09는 AKS 기술 검증·destroy·Cost Management observed spend까지 모두
-curated evidence로 확정됐다. L10은 이 evidence를 portfolio package로 정리했다.
-모든 단계의 학습 질문과 완료 기준은
+curated evidence로 확정됐다. L10은 이 evidence를 portfolio package로 정리했다. L11(Optional
+Extension)은 Core 완료 후 같은 fixed workload에서 Pod-local sidecar와 node-local ambient
+ztunnel의 capacity visibility/ownership 차이를 비교했다. 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
 ## Experiments
@@ -514,6 +515,20 @@ L10은 새 실험을 추가하지 않고 기존 evidence를 SRE narrative와 재
 설명한다. 면접관을 위한 10분 case study는 [docs/portfolio.md](docs/portfolio.md), 발표/녹화
 흐름과 demo failure fallback 경로는 [docs/demo-runbook.md](docs/demo-runbook.md)에 있다.
 
+## Sidecar vs Ambient (Optional Extension)
+
+L11은 Core(L00–L10) 완료 후의 Optional Extension이다. 같은 fixed workload(20 ops/s, 4s,
+250ms latency, no retry, no artificial capacity constraint)에서 Pod-local Istio sidecar와
+node-local Ambient ztunnel-only proxy placement만 바꿔 비교했다. Waypoint, HPA, Gateway
+API CRD는 사용하지 않았다. 세 clean local repetition 모두 두 scenario에서
+`logical_requests == physical_attempts`, retry 0, 503 0, admission rejection 0을 보였고,
+sidecar는 Pod-local HTTP L7 counter를, ambient는 node-local ztunnel TCP L4 counter를
+노출했다 — 두 counter는 NON-EQUIVALENT다. 어느 architecture가 우월하다는 결론은 없다.
+Preflight에서 pinned 1.30.4 `istio/cni` chart의 k3d platform override가 실제 사용 중인
+`rancher/k3s:v1.35.5-k3s1` node의 CNI bin 경로와 달라 명시적으로 override해야 했다. 상세
+결과와 한계는 [L11 curated evidence](results/curated/l11/README.md)와
+[architecture](docs/architecture.md#l11-sidecar-vs-ambient-ztunnel-comparison)에 있다.
+
 ## Repository status
 
 - Completed foundation: L00 — Minimal Workload and k6
@@ -527,5 +542,6 @@ L10은 새 실험을 추가하지 않고 기존 evidence를 SRE narrative와 재
 - Completed foundation: L08 — Chaos Mesh Reproduction (implementation verified; 3 clean-source repetitions with abort safety and cleanup)
 - Completed foundation: L09 — Azure AKS Validation (implementation verified; 3 clean cloud repetitions, destroy/zero-residual and Cost Management observation curated)
 - Completed foundation: L10 — Portfolio Evidence and Demo (implementation verified; portfolio evidence, demo runbook and clean-checkout reproducibility confirmed)
+- Optional Extension: L11 — Sidecar vs Ambient Architecture Comparison (implementation verified; 3 clean local repetitions; not part of the L00–L10 core)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

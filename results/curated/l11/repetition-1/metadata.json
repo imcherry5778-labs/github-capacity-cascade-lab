@@ -1,0 +1,95 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L11",
+  "classification": "local exploratory evidence; Optional Extension",
+  "scenario_mode": "pair",
+  "started_at_utc": "2026-09-18T15:57:00Z",
+  "git_commit": "00d6b81af23fe6d6bc696f3608c8b9e31d458362",
+  "git_dirty": false,
+  "tool_versions": {
+    "git": "2.55.0",
+    "go": "go1.26.7",
+    "local_k6": "v2.2.0",
+    "docker": "29.7.2",
+    "k3d": "v5.9.0",
+    "k3d_default_k3s": "v1.35.5-k3s1",
+    "kubectl_client": "v1.36.1",
+    "kubernetes_server": "v1.35.5+k3s1",
+    "helm": "v4.2.3"
+  },
+  "cluster": {
+    "name": "capacity-cascade-l11",
+    "servers": 1,
+    "agents": 0,
+    "k3s_image": "rancher/k3s:v1.35.5-k3s1",
+    "api_exposure": "dynamic loopback port",
+    "disabled_packaged_components": [
+      "traefik",
+      "servicelb",
+      "local-storage"
+    ]
+  },
+  "istio": {
+    "version": "1.30.4",
+    "install": "pinned Helm istio-base, istiod (profile=ambient), istio-cni (profile=ambient, global.platform=k3d), ztunnel; no waypoint, no Gateway API CRD",
+    "chart_sha256": {
+      "base": "d3532767f9f2042ad1a1f7ca060c2b734762c8d1bcd57fa0244482359146a5f1",
+      "istiod": "66ad8344e2ef16745aa425dc6609570b42536ecdf1ab5ca04a90abf1bc577344",
+      "cni": "056627788a56a3c6ca7c3e5ea85c77de448baa80495acc6798a2bb29f4765b3c",
+      "ztunnel": "9a87cc23d5ccc5346e7a0ded03a1d9e8f36d578376c715a5a46daec4de2a6ed0"
+    },
+    "istiod_image": "registry.istio.io/release/pilot:1.30.4-distroless",
+    "istiod_image_id": "registry.istio.io/release/pilot@sha256:fe77533a5524e41e2381a262a89e965d590a547a2d867a6e1dfa68b2bd438dd3",
+    "sidecar_proxy_image": "registry.istio.io/release/proxyv2:1.30.4-distroless",
+    "sidecar_proxy_image_id": "registry.istio.io/release/proxyv2@sha256:4af93c1c6502d7fdf2b77d9a4533abeedef6d32389d7e1c4b083279402d16613",
+    "envoy_version": "ce177c56fe75661f16b654e2f164d4ab02058222/1.38.4-dev/Clean/RELEASE/BoringSSL",
+    "istio_cni_image": "registry.istio.io/release/install-cni:1.30.4-distroless",
+    "ztunnel_image": "registry.istio.io/release/ztunnel:1.30.4",
+    "gateway_api_crd_present": "false",
+    "sidecar_injection": "namespace label istio-injection=enabled",
+    "ambient_enrollment": "namespace label istio.io/dataplane-mode=ambient",
+    "stats_matcher": "l11/istiod-ambient-values.yaml"
+  },
+  "images": {
+    "auth_sim": {
+      "name": "capacity-cascade/auth-sim:l11-00d6b81af23f",
+      "id": "sha256:93cef711df53a5d77a47c339f7885a9f95293c77d10dcb780f8ac8d963bd23bc",
+      "pull_policy": "Never"
+    },
+    "k6": {
+      "name": "grafana/k6:2.2.0",
+      "id": "sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+      "digest": "grafana/k6@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6",
+      "pull_policy": "IfNotPresent with immutable digest"
+    }
+  },
+  "comparison": {
+    "replicas": 1,
+    "application_fault": {
+      "latency_ms": 250,
+      "error_rate": 0,
+      "max_in_flight": 0,
+      "seed": 17082026
+    },
+    "logical_rate": 20,
+    "duration": "4s",
+    "request_timeout": "1s",
+    "logical_id_namespace": "l11-sidecar-ambient-pair",
+    "client_retry": "none",
+    "client_max_attempts": 1,
+    "sidecar_proxy_retry": "none (EnvoyFilter fallback removes generated inbound retry)",
+    "ambient_proxy_retry": "not applicable (ztunnel does not perform HTTP-level retry)",
+    "load_path_sidecar": "non-injected k6 Job -> ClusterIP Service:8080 -> istio-proxy -> auth-sim:8080",
+    "load_path_ambient": "non-injected k6 Job -> ClusterIP Service:8080 -> destination node ztunnel -> auth-sim:8080",
+    "sampling_interval": "0.5s",
+    "only_intended_comparison_variable": "destination proxy placement (Pod-local sidecar vs node-local ztunnel); no artificial capacity constraint, no waypoint",
+    "capacity_parity": "NON-EQUIVALENT by design; see comparison notes in summary.md"
+  },
+  "access": {
+    "admin": "runner -> loopback Pod port-forward -> auth-sim:9090",
+    "application_metrics": "runner -> verified direct Pod port-forward -> auth-sim:8080",
+    "sidecar_observation": "kubectl exec istio-proxy -> pilot-agent request",
+    "ambient_observation": "runner -> loopback ztunnel Pod port-forward :15020 /stats/prometheus, plus kubectl logs for access-log evidence",
+    "original_context_state": "unset"
+  }
+}
