@@ -115,18 +115,25 @@ label을 grep으로 찾아 filter로 선택했다(label 이름을 미리 하드�
 실제 `access: connection complete` 로그가 있다. 예:
 
 ```text
-2026-09-18T15:48:52.245611Z info access connection complete src.addr=10.42.0.14:46862
+2026-09-18T15:59:16.134554Z info access connection complete src.addr=10.42.0.14:58952
+src.workload="l11-k6-ambient-ztunnel-5zf5k" src.namespace="capacity-cascade-l11-load"
 dst.addr=10.42.0.12:8080 dst.service="auth-sim-ambient.capacity-cascade-l11-ambient.svc.cluster.local"
-dst.workload="auth-sim-ambient-79bccfd99-58nwg" dst.namespace="capacity-cascade-l11-ambient"
-direction="inbound" bytes_sent=320 bytes_recv=274 duration="251ms"
+dst.workload="auth-sim-ambient-d495ff57-x6k54" dst.namespace="capacity-cascade-l11-ambient"
+direction="inbound" bytes_sent=322 bytes_recv=275 duration="250ms"
 ```
 
 `duration`이 주입한 application latency(`250 ms`)와 거의 일치하고, `direction="inbound"`,
 `dst.workload`가 target auth-sim Pod와 일치한다 — request가 실제로 destination ztunnel을
-통과했다는 직접 증거다. 이 로그 줄에는 `src.workload`/`src.identity`가 없다 — k6 load
-generator가 out-of-mesh(plain TCP) source이기 때문이며, ztunnel이 source 쪽 ambient
-identity를 모른다는 것을 보여준다(source 자체가 Ambient HBONE identity를 가졌다는 뜻이
-아니다).
+통과했다는 직접 증거다. `src.identity`(SPIFFE/mTLS peer identity)는 세 repetition의 access
+log 어디에도 없다 — k6 load generator가 out-of-mesh(plain TCP) source이므로 ztunnel이
+암호학적 mesh identity를 가진 적이 없다는 뜻이다. 그러나 `src.workload`/`src.namespace`는
+실제로 대부분의 line에 존재한다(예: repetition-1은 81개 inbound line 중 65개, 나머지 16개는
+없음). 이는 ztunnel이 source Pod IP를 Kubernetes API 기반 workload cache에서 조회해
+attribution하며, 이 조회는 mesh 등록 여부와 무관하다는 것을 보여준다 — 초기 몇 개 connection은
+k6 Job Pod가 막 생성돼 이 cache가 아직 채워지기 전이라 `src.workload`가 비어 있고, 이후
+connection부터는 채워졌다. 즉 "out-of-mesh source의 identity를 ztunnel이 전혀 모른다"는
+결론은 과장이며, 정확히는 "cryptographic mesh identity(`src.identity`)는 없지만 plain
+Kubernetes Pod attribution(`src.workload`)은 (cache가 채워진 뒤에는) 가능하다"는 것이다.
 
 ## Topology-only scaling observation (HPA 없음)
 

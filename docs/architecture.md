@@ -528,9 +528,13 @@ hardcoded), and reads `istio_tcp_connections_opened_total`, `_closed_total`,
 `istio_tcp_sent_bytes_total` and `_received_bytes_total` deltas. It also captures ztunnel's
 default `access: connection complete` log line per finished connection as corroborating evidence
 — across the curated runs those lines showed `direction="inbound"`, the correct
-`dst.workload`/`dst.service`, a `duration` matching the injected 250 ms latency, and no
-`src.workload`/`src.identity` (the k6 load generator is a plain out-of-mesh TCP client; ztunnel
-does not know its identity). Both scenarios proved that a direct Pod metrics scrape does not
+`dst.workload`/`dst.service`, and a `duration` matching the injected 250 ms latency. `src.identity`
+(the SPIFFE/mTLS peer identity) never appears in any repetition, consistent with the k6 load
+generator being a plain out-of-mesh TCP client with no cryptographic mesh identity. `src.workload`/
+`src.namespace`, however, do appear on most connections (repetition-1: 65 of 81 inbound lines) —
+ztunnel resolves the source Pod's identity from its own Kubernetes Pod-IP cache regardless of mesh
+enrollment, and only the earliest few connections in a run (before that cache catches up to the
+freshly created k6 Job Pod) lack it. Both scenarios proved that a direct Pod metrics scrape does not
 itself move the target proxy's counters (sidecar downstream / ztunnel opened), keeping the
 observation path separate from the workload data path.
 
