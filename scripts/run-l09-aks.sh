@@ -586,7 +586,9 @@ wait_for_idle() {
 
 probe_service_datapath() {
   local scenario=$1 namespace=$2 scenario_dir=$3 probe phase=""
-  probe="l09-datapath-${scenario#cascade-}"
+  local run_suffix="${namespace#capacity-cascade-l09-}"
+  probe="l09-probe-${run_suffix}"
+  kubectl delete pod "${probe}" --namespace "${LOAD_NAMESPACE}" --ignore-not-found=true --wait=true --timeout=60s >/dev/null 2>&1 || true
   kubectl run "${probe}" --namespace "${LOAD_NAMESPACE}" \
     --image="${K6_IMAGE_VALUE}" --image-pull-policy=IfNotPresent --restart=Never \
     --labels="capacity-cascade-lab/owner=l09,capacity-cascade-lab/scenario=${scenario}" \
@@ -607,9 +609,14 @@ probe_service_datapath() {
 
 create_k6_job() {
   local scenario=$1 namespace=$2 scenario_dir=$3 proxy_image=$4 configmap job haproxy_fqdn load_pod result_ready=false
-  configmap="l09-k6-${scenario#cascade-}"
-  job="l09-k6-${scenario#cascade-}"
+  local run_suffix="${namespace#capacity-cascade-l09-}"
+  configmap="l09-k6-${run_suffix}"
+  job="l09-k6-${run_suffix}"
   haproxy_fqdn="l09-haproxy.${namespace}.svc.cluster.local"
+
+  kubectl delete job "${job}" --namespace "${LOAD_NAMESPACE}" --ignore-not-found=true --wait=true --timeout=60s >/dev/null 2>&1 || true
+  kubectl delete configmap "${configmap}" --namespace "${LOAD_NAMESPACE}" --ignore-not-found=true >/dev/null 2>&1 || true
+
   kubectl create configmap "${configmap}" --namespace "${LOAD_NAMESPACE}" \
     --from-file=l09.js="${PROJECT_ROOT}/load/k6/l09.js" \
     --from-file=config.js="${PROJECT_ROOT}/load/k6/lib/config.js" \
@@ -617,6 +624,7 @@ create_k6_job() {
     --from-file=summary.js="${PROJECT_ROOT}/load/k6/lib/summary.js" \
     --dry-run=client -o yaml >"${scenario_dir}/k6-configmap.yaml"
   kubectl apply -f "${scenario_dir}/k6-configmap.yaml" >"${scenario_dir}/k6-configmap-apply.log"
+
   cat >"${scenario_dir}/k6-job.yaml" <<EOF
 apiVersion: batch/v1
 kind: Job
@@ -716,7 +724,10 @@ EOF
   kubectl wait --for=condition=complete "job/${job}" --namespace "${LOAD_NAMESPACE}" --timeout=60s >"${scenario_dir}/k6-job-wait.log"
   kubectl get job "${job}" --namespace "${LOAD_NAMESPACE}" -o json >"${scenario_dir}/k6-job-state.json"
   [[ "$(tr -d '[:space:]' <"${scenario_dir}/k6.exit")" == 0 ]] || { printf 'k6 exited non-zero\n' >&2; return 1; }
+  kubectl delete job "${job}" --namespace "${LOAD_NAMESPACE}" --ignore-not-found=true --wait=true --timeout=60s >"${scenario_dir}/k6-job-delete.log" 2>&1 || true
+  kubectl delete configmap "${configmap}" --namespace "${LOAD_NAMESPACE}" --ignore-not-found=true >"${scenario_dir}/k6-configmap-delete.log" 2>&1 || true
 }
+
 
 write_scenario_contract() {
   local scenario=$1 scenario_dir=$2 samples="${scenario_dir}/samples.jsonl" summary="${scenario_dir}/k6-summary.json" logical physical retries failures p95 dropped status200 status503 status504 desired_max current_max pod_max overflow downstream upstream app_tokens app_admission haproxy_sessions haproxy_5xx phases final_proxy_active final_haproxy_sessions final_haproxy_queue passed=false
@@ -895,9 +906,10 @@ do_smoke() {
     result_dir="${saved_result_dir}"
   fi
 
-  PHASE_STABLE_DURATION=2s PHASE_PEAK_DURATION=3s PHASE_RECOVERY_DURATION=2s \
+  PHASE_STABLE_DURATION=5s PHASE_PEAK_DURATION=10s PHASE_RECOVERY_DURATION=5s \
     run_aks_scenario cascade-no-retry "capacity-cascade-l09-smoke" "${acr_server}"
   printf '=== Smoke run completed successfully on AKS ===\n'
+
 }
 
 do_verify() {
