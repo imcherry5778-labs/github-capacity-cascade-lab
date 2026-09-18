@@ -141,7 +141,7 @@
 - **Done:** Provision/destroy, 비용, 결과, drift와 한계가 증명되고 잔여 resource가 없다.
 - **Non-goals:** GitHub Central US infrastructure 매핑, production architecture, SKU 사전 확정.
 - **Dependencies:** L07–L08; explicit cloud authorization and budget.
-- **Status:** Planned.
+- **Status:** Current — Phase A read-only preflight, static checks, and local harness implementation complete; explicit user cloud authorization required before Phase B.
 
 ## L10 — Portfolio Evidence and Demo
 
