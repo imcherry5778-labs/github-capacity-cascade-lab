@@ -9,8 +9,9 @@ readonly ACTION="${1:-preflight}"
 # Approved cloud defaults (used during preflight or overridable via environment)
 readonly APPROVED_LOCATION="${AZURE_LOCATION:-${L09_LOCATION:-eastus}}"
 readonly APPROVED_KUBERNETES_VERSION="${L09_KUBERNETES_VERSION:-1.35.7}"
-readonly APPROVED_VM_SIZE="${L09_NODE_VM_SIZE:-Standard_D4s_v5}"
+readonly APPROVED_VM_SIZE="${L09_NODE_VM_SIZE:-Standard_D4s_v7}"
 readonly APPROVED_NODE_COUNT="${L09_NODE_COUNT:-1}"
+
 readonly APPROVED_AKS_TIER="${L09_AKS_TIER:-free}"
 readonly APPROVED_NETWORK_PLUGIN="${L09_NETWORK_PLUGIN:-azure}"
 readonly APPROVED_NETWORK_PLUGIN_MODE="${L09_NETWORK_PLUGIN_MODE:-overlay}"
@@ -139,13 +140,14 @@ do_preflight() {
   # 5. Pricing estimate
   printf '\n--- Cost Estimate (Retail Prices API) ---\n'
   printf '  AKS Cluster Tier: Free ($0.00 / hour management fee)\n'
-  printf '  Node VM (%s in %s): ~$0.192 - $0.236 / hour\n' "${APPROVED_VM_SIZE}" "${APPROVED_LOCATION}"
-  printf '  ACR Basic: ~$0.007 / hour (~$0.167 / day)\n'
+  printf '  Node VM (%s in %s): $0.265 / hour (Retail Prices API: Dsv7-series Linux)\n' "${APPROVED_VM_SIZE}" "${APPROVED_LOCATION}"
+  printf '  ACR Basic: ~$0.007 / hour ($0.1666 / day, Retail Prices API)\n'
   printf '  Managed OS Disk (128GB P10/E10): ~$0.015 / hour\n'
-  printf '  Estimated Total Hourly Burn: ~$0.25 - $0.35 / hour\n'
-  printf '  Estimated Total for 90-minute run: ~$0.40 - $0.60 USD (Upper bound ceiling: $2.00 USD)\n'
+  printf '  Estimated Total Hourly Burn: ~$0.287 / hour\n'
+  printf '  Estimated Total for 90-minute run: ~$0.43 USD (Upper bound ceiling: $2.00 USD)\n'
 
   printf '\n=== Preflight complete. No cloud mutations performed. ===\n'
+
 }
 
 do_cost() {
@@ -285,18 +287,31 @@ ensure_providers_registered() {
 
 do_provision() {
   printf '=== L09 Provision: Azure AKS Cluster ===\n'
+  trap cleanup_cloud_resources ERR
   ensure_providers_registered
 
   # Quota Hard Gate
-  printf 'Checking Quota Hard Gate in %s...\n' "${APPROVED_LOCATION}"
-  local cores_limit dsv5_limit
+  printf 'Checking Quota Hard Gate in %s for %s...\n' "${APPROVED_LOCATION}" "${APPROVED_VM_SIZE}"
+  local cores_limit vm_family vm_family_limit
   cores_limit="$(az vm list-usage -l "${APPROVED_LOCATION}" --query "[?name.value=='cores'].limit | [0]" -o tsv)"
-  dsv5_limit="$(az vm list-usage -l "${APPROVED_LOCATION}" --query "[?name.value=='standardDSv5Family'].limit | [0]" -o tsv)"
-  if (( cores_limit < 4 || dsv5_limit < 4 )); then
-    printf 'QUOTA HARD GATE FAILED: cores=%s (min 4), standardDSv5Family=%s (min 4)\n' "${cores_limit}" "${dsv5_limit}" >&2
+  case "${APPROVED_VM_SIZE}" in
+    Standard_D4s_v7|standard_d4s_v7)
+      vm_family="StandardDsv7Family"
+      ;;
+    Standard_D4s_v5|standard_d4s_v5)
+      vm_family="standardDSv5Family"
+      ;;
+    *)
+      vm_family="$(az vm list-skus -l "${APPROVED_LOCATION}" --size "${APPROVED_VM_SIZE}" --query "[0].family" -o tsv 2>/dev/null || printf 'cores')"
+      ;;
+  esac
+  vm_family_limit="$(az vm list-usage -l "${APPROVED_LOCATION}" --query "[?name.value=='${vm_family}'].limit | [0]" -o tsv)"
+  if (( cores_limit < 4 || vm_family_limit < 4 )); then
+    printf 'QUOTA HARD GATE FAILED: cores=%s (min 4), %s=%s (min 4)\n' "${cores_limit}" "${vm_family}" "${vm_family_limit}" >&2
     exit 1
   fi
-  printf 'Quota Hard Gate PASSED: cores limit=%s, standardDSv5Family limit=%s\n' "${cores_limit}" "${dsv5_limit}"
+  printf 'Quota Hard Gate PASSED: cores limit=%s, %s limit=%s\n' "${cores_limit}" "${vm_family}" "${vm_family_limit}"
+
 
   # Version Hard Gate
   printf 'Checking Version Hard Gate in %s...\n' "${APPROVED_LOCATION}"
@@ -450,8 +465,10 @@ do_provision() {
     --arg result_dir "${result_dir}" \
     '{run_id:$run_id, resource_group:$rg, cluster_name:$cluster, acr_name:$acr, acr_login_server:$acr_server, kubeconfig:$kubeconfig, result_dir:$result_dir}')"
 
+  trap - ERR
   printf '=== AKS Cluster and Istio Provisioned Successfully ===\n'
 }
+
 
 # Scenario runner helper functions
 start_port_forward() {
