@@ -29,7 +29,7 @@ L09_ISTIO_VERSION ?= $(L04_ISTIO_VERSION)
 L09_K6_IMAGE ?= $(L06_K6_IMAGE)
 L09_HAPROXY_IMAGE ?= $(L06_HAPROXY_IMAGE)
 L09_KUBERNETES_VERSION ?= 1.35.7
-L09_NODE_VM_SIZE ?= Standard_D4s_v5
+L09_NODE_VM_SIZE ?= Standard_D4s_v7
 
 .PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean l09-doctor l09-check l09-preflight l09-provision l09-smoke l09-verify l09-destroy l09-cost
 

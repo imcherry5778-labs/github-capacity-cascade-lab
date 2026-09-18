@@ -154,20 +154,165 @@ do_preflight() {
 do_cost() {
   printf '=== L09 Cost Query ===\n'
   check_required_tools
-  local sub_fp
+  local sub_fp sub_id
   sub_fp="$(get_subscription_fingerprint)"
-  printf 'Querying Azure Cost Management for subscription fingerprint: %s\n' "${sub_fp}"
+  sub_id="$(az account show --query id -o tsv 2>/dev/null || true)"
+  if [[ -z "${sub_id}" ]]; then
+    printf 'Error: Unable to retrieve Azure subscription ID. Please ensure "az login" is active.\n' >&2
+    exit 1
+  fi
 
-  cat <<EOF
+  local destroy_contract="${PROJECT_ROOT}/results/curated/l09/destroy-contract.json"
+  local primary_rg node_rg
+  if [[ -f "${destroy_contract}" ]]; then
+    primary_rg="$(jq -r '.destroyed_resource_group // empty' "${destroy_contract}")"
+    node_rg="$(jq -r '.destroyed_node_resource_group // empty' "${destroy_contract}")"
+  fi
+  primary_rg="${primary_rg:-rg-capacity-cascade-l09-09180624}"
+  node_rg="${node_rg:-rg-capacity-cascade-l09-09180624-nodes}"
+
+  local query_from="2026-09-18T00:00:00Z"
+  local query_to="2026-09-18T23:59:59Z"
+  local now_utc
+  now_utc="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+  printf 'Querying Azure Cost Management API (read-only) for subscription fingerprint: %s\n' "${sub_fp}"
+  printf 'Target resource groups: %s, %s\n' "${primary_rg}" "${node_rg}"
+
+  local raw_dir="${PROJECT_ROOT}/results/l09/cost"
+  mkdir -p "${raw_dir}"
+  local raw_response="${raw_dir}/raw-cost-query.json"
+
+  local query_payload
+  query_payload="$(jq -n \
+    --arg from "${query_from}" \
+    --arg to "${query_to}" \
+    --arg prg "${primary_rg}" \
+    --arg nrg "${node_rg}" \
+    '{
+      type: "Usage",
+      timeframe: "Custom",
+      timePeriod: {
+        from: $from,
+        to: $to
+      },
+      dataset: {
+        granularity: "None",
+        aggregation: {
+          totalCost: {
+            name: "PreTaxCost",
+            function: "Sum"
+          }
+        },
+        grouping: [
+          {
+            type: "Dimension",
+            name: "ResourceGroupName"
+          }
+        ],
+        filter: {
+          dimensions: {
+            name: "ResourceGroupName",
+            operator: "In",
+            values: [$prg, $nrg]
+          }
+        }
+      }
+    }')"
+
+  local max_attempts=3
+  local attempt=1
+  local api_success=0
+  local api_err=""
+
+  while (( attempt <= max_attempts )); do
+    local http_err_file
+    http_err_file="$(mktemp)"
+    if az rest --method post \
+      --uri "https://management.azure.com/subscriptions/${sub_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01" \
+      --headers "Content-Type=application/json" "ClientType=github-capacity-cascade-lab" \
+      --body "${query_payload}" > "${raw_response}" 2> "${http_err_file}"; then
+      api_success=1
+      rm -f "${http_err_file}"
+      break
+    else
+      api_err="$(cat "${http_err_file}" 2>/dev/null || true)"
+      rm -f "${http_err_file}"
+      if [[ "${api_err}" =~ 429 ]]; then
+        printf 'Cost Management API throttled (429). Retrying in 16s (attempt %d/%d)...\n' "${attempt}" "${max_attempts}" >&2
+        sleep 16
+        ((attempt++))
+      else
+        printf 'Cost Management API query failed: %s\n' "${api_err}" >&2
+        break
+      fi
+    fi
+  done
+
+  if [[ "${api_success}" -ne 1 ]]; then
+    printf 'Failed to query Cost Management API after retries.\n' >&2
+    cat <<EOF
 {
   "available": false,
-  "reason": "Azure Cost Management data not yet available (typical pipeline latency 24-48h)",
-  "pre_run_estimate_usd": {
-    "hourly_burn": 0.28,
+  "error": "Cost Management API query failed",
+  "subscription_fingerprint": "${sub_fp}",
+  "queried_at_utc": "${now_utc}"
+}
+EOF
+    return 1
+  fi
+
+  local row_count
+  row_count="$(jq -r '.properties.rows | length' "${raw_response}" 2>/dev/null || printf '0')"
+
+  if [[ "${row_count}" -eq 0 ]]; then
+    cat <<EOF
+{
+  "available": false,
+  "reason": "Azure Cost Management query returned 0 rows for L09 resource groups (typical billing pipeline latency 24-48h)",
+  "subscription_fingerprint": "${sub_fp}",
+  "query_scope": "subscription-scoped, exact L09 RG filter",
+  "resource_groups": [
+    "${primary_rg}",
+    "${node_rg}"
+  ],
+  "queried_at_utc": "${now_utc}",
+  "retail_price_estimate_usd": {
+    "hourly_burn": 0.287,
+    "estimated_spend": 0.21,
     "upper_bound_budget": 2.00
   }
 }
 EOF
+  else
+    local summary_json
+    summary_json="$(jq -r --arg sub_fp "${sub_fp}" --arg now "${now_utc}" '
+      .properties as $p |
+      ($p.columns | map(.name)) as $cols |
+      ($cols | index("PreTaxCost")) as $cost_idx |
+      ($cols | index("Currency")) as $curr_idx |
+      ($cols | index("ResourceGroupName")) as $rg_idx |
+      ($p.rows | map(.[$curr_idx]) | unique) as $currencies |
+      if ($currencies | length) > 1 then
+        {
+          available: false,
+          error: "Multiple currencies found in response rows",
+          currencies: $currencies
+        }
+      else
+        {
+          available: true,
+          query_scope: "subscription-scoped, exact L09 RG filter",
+          resource_groups: ($p.rows | map(.[$rg_idx]) | unique),
+          observed_cost: ($p.rows | map(.[$cost_idx]) | add),
+          currency: ($currencies[0] // "USD"),
+          queried_at_utc: $now,
+          subscription_fingerprint: $sub_fp
+        }
+      end
+    ' "${raw_response}")"
+    printf '%s\n' "${summary_json}"
+  fi
 }
 
 case "${ACTION}" in
