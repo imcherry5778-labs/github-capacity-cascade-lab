@@ -4,7 +4,7 @@ SHELL := /bin/bash
 BINARY ?= bin/auth-sim
 IMAGE ?= capacity-cascade/auth-sim:dev
 SCENARIO ?=
-K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05 l06 l07 l08
+K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05 l06 l07 l08 l09
 L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
 L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 L02_ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
@@ -25,8 +25,13 @@ L08_K6_IMAGE ?= $(L04_K6_IMAGE)
 L08_HAPROXY_IMAGE ?= $(L01_HAPROXY_IMAGE)
 L08_ISTIO_VERSION ?= $(L04_ISTIO_VERSION)
 L08_CHAOS_MESH_VERSION ?= 2.8.4
+L09_ISTIO_VERSION ?= $(L04_ISTIO_VERSION)
+L09_K6_IMAGE ?= $(L06_K6_IMAGE)
+L09_HAPROXY_IMAGE ?= $(L06_HAPROXY_IMAGE)
+L09_KUBERNETES_VERSION ?= 1.35.7
+L09_NODE_VM_SIZE ?= Standard_D4s_v5
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean l09-doctor l09-check l09-preflight l09-provision l09-smoke l09-verify l09-destroy l09-cost
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -447,6 +452,47 @@ l08-verify: l08-check ## Fresh cluster에서 frozen condition L08 experiment를 
 
 l08-clean: ## exact L08 cluster/process만 정리하고 evidence는 보존합니다.
 	@scripts/run-l08-chaos.sh clean
+
+l09-doctor: ## L09 AKS lifecycle에 필요한 local tool과 Azure CLI를 확인합니다.
+	scripts/run-l09-aks.sh doctor
+
+l09-check: l09-doctor ## L09 manifests, k6 및 runner를 정적으로 검사합니다.
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d /tmp/capacity-cascade-l09-check.XXXXXX)"; \
+	trap 'find "$$tmp" -depth -delete' EXIT; \
+	for image in "$(L09_K6_IMAGE)" "$(L09_HAPROXY_IMAGE)"; do \
+		case "$$image" in *:latest|latest) printf 'latest image is forbidden: %s\n' "$$image" >&2; exit 1;; *:*) ;; *) printf 'explicit image tag required: %s\n' "$$image" >&2; exit 1;; esac; \
+	done; \
+	ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_stream(File.read(f)) }' l09/*.yaml; \
+	if grep -ERq ':latest|[[:space:]]latest[[:space:]]' l09 load/k6/l09.js; then printf 'latest is forbidden in L09\n' >&2; exit 1; fi; \
+	grep -q 'http2MaxRequests: 1' l09/sidecar.yaml; \
+	grep -q 'ContainerResource' l09/hpa-blind.yaml; \
+	grep -q 'retries 0' l09/haproxy.yaml; \
+	grep -q 'no option redispatch' l09/haproxy.yaml; \
+	if grep -q 'retry_policy:' l09/retry-disabled.yaml; then printf 'Envoy retry must be omitted\n' >&2; exit 1; fi; \
+	sed -e 's/TARGET_NAMESPACE/capacity-cascade-l09-target/g' -e 's/AUTH_SIM_SERVICE_FQDN/auth-sim.capacity-cascade-l09-target.svc.cluster.local/g' -e 's#HAPROXY_IMAGE#$(L09_HAPROXY_IMAGE)#g' l09/haproxy.yaml >"$$tmp/haproxy.yaml"; \
+	ruby -e 'require "yaml"; d=YAML.load_stream(File.read(ARGV[0])).find { |x| x["kind"]=="ConfigMap" }; File.write(ARGV[1], d.dig("data","haproxy.cfg"))' "$$tmp/haproxy.yaml" "$$tmp/haproxy.cfg"; \
+	docker run --rm --entrypoint haproxy --volume "$$tmp/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro" "$(L09_HAPROXY_IMAGE)" -c -f /usr/local/etc/haproxy/haproxy.cfg; \
+	k6 inspect load/k6/l09.js >/dev/null; \
+	bash -n scripts/run-l09-aks.sh
+
+l09-preflight: l09-check ## Azure 계정, 프로바이더, 리전, SKU, 예상 비용을 read-only로 검사합니다.
+	scripts/run-l09-aks.sh preflight
+
+l09-provision: l09-check ## [승인 필요] 승인된 최소 Azure 리소스(RG, ACR, AKS)를 생성합니다.
+	scripts/run-l09-aks.sh provision
+
+l09-smoke: l09-check ## [승인 필요] AKS 클러스터에서 짧은 smoke 경로를 검증합니다.
+	scripts/run-l09-aks.sh smoke
+
+l09-verify: l09-check ## [승인 필요] AKS 클러스터에서 3회 paired validation을 실행합니다.
+	scripts/run-l09-aks.sh verify
+
+l09-destroy: ## [승인 필요] L09가 소유한 Azure 리소스(RG, ACR, AKS)를 완전히 삭제합니다.
+	scripts/run-l09-aks.sh destroy
+
+l09-cost: ## Azure Cost Management를 read-only로 조회합니다.
+	scripts/run-l09-aks.sh cost
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"
