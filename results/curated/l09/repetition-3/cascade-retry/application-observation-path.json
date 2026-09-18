@@ -1,0 +1,4 @@
+{
+  "direct_pod_metrics_scrape_proxy_downstream_delta": 0,
+  "bypasses_target_inbound_proxy": true
+}

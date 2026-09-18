@@ -1,0 +1,99 @@
+{
+  "repetition": 3,
+  "no_retry": {
+    "passed": true,
+    "scenario": "cascade-no-retry",
+    "k6": {
+      "logical_requests": 219,
+      "physical_attempts": 219,
+      "retry_attempts": 0,
+      "logical_failure_rate": 0.6575342465753424,
+      "logical_p95_ms": 1003,
+      "dropped_iterations": 0,
+      "status": {
+        "200": 75,
+        "503": 144,
+        "504": 0
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1,
+      "workload_pod_count_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 144,
+      "downstream_delta": 219,
+      "upstream_delta": 75
+    },
+    "haproxy": {
+      "backend_sessions_delta": 219,
+      "backend_responses_5xx_delta": 144
+    },
+    "application": {
+      "token_delta": 75,
+      "admission_rejection_delta": 0
+    },
+    "sampling": {
+      "phases": [
+        "after",
+        "baseline",
+        "peak",
+        "recovery",
+        "stable"
+      ],
+      "recovery_idle": true
+    }
+  },
+  "retry": {
+    "passed": true,
+    "scenario": "cascade-retry",
+    "k6": {
+      "logical_requests": 220,
+      "physical_attempts": 513,
+      "retry_attempts": 293,
+      "logical_failure_rate": 0.6409090909090909,
+      "logical_p95_ms": 1003,
+      "dropped_iterations": 0,
+      "status": {
+        "200": 79,
+        "503": 141,
+        "504": 0
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1,
+      "workload_pod_count_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 434,
+      "downstream_delta": 513,
+      "upstream_delta": 79
+    },
+    "haproxy": {
+      "backend_sessions_delta": 513,
+      "backend_responses_5xx_delta": 434
+    },
+    "application": {
+      "token_delta": 79,
+      "admission_rejection_delta": 0
+    },
+    "sampling": {
+      "phases": [
+        "after",
+        "baseline",
+        "peak",
+        "recovery",
+        "stable"
+      ],
+      "recovery_idle": true
+    }
+  },
+  "observation": {
+    "physical_attempts_delta": 294,
+    "sidecar_overflow_delta": 290,
+    "haproxy_sessions_delta": 294,
+    "haproxy_5xx_delta": 290
+  }
+}

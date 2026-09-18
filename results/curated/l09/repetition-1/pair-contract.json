@@ -1,0 +1,99 @@
+{
+  "repetition": 1,
+  "no_retry": {
+    "passed": true,
+    "scenario": "cascade-no-retry",
+    "k6": {
+      "logical_requests": 219,
+      "physical_attempts": 219,
+      "retry_attempts": 0,
+      "logical_failure_rate": 0.6529680365296804,
+      "logical_p95_ms": 1003,
+      "dropped_iterations": 0,
+      "status": {
+        "200": 76,
+        "503": 143,
+        "504": 0
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1,
+      "workload_pod_count_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 143,
+      "downstream_delta": 219,
+      "upstream_delta": 76
+    },
+    "haproxy": {
+      "backend_sessions_delta": 219,
+      "backend_responses_5xx_delta": 143
+    },
+    "application": {
+      "token_delta": 76,
+      "admission_rejection_delta": 0
+    },
+    "sampling": {
+      "phases": [
+        "after",
+        "baseline",
+        "peak",
+        "recovery",
+        "stable"
+      ],
+      "recovery_idle": true
+    }
+  },
+  "retry": {
+    "passed": true,
+    "scenario": "cascade-retry",
+    "k6": {
+      "logical_requests": 219,
+      "physical_attempts": 508,
+      "retry_attempts": 289,
+      "logical_failure_rate": 0.639269406392694,
+      "logical_p95_ms": 1003,
+      "dropped_iterations": 0,
+      "status": {
+        "200": 79,
+        "503": 140,
+        "504": 0
+      }
+    },
+    "hpa": {
+      "desired_replicas_max": 1,
+      "current_replicas_max": 1,
+      "workload_pod_count_max": 1
+    },
+    "sidecar": {
+      "active_overflow_delta": 429,
+      "downstream_delta": 508,
+      "upstream_delta": 79
+    },
+    "haproxy": {
+      "backend_sessions_delta": 508,
+      "backend_responses_5xx_delta": 429
+    },
+    "application": {
+      "token_delta": 79,
+      "admission_rejection_delta": 0
+    },
+    "sampling": {
+      "phases": [
+        "after",
+        "baseline",
+        "peak",
+        "recovery",
+        "stable"
+      ],
+      "recovery_idle": true
+    }
+  },
+  "observation": {
+    "physical_attempts_delta": 289,
+    "sidecar_overflow_delta": 286,
+    "haproxy_sessions_delta": 289,
+    "haproxy_5xx_delta": 286
+  }
+}
