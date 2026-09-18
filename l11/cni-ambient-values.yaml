@@ -1,0 +1,19 @@
+# k3d 기본 Flannel CNI는 CNI config/binary 경로가 non-standard이므로, pinned 1.30.4
+# istio/cni chart가 파일로 내장한 k3d platform override
+# (files/profile-platform-k3d.yaml: cniConfDir=/var/lib/rancher/k3s/agent/etc/cni/net.d,
+# cniBinDir=/bin)가 필요하다. 이 override는 `global.platform=k3d`로만 활성화된다.
+profile: ambient
+
+global:
+  platform: k3d
+
+# MEASURED (L11 preflight): 위 k3d platform profile의 `cniBinDir: /bin`은 이 lab이 pinned으로
+# 유지하는 `rancher/k3s:v1.35.5-k3s1` node에서 실제로 틀렸다. kubelet은 실제로
+# `/var/lib/rancher/k3s/data/cni`에서 CNI plugin binary를 찾고(`FailedCreatePodSandBox: failed to
+# find plugin "istio-cni" in path [/var/lib/rancher/k3s/data/cni]`), 그 디렉터리 안의 다른 플러그인
+# (flannel/bridge/portmap 등)은 실제로 `/bin/cni`로의 symlink였다. `/bin`은 chart가 만든 platform
+# profile이 오래된 k3d/K3s 버전을 가정한 값으로 보이며, 최신 pinned k3s 버전과 맞지 않는다. 이
+# user-supplied override(-f/--set)가 profile 병합보다 우선하므로 실제 관찰한 경로로 명시적으로
+# 덮어쓴다. 최신 공식 문서 예시를 그대로 따르지 않고 이 pinned 조합에서 실제로 동작하는 값을 쓴다.
+cni:
+  cniBinDir: /var/lib/rancher/k3s/data/cni

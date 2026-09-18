@@ -4,7 +4,7 @@ SHELL := /bin/bash
 BINARY ?= bin/auth-sim
 IMAGE ?= capacity-cascade/auth-sim:dev
 SCENARIO ?=
-K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05 l06 l07 l08 l09
+K6_SCRIPTS := smoke baseline latency bad-retry good-retry probe reset l01 l02 l04 l05 l06 l07 l08 l09 l11
 L01_HAPROXY_IMAGE ?= haproxy:3.2.23-alpine
 L01_TOXIPROXY_IMAGE ?= ghcr.io/shopify/toxiproxy:2.12.0
 L02_ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
@@ -30,8 +30,11 @@ L09_K6_IMAGE ?= $(L06_K6_IMAGE)
 L09_HAPROXY_IMAGE ?= $(L06_HAPROXY_IMAGE)
 L09_KUBERNETES_VERSION ?= 1.35.7
 L09_NODE_VM_SIZE ?= Standard_D4s_v7
+L11_ISTIO_VERSION ?= $(L04_ISTIO_VERSION)
+L11_K6_IMAGE ?= $(L04_K6_IMAGE)
+L11_K3S_IMAGE ?= $(L03_K3S_IMAGE)
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean l09-doctor l09-check l09-preflight l09-provision l09-smoke l09-verify l09-destroy l09-cost l10-check
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean l09-doctor l09-check l09-preflight l09-provision l09-smoke l09-verify l09-destroy l09-cost l10-check l11-doctor l11-check l11-smoke l11-scenario l11-verify l11-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -497,6 +500,80 @@ l09-cost: ## Azure Cost Management를 read-only로 조회합니다.
 l10-check: ## Portfolio package(문서, curated evidence 참조, source integrity)를 정적으로 검사합니다.
 	bash -n scripts/verify-l10-portfolio.sh
 	scripts/verify-l10-portfolio.sh
+
+l11-doctor: ## L11(Optional)에 필요한 ambient/sidecar lifecycle 및 JSON/stat 처리 도구를 확인합니다.
+	@missing=0; \
+	for tool in git go k6 docker kubectl k3d helm curl awk sed grep jq tee wc tr mktemp sha256sum diff cmp sort find ps make; do \
+		if ! command -v "$$tool" >/dev/null 2>&1; then printf '%-16s MISSING\n' "$$tool"; missing=1; else printf '%-16s OK\n' "$$tool"; fi; \
+	done; \
+	if ! docker info >/dev/null 2>&1; then printf '%-16s UNAVAILABLE\n' 'docker daemon'; missing=1; else printf '%-16s OK\n' 'docker daemon'; fi; \
+	if command -v k3d >/dev/null 2>&1; then k3d version; fi; \
+	if command -v kubectl >/dev/null 2>&1; then kubectl version --client; fi; \
+	if command -v helm >/dev/null 2>&1; then helm version --short; fi; \
+	if command -v k6 >/dev/null 2>&1; then k6 version | head -n 1; fi; \
+	exit $$missing
+
+l11-check: l11-doctor ## L11(Optional) pinned ambient/sidecar charts, manifests, k6, scope와 runner를 정적으로 검사합니다.
+	@set -euo pipefail; \
+	tmp="$$(mktemp -d "$${TMPDIR:-/tmp}/capacity-cascade-l11-check.XXXXXX")"; \
+	cleanup_l11_check() { find "$$tmp" -depth -delete; }; \
+	trap cleanup_l11_check EXIT; \
+	export HELM_CONFIG_HOME="$$tmp/helm-config" HELM_CACHE_HOME="$$tmp/helm-cache" HELM_DATA_HOME="$$tmp/helm-data"; \
+	mkdir -p "$$HELM_CONFIG_HOME" "$$HELM_CACHE_HOME" "$$HELM_DATA_HOME"; \
+	helm lint "$(L03_CHART)" --set-string image.repository="$(L03_RENDER_REPOSITORY)" --set-string image.tag="l11-check"; \
+	helm template auth-sim-sidecar "$(L03_CHART)" --namespace capacity-cascade-l11-sidecar \
+		--set-string image.repository="$(L03_RENDER_REPOSITORY)" --set-string image.tag="l11-check" >"$$tmp/auth-sim.yaml"; \
+	helm repo add istio https://istio-release.storage.googleapis.com/charts >/dev/null; \
+	helm repo update istio >/dev/null; \
+	helm show chart istio/base --version "$(L11_ISTIO_VERSION)" >"$$tmp/base-chart.yaml"; \
+	helm show chart istio/istiod --version "$(L11_ISTIO_VERSION)" >"$$tmp/istiod-chart.yaml"; \
+	helm show chart istio/cni --version "$(L11_ISTIO_VERSION)" >"$$tmp/cni-chart.yaml"; \
+	helm show chart istio/ztunnel --version "$(L11_ISTIO_VERSION)" >"$$tmp/ztunnel-chart.yaml"; \
+	helm template istio-base istio/base --version "$(L11_ISTIO_VERSION)" --namespace istio-system \
+		--set defaultRevision=default --kube-version 1.35.5 >"$$tmp/base.yaml"; \
+	helm template istiod istio/istiod --version "$(L11_ISTIO_VERSION)" --namespace istio-system \
+		--values l11/istiod-ambient-values.yaml --kube-version 1.35.5 >"$$tmp/istiod.yaml"; \
+	helm template istio-cni istio/cni --version "$(L11_ISTIO_VERSION)" --namespace istio-system \
+		--values l11/cni-ambient-values.yaml --kube-version 1.35.5 >"$$tmp/cni.yaml"; \
+	helm template ztunnel istio/ztunnel --version "$(L11_ISTIO_VERSION)" --namespace istio-system \
+		--kube-version 1.35.5 >"$$tmp/ztunnel.yaml"; \
+	grep -q "version: $(L11_ISTIO_VERSION)" "$$tmp/base-chart.yaml"; \
+	grep -q "version: $(L11_ISTIO_VERSION)" "$$tmp/istiod-chart.yaml"; \
+	grep -q "version: $(L11_ISTIO_VERSION)" "$$tmp/cni-chart.yaml"; \
+	grep -q "version: $(L11_ISTIO_VERSION)" "$$tmp/ztunnel-chart.yaml"; \
+	if grep -ERq ':latest|[[:space:]]latest[[:space:]]' l11 load/k6/l11.js; then printf 'latest is forbidden in L11\n' >&2; exit 1; fi; \
+	if grep -Eq 'image:[[:space:]].*:latest' "$$tmp/base.yaml" "$$tmp/istiod.yaml" "$$tmp/cni.yaml" "$$tmp/ztunnel.yaml" "$$tmp/auth-sim.yaml"; then printf 'rendered latest image is forbidden\n' >&2; exit 1; fi; \
+	if grep -Eq '^kind: (Gateway|GatewayClass|HorizontalPodAutoscaler)$$' "$$tmp/base.yaml" "$$tmp/istiod.yaml" "$$tmp/cni.yaml" "$$tmp/ztunnel.yaml" l11/*.yaml; then printf 'out-of-scope resource rendered\n' >&2; exit 1; fi; \
+	if grep -ERq 'istio.io/use-waypoint|gatewayClassName:[[:space:]]*istio-waypoint|kind: WasmPlugin' l11 "$$tmp/istiod.yaml" "$$tmp/cni.yaml" "$$tmp/ztunnel.yaml"; then printf 'L11 must not configure a waypoint\n' >&2; exit 1; fi; \
+	if grep -ERiq 'haproxy|toxiproxy|chaosmesh|networkchaos|azure|\.azure\.com|aks|kind: HorizontalPodAutoscaler|helm.*prometheus|helm.*grafana|helm.*kiali|kind: ServiceMonitor|kind: PrometheusRule' l11 load/k6/l11.js scripts/run-l11-sidecar-ambient.sh; then printf 'L11 scope must not include HPA/HAProxy/Chaos Mesh/cloud/monitoring-stack components\n' >&2; exit 1; fi; \
+	if grep -Eq 'http2MaxRequests' l11/*.yaml; then printf 'L11 must not create an artificial Sidecar http2MaxRequests capacity target\n' >&2; exit 1; fi; \
+	if grep -ERq '^kind: Sidecar$$' l11/*.yaml; then printf 'L11 must not create a Sidecar capacity CR (see AGENTS/roadmap scope)\n' >&2; exit 1; fi; \
+	if grep -ERq 'replace-with|LAB_ADMIN_TOKEN_PLACEHOLDER|local-[0-9]+-[0-9]+|/home/[A-Za-z0-9_.-]+|/Users/[A-Za-z0-9_.-]+' l11 scripts/run-l11-sidecar-ambient.sh "$$tmp/auth-sim.yaml"; then printf 'secret literal or private path found\n' >&2; exit 1; fi; \
+	grep -q 'context: SIDECAR_INBOUND' l11/retry-disabled-sidecar.yaml; \
+	grep -q 'applyTo: VIRTUAL_HOST' l11/retry-disabled-sidecar.yaml; \
+	grep -q 'operation: REPLACE' l11/retry-disabled-sidecar.yaml; \
+	if grep -q 'retry_policy:' l11/retry-disabled-sidecar.yaml; then printf 'retry-disable replacement must omit retry_policy\n' >&2; exit 1; fi; \
+	grep -q 'profile: ambient' l11/istiod-ambient-values.yaml; \
+	grep -q 'profile: ambient' l11/cni-ambient-values.yaml; \
+	grep -q 'global.platform=k3d\|platform: k3d' l11/cni-ambient-values.yaml; \
+	k6 inspect load/k6/l11.js >/dev/null; \
+	bash -n scripts/run-l11-sidecar-ambient.sh
+
+l11-smoke: l11-check ## Sidecar scenario 단독 lifecycle(injection/datapath/no-retry)과 cleanup을 확인합니다.
+	LOGICAL_RATE=1 DURATION=1s ISTIO_VERSION="$(L11_ISTIO_VERSION)" K6_IMAGE="$(L11_K6_IMAGE)" K3S_IMAGE="$(L11_K3S_IMAGE)" scripts/run-l11-sidecar-ambient.sh smoke
+
+l11-scenario: l11-check ## SCENARIO(sidecar|ambient-ztunnel)의 fresh 단일 lifecycle과 evidence를 생성합니다.
+	@if [[ "$(SCENARIO)" != "sidecar" && "$(SCENARIO)" != "ambient-ztunnel" ]]; then \
+		printf 'SCENARIO is required (sidecar|ambient-ztunnel)\n' >&2; \
+		exit 2; \
+	fi
+	ISTIO_VERSION="$(L11_ISTIO_VERSION)" K6_IMAGE="$(L11_K6_IMAGE)" K3S_IMAGE="$(L11_K3S_IMAGE)" scripts/run-l11-sidecar-ambient.sh "$(SCENARIO)"
+
+l11-verify: l11-check ## Sidecar/ambient-ztunnel pair를 한 cluster lifecycle에서 한 번 실행합니다.
+	ISTIO_VERSION="$(L11_ISTIO_VERSION)" K6_IMAGE="$(L11_K6_IMAGE)" K3S_IMAGE="$(L11_K3S_IMAGE)" scripts/run-l11-sidecar-ambient.sh pair
+
+l11-clean: ## exact L11 cluster/process만 정리하고 evidence는 보존합니다.
+	@ISTIO_VERSION="$(L11_ISTIO_VERSION)" K6_IMAGE="$(L11_K6_IMAGE)" K3S_IMAGE="$(L11_K3S_IMAGE)" scripts/run-l11-sidecar-ambient.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"
