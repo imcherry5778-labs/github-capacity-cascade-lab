@@ -238,22 +238,30 @@ mkdir -p "${helm_config_home}" "${helm_cache_home}" "${helm_data_home}" "${chart
 export KUBECONFIG="${kubeconfig_file}" HELM_CONFIG_HOME="${helm_config_home}" HELM_CACHE_HOME="${helm_cache_home}" HELM_DATA_HOME="${helm_data_home}"
 
 cleanup_cloud_resources() {
-  printf '\n=== Cleanup Cloud Resources: %s ===\n' "${RESOURCE_GROUP}"
-  if az group exists --name "${RESOURCE_GROUP}" 2>/dev/null | grep -q true; then
-    printf 'Deleting Azure resource group: %s...\n' "${RESOURCE_GROUP}"
-    az group delete --name "${RESOURCE_GROUP}" --yes --no-wait 2>/dev/null || true
-    # Bounded wait for deletion
-    printf 'Waiting for resource group deletion confirmation...\n'
-    for _ in {1..90}; do
-      if ! az group exists --name "${RESOURCE_GROUP}" 2>/dev/null | grep -q true; then
-        printf 'Resource group %s successfully deleted.\n' "${RESOURCE_GROUP}"
-        break
-      fi
-      sleep 5
-    done
-  fi
+  local state
+  state="$(load_state)"
+  local rg node_rg
+  rg="$(printf '%s' "${state}" | jq -r '.resource_group // empty')"
+  [[ -n "${rg}" ]] || rg="${RESOURCE_GROUP}"
+  node_rg="${rg}-nodes"
+  printf '\n=== Cleanup Cloud Resources: %s and %s ===\n' "${rg}" "${node_rg}"
+  for g in "${rg}" "${node_rg}"; do
+    if az group exists --name "${g}" 2>/dev/null | grep -q true; then
+      printf 'Deleting Azure resource group: %s...\n' "${g}"
+      az group delete --name "${g}" --yes --no-wait 2>/dev/null || true
+    fi
+  done
+  printf 'Waiting for resource group deletion confirmation...\n'
+  for _ in {1..90}; do
+    if ! az group exists --name "${rg}" 2>/dev/null | grep -q true && ! az group exists --name "${node_rg}" 2>/dev/null | grep -q true; then
+      printf 'Resource groups successfully deleted.\n'
+      break
+    fi
+    sleep 5
+  done
   rm -rf "${runtime_root}" "${STATE_FILE}"
 }
+
 
 ensure_providers_registered() {
   printf '%s\n' '--- Ensuring Resource Providers are Registered ---'
@@ -477,10 +485,14 @@ haproxy_value() {
 
 phase_seconds() { local value=$1; printf '%s' "${value%s}"; }
 phase_for_now() {
-  local now elapsed stable peak
-  now="$(date +%s)"; elapsed=$((now - workload_start_epoch)); stable="$(phase_seconds "${STABLE_DURATION_VALUE}")"; peak="$(phase_seconds "${PEAK_DURATION_VALUE}")"
-  if (( elapsed < 0 )); then printf baseline; elif (( elapsed < stable )); then printf stable; elif (( elapsed < stable + peak )); then printf peak; elif (( elapsed < stable + peak + $(phase_seconds "${RECOVERY_DURATION_VALUE}") )); then printf recovery; else printf after; fi
+  local now elapsed stable peak recovery
+  now="$(date +%s)"; elapsed=$((now - workload_start_epoch))
+  stable="$(phase_seconds "${current_stable_dur:-${STABLE_DURATION_VALUE}}")"
+  peak="$(phase_seconds "${current_peak_dur:-${PEAK_DURATION_VALUE}}")"
+  recovery="$(phase_seconds "${current_recovery_dur:-${RECOVERY_DURATION_VALUE}}")"
+  if (( elapsed < 0 )); then printf baseline; elif (( elapsed < stable )); then printf stable; elif (( elapsed < stable + peak )); then printf peak; elif (( elapsed < stable + peak + recovery )); then printf recovery; else printf after; fi
 }
+
 
 discover_proxy_config() {
   local namespace=$1 pod=$2 scenario_dir=$3 config_dump cluster_names cluster_name hcm_prefixes hcm_prefix threshold retry_count retry_budget
@@ -624,9 +636,10 @@ spec:
             - {name: STABLE_RATE, value: "${STABLE_RATE_VALUE}"}
             - {name: PEAK_RATE, value: "${PEAK_RATE_VALUE}"}
             - {name: RECOVERY_RATE, value: "${RECOVERY_RATE_VALUE}"}
-            - {name: PHASE_STABLE_DURATION, value: "${STABLE_DURATION_VALUE}"}
-            - {name: PHASE_PEAK_DURATION, value: "${PEAK_DURATION_VALUE}"}
-            - {name: PHASE_RECOVERY_DURATION, value: "${RECOVERY_DURATION_VALUE}"}
+            - {name: PHASE_STABLE_DURATION, value: "${current_stable_dur:-${STABLE_DURATION_VALUE}}"}
+            - {name: PHASE_PEAK_DURATION, value: "${current_peak_dur:-${PEAK_DURATION_VALUE}}"}
+            - {name: PHASE_RECOVERY_DURATION, value: "${current_recovery_dur:-${RECOVERY_DURATION_VALUE}}"}
+
             - {name: REQUEST_TIMEOUT, value: "${REQUEST_TIMEOUT_VALUE}"}
             - {name: APPLICATION_LATENCY_MS, value: "${APPLICATION_LATENCY_MS_VALUE}"}
             - {name: FAULT_SEED, value: "${FAULT_SEED_VALUE}"}
@@ -717,8 +730,12 @@ run_aks_scenario() {
   local scenario_dir="${result_dir}/${rep_prefix}/${scenario}"
   mkdir -p "${scenario_dir}"
   local service_fqdn="auth-sim.${namespace}.svc.cluster.local"
+  local current_stable_dur="${PHASE_STABLE_DURATION:-${STABLE_DURATION_VALUE}}"
+  local current_peak_dur="${PHASE_PEAK_DURATION:-${PEAK_DURATION_VALUE}}"
+  local current_recovery_dur="${PHASE_RECOVERY_DURATION:-${RECOVERY_DURATION_VALUE}}"
 
   local admin_token="l09-${RANDOM}-${RANDOM}-$$-$(date +%s)"
+
   local admin_pf_pid="" metrics_pf_pid="" haproxy_pf_pid="" observer_pid="" observer_stop_file=""
 
   stop_backgrounds() {
@@ -830,6 +847,15 @@ do_smoke() {
   local acr_server
   acr_server="$(printf '%s' "${state}" | jq -r '.acr_login_server // empty')"
   [[ -n "${acr_server}" ]] || { printf 'No provisioned cluster state found. Run provision first.\n' >&2; exit 1; }
+  local saved_kubeconfig saved_result_dir
+  saved_kubeconfig="$(printf '%s' "${state}" | jq -r '.kubeconfig // empty')"
+  if [[ -n "${saved_kubeconfig}" && -f "${saved_kubeconfig}" && -s "${saved_kubeconfig}" ]]; then
+    export KUBECONFIG="${saved_kubeconfig}"
+  fi
+  saved_result_dir="$(printf '%s' "${state}" | jq -r '.result_dir // empty')"
+  if [[ -n "${saved_result_dir}" && -d "${saved_result_dir}" ]]; then
+    result_dir="${saved_result_dir}"
+  fi
 
   PHASE_STABLE_DURATION=2s PHASE_PEAK_DURATION=3s PHASE_RECOVERY_DURATION=2s \
     run_aks_scenario cascade-no-retry "capacity-cascade-l09-smoke" "${acr_server}"
@@ -843,6 +869,16 @@ do_verify() {
   local acr_server
   acr_server="$(printf '%s' "${state}" | jq -r '.acr_login_server // empty')"
   [[ -n "${acr_server}" ]] || { printf 'No provisioned cluster state found. Run provision first.\n' >&2; exit 1; }
+  local saved_kubeconfig saved_result_dir
+  saved_kubeconfig="$(printf '%s' "${state}" | jq -r '.kubeconfig // empty')"
+  if [[ -n "${saved_kubeconfig}" && -f "${saved_kubeconfig}" && -s "${saved_kubeconfig}" ]]; then
+    export KUBECONFIG="${saved_kubeconfig}"
+  fi
+  saved_result_dir="$(printf '%s' "${state}" | jq -r '.result_dir // empty')"
+  if [[ -n "${saved_result_dir}" && -d "${saved_result_dir}" ]]; then
+    result_dir="${saved_result_dir}"
+  fi
+
 
   for rep in 1 2 3; do
     printf '\n=======================================================\n'
@@ -899,16 +935,23 @@ do_destroy() {
   local rg
   rg="$(printf '%s' "${state}" | jq -r '.resource_group // empty')"
   [[ -n "${rg}" ]] || rg="${RESOURCE_GROUP}"
+  local node_rg="${rg}-nodes"
+  local saved_result_dir
+  saved_result_dir="$(printf '%s' "${state}" | jq -r '.result_dir // empty')"
+  if [[ -n "${saved_result_dir}" && -d "${saved_result_dir}" ]]; then
+    result_dir="${saved_result_dir}"
+  fi
 
   local destroy_start_utc
   destroy_start_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  printf 'Initiating deletion of exact L09 Resource Group: %s...\n' "${rg}"
+  printf 'Initiating deletion of exact L09 Resource Group: %s and node RG: %s...\n' "${rg}" "${node_rg}"
   az group delete --name "${rg}" --yes --no-wait 2>/dev/null || true
+  az group delete --name "${node_rg}" --yes --no-wait 2>/dev/null || true
 
   # Wait for deletion
   local confirmed=false
-  for _ in {1..90}; do
-    if ! az group exists --name "${rg}" 2>/dev/null | grep -q true; then
+  for _ in {1..120}; do
+    if ! az group exists --name "${rg}" 2>/dev/null | grep -q true && ! az group exists --name "${node_rg}" 2>/dev/null | grep -q true; then
       confirmed=true
       break
     fi
@@ -922,9 +965,11 @@ do_destroy() {
     --arg start "${destroy_start_utc}" \
     --arg end "${destroy_end_utc}" \
     --arg rg "${rg}" \
+    --arg node_rg "${node_rg}" \
     --argjson confirmed "${confirmed}" \
     '{
       destroyed_resource_group: $rg,
+      destroyed_node_resource_group: $node_rg,
       started_at_utc: $start,
       completed_at_utc: $end,
       confirmed_absent: $confirmed,
@@ -934,6 +979,7 @@ do_destroy() {
   rm -rf "${runtime_root}" "${STATE_FILE}"
   printf '=== Cloud Destroy Complete. No L09 resources remain. ===\n'
 }
+
 
 case "${ACTION}" in
   provision)
