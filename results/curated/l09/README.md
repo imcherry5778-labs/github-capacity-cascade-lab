@@ -89,18 +89,18 @@ non-injected k6 Job (in aks cluster, load namespace)
 
 ## 5. Cloud Environment & Operational Drift
 
-메커니즘 동작과 별개로, 관리형 클라우드 환경(Azure AKS) 도입에 따라 발생한 인프라 및 운영상의 구체적 차이는 다음과 같다 (`FACT`):
+메커니즘 동작과 별개로, 관리형 클라우드 환경(Azure AKS) 도입에 따라 발생한 인프라 및 운영상의 구체적 차이는 다음과 같으며, 이는 GitHub incident FACT가 아닌 L09의 환경 선택(`LAB_IMPLEMENTATION`) 및 실측 관찰값(`measured L09 observation`)이다:
 
 - **인프라 및 네트워크 데이터패스:**
-  Local의 Docker bridge/localhost 루프백 대신 Azure CNI Overlay 및 VNet 서브넷 라우팅, 클라우드 호스트 VM 커널(`6.8.0-1067-azure`) 상에서 구동됨 (`FACT`).
+  Local의 Docker bridge/localhost 루프백 대신 Azure CNI Overlay 및 VNet 서브넷 라우팅(`LAB_IMPLEMENTATION`), 클라우드 호스트 VM 커널(`6.8.0-1067-azure`) 및 containerd 런타임 상에서 구동됨 (`measured L09 observation`).
 - **프로비저닝 수명주기 및 대기 시간:**
-  Local k3d는 10~20초 내 클러스터 준비가 완료되나, AKS는 ARM API 및 클라우드 제어평면 오케스트레이션으로 인해 클러스터 생성에 약 5분, 전체 프로비저닝에 약 8분이 소요됨 (`FACT`).
+  Local k3d는 10~20초 내 클러스터 준비가 완료되나, AKS는 ARM API 및 클라우드 제어평면 오케스트레이션으로 인해 클러스터 생성에 약 5분, 전체 프로비저닝에 약 8분이 소요됨 (`measured L09 observation`).
 - **이미지 배포 방식:**
-  Local 이미지 직접 로드(`imagePullPolicy: Never`) 대신 Azure Container Registry(Basic SKU)로의 TLS 기반 원격 push/pull(`imagePullPolicy: IfNotPresent`) 경로를 사용함 (`FACT`).
+  Local 이미지 직접 로드(`imagePullPolicy: Never`) 대신 Azure Container Registry(Basic SKU)로의 TLS 기반 원격 push/pull(`imagePullPolicy: IfNotPresent`) 경로를 사용함 (`LAB_IMPLEMENTATION / measured L09 observation`).
 - **컴퓨트 Quota 및 SKU 제약:**
-  Local 워크스테이션 사양과 달리, Azure 구독의 `eastus` 리전 vCPU 코어 제한(4 vCPU) 및 `Standard_D4s_v5` SKU 제한으로 인해 `Standard_D4s_v7` 단일 노드로 한정하여 실행해야 했음 (`FACT`).
+  Local 워크스테이션 사양과 달리, Azure 구독의 `eastus` 리전 vCPU 코어 제한(4 vCPU) 및 `Standard_D4s_v5` SKU 제한으로 인해 `Standard_D4s_v7` 단일 노드로 한정하여 실행해야 했음 (`measured L09 observation`).
 - **구독 리소스 공급자 상태 영구 변경 (Persistent Subscription Drift):**
-  최초 `NotRegistered` 상태였던 `Microsoft.ContainerService` 및 `Microsoft.ContainerRegistry`가 L09 사전 준비 과정에서 `Registered`로 변경되어 구독 설정의 영구 drift가 발생함 (`FACT`).
+  최초 `NotRegistered` 상태였던 `Microsoft.ContainerService` 및 `Microsoft.ContainerRegistry`가 L09 사전 준비 과정에서 `Registered`로 변경되어 구독 설정의 영구 drift가 발생함 (`subscription-level persistent configuration drift, measured L09 observation`).
 
 ---
 
@@ -126,5 +126,5 @@ non-injected k6 Job (in aks cluster, load namespace)
   - **Retail-price 기반 추정 지출액:** 약 **$0.21 USD** (승인 예산 상한 $2.00 USD 대비 약 10.5% 수준)
   - *주의: 위 $0.21 USD는 확정 청구액(actual cost)이 아니며 리테일 가격표에 기반한 예상 지출액(estimated spend)이다.*
 - **Azure Cost Management API (Actual Cost Observation Pending):**
-  - Azure Cost Management 파이프라인의 일반적인 24~48시간 수집 지연으로 인해 실행 직후 상태는 `available: false`임 (`FACT`).
-  - 현재 시점에서 실제 확정 청구액(actual cost)은 아직 조회되지 않으며($0으로 간주하지 않음), 수집 파이프라인 반영 후 `make l09-cost`를 통해 확정 데이터를 관찰할 예정이다.
+  - 실행 직후 실제 Cost Management query에서는 Azure 비용 파이프라인의 24~48시간 수집 지연으로 인해 `available: false`가 관찰되었다 (`measured L09 observation`).
+  - 따라서 actual cost observation은 아직 pending 상태이며($0으로 간주하지 않음), 약 $0.21 USD는 Retail Prices API와 실행 시간에 기반한 estimated spend다. 수집 파이프라인 반영 후 `make l09-cost`를 통해 확정 청구 데이터를 관찰할 예정이다.
