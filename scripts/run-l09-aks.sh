@@ -851,6 +851,13 @@ do_smoke() {
   saved_kubeconfig="$(printf '%s' "${state}" | jq -r '.kubeconfig // empty')"
   if [[ -n "${saved_kubeconfig}" && -f "${saved_kubeconfig}" && -s "${saved_kubeconfig}" ]]; then
     export KUBECONFIG="${saved_kubeconfig}"
+  else
+    local cluster_name rg
+    cluster_name="$(printf '%s' "${state}" | jq -r '.cluster_name // empty')"
+    rg="$(printf '%s' "${state}" | jq -r '.resource_group // empty')"
+    az aks get-credentials --resource-group "${rg}" --name "${cluster_name}" --file "${kubeconfig_file}" --overwrite-existing >/dev/null
+    chmod 600 "${kubeconfig_file}"
+    export KUBECONFIG="${kubeconfig_file}"
   fi
   saved_result_dir="$(printf '%s' "${state}" | jq -r '.result_dir // empty')"
   if [[ -n "${saved_result_dir}" && -d "${saved_result_dir}" ]]; then
@@ -873,11 +880,19 @@ do_verify() {
   saved_kubeconfig="$(printf '%s' "${state}" | jq -r '.kubeconfig // empty')"
   if [[ -n "${saved_kubeconfig}" && -f "${saved_kubeconfig}" && -s "${saved_kubeconfig}" ]]; then
     export KUBECONFIG="${saved_kubeconfig}"
+  else
+    local cluster_name rg
+    cluster_name="$(printf '%s' "${state}" | jq -r '.cluster_name // empty')"
+    rg="$(printf '%s' "${state}" | jq -r '.resource_group // empty')"
+    az aks get-credentials --resource-group "${rg}" --name "${cluster_name}" --file "${kubeconfig_file}" --overwrite-existing >/dev/null
+    chmod 600 "${kubeconfig_file}"
+    export KUBECONFIG="${kubeconfig_file}"
   fi
   saved_result_dir="$(printf '%s' "${state}" | jq -r '.result_dir // empty')"
   if [[ -n "${saved_result_dir}" && -d "${saved_result_dir}" ]]; then
     result_dir="${saved_result_dir}"
   fi
+
 
 
   for rep in 1 2 3; do
