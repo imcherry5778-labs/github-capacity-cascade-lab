@@ -1,0 +1,26 @@
+[
+  {
+    "name": "aks-nodepool1-16601413-vmss000000",
+    "kubernetes_version": "v1.35.7",
+    "os_image": "Ubuntu 24.04.4 LTS",
+    "kernel_version": "6.8.0-1067-azure",
+    "container_runtime": "containerd://2.3.3-2",
+    "architecture": "amd64",
+    "capacity": {
+      "cpu": "4",
+      "ephemeral-storage": "128917488Ki",
+      "hugepages-1Gi": "0",
+      "hugepages-2Mi": "0",
+      "memory": "16371452Ki",
+      "pods": "250"
+    },
+    "allocatable": {
+      "cpu": "3860m",
+      "ephemeral-storage": "118810356745",
+      "hugepages-1Gi": "0",
+      "hugepages-2Mi": "0",
+      "memory": "12074748Ki",
+      "pods": "250"
+    }
+  }
+]

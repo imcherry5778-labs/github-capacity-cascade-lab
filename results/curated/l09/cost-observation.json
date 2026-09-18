@@ -1,0 +1,24 @@
+{
+  "available": true,
+  "query_scope": "subscription-scoped, exact L09 RG filter",
+  "resource_groups": [
+    "rg-capacity-cascade-l09-09180624",
+    "rg-capacity-cascade-l09-09180624-nodes"
+  ],
+  "observed_cost": 223.20039963118,
+  "currency": "KRW",
+  "breakdown_by_resource_group": [
+    {
+      "resource_group": "rg-capacity-cascade-l09-09180624",
+      "observed_cost": 5.43186798336,
+      "currency": "KRW"
+    },
+    {
+      "resource_group": "rg-capacity-cascade-l09-09180624-nodes",
+      "observed_cost": 217.76853164782,
+      "currency": "KRW"
+    }
+  ],
+  "queried_at_utc": "2026-09-18T14:07:02Z",
+  "subscription_fingerprint": "6838db8ca34b"
+}

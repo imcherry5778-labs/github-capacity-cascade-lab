@@ -1,0 +1,20 @@
+{
+  "resource_group_created": true,
+  "rg_duration": {
+    "start": "2026-09-18T06:26:35Z",
+    "end": "2026-09-18T06:26:40Z"
+  },
+  "acr_created": true,
+  "acr_duration": {
+    "start": "2026-09-18T06:26:40Z",
+    "end": "2026-09-18T06:26:52Z"
+  },
+  "aks_created": true,
+  "aks_duration": {
+    "start": "2026-09-18T06:27:23Z",
+    "end": "2026-09-18T06:32:25Z"
+  },
+  "aks_provisioning_state": "Succeeded",
+  "node_ready": true,
+  "istio_ready": true
+}

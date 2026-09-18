@@ -1,0 +1,14 @@
+{
+  "destroyed_resource_group": "rg-capacity-cascade-l09-09180624",
+  "destroyed_node_resource_group": "rg-capacity-cascade-l09-09180624-nodes",
+  "started_at_utc": "2026-09-18T07:00:35Z",
+  "completed_at_utc": "2026-09-18T07:08:45Z",
+  "confirmed_absent": true,
+  "residual_verification": {
+    "primary_rg_exists": false,
+    "node_rg_exists": false,
+    "tagged_resources": [],
+    "residual_acrs": []
+  },
+  "residual_owned_resources": 0
+}

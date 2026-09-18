@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: Sidecar
+metadata:
+  name: auth-sim-inbound-capacity
+  namespace: TARGET_NAMESPACE
+  labels:
+    capacity-cascade-lab/owner: l09
+spec:
+  workloadSelector:
+    labels:
+      app.kubernetes.io/name: auth-sim
+      app.kubernetes.io/instance: auth-sim
+  ingress:
+    - port: {number: 8080, protocol: HTTP, name: public}
+      defaultEndpoint: 127.0.0.1:8080
+      connectionPool:
+        http:
+          # A local capacity target reused from L05/L06 on AKS, not a GitHub value.
+          http2MaxRequests: 1

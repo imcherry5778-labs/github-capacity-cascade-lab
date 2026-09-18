@@ -1,0 +1,17 @@
+{
+  "project": "GitHub Capacity Cascade Lab",
+  "learning_unit": "L09",
+  "classification": "cloud exploratory evidence",
+  "started_at_utc": "2026-09-18T06:24:57Z",
+  "git_commit": "75368e390cae5c483d4ec51df4ffd41709ff75ee",
+  "azure": {
+    "region": "eastus",
+    "kubernetes_version": "1.35.7",
+    "vm_size": "Standard_D4s_v7",
+    "tier": "free",
+    "network_plugin": "azure",
+    "network_plugin_mode": "overlay"
+  },
+  "workload": "k6 -> HAProxy -> ClusterIP -> Istio sidecar -> auth-sim",
+  "comparison": "cascade-no-retry (max attempts 1) vs cascade-retry (max attempts 3), 3 repetitions"
+}
