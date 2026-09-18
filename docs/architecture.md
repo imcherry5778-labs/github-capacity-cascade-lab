@@ -462,8 +462,14 @@ flowchart LR
     from fault-induced delay and backend timeout under continuous load rather than sidecar queue overflow.
   - Original evidence files and comparison metrics are documented in [L08 curated evidence](../results/curated/l08/README.md).
 
-## Future architecture only
+## Beyond L08
 
-Azure AKS validation (L09) and Portfolio/Demo packaging (L10) are connected after L08. Gateway, Ambient/CNI,
-Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing and production tuning are not in L08 scope.
+L09 (Azure AKS validation) is complete: technical validation, full teardown and Cost Management
+observed spend are all curated. [Roadmap](roadmap.md) holds the authoritative status, and
+[L09 curated evidence](../results/curated/l09/README.md) holds its own architecture, measured
+comparison, destroy contract and cost observation. L10 (Portfolio/Demo packaging)
+connects L00–L09 evidence into one reviewable package without adding new topology; see
+[portfolio](portfolio.md) and [demo runbook](demo-runbook.md). Gateway, Ambient/CNI,
+Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing and production tuning remain out of scope
+through L10.
 

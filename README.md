@@ -10,6 +10,24 @@
 만들어 복구 여유까지 소진할 때다. 이 저장소는 그 효과를 작은 단계로 분해해 관찰하고,
 완화책을 동일 조건에서 비교하기 위한 개인 SRE / Platform Engineering Lab이다.
 
+## Portfolio entry point
+
+처음 이 저장소를 보는 reviewer는 아래 순서로 5–10분 안에 핵심을 파악할 수 있다.
+
+- **무엇을 연구하는가:** GitHub의 2026-08-17 공개 incident에서 나타난 "실패가 추가 traffic을
+  만드는 cascade" effect를 작은 단위로 분해해 local과 managed Kubernetes에서 관찰한다.
+- **공식 incident source 경계:** claim별 `FACT`/`INFERENCE`/`LAB_IMPLEMENTATION`/`UNKNOWN`
+  분류는 [source register](docs/source-register.md)와
+  [facts and assumptions](docs/facts-and-assumptions.md)에 있다.
+- **핵심 학습 경로:** L00–L05는 이후 결론을 신뢰하기 위한 measurement foundation이고,
+  L06–L09가 portfolio의 핵심 story다. 전체 학습 계약은 [roadmap](docs/roadmap.md)에 있다.
+- **핵심 evidence:** 모든 curated evidence index는
+  [results/curated/README.md](results/curated/README.md)에 있다.
+- **Portfolio case study:** 면접관을 위한 10분 요약은 [docs/portfolio.md](docs/portfolio.md)에 있다.
+- **Demo runbook:** 재현 가능한 live/evidence-only demo 흐름은
+  [docs/demo-runbook.md](docs/demo-runbook.md)에 있다.
+- **Local 재현:** 아래 [Local quick start](#local-quick-start)를 따른다.
+
 ## Incident summary
 
 GitHub의 공개 RCA에 따르면 2026-08-17 13:28–21:15 UTC 동안 7시간 47분의
@@ -449,8 +467,9 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L08까지는 completed
-foundation이며 L09 이후는 planned 단계다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L09까지는 completed
+foundation이며, L09는 AKS 기술 검증·destroy·Cost Management observed spend까지 모두
+curated evidence로 확정됐다. L10은 이 evidence를 portfolio package로 정리했다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -466,10 +485,10 @@ Retry Amplification = Physical Attempts / Logical Requests
 
 ## Results — Local evidence
 
-L05, L06, L07은 fixed condition clean-source 3회 반복 local evidence를 curated set으로 보관한다. 이는
-implementation verification이며 portfolio final evidence, production benchmark 또는
-machine-independent performance conclusion은 아니다. 최종 portfolio comparison은 L10에서
-별도로 구성한다.
+L05, L06, L07, L08은 fixed condition clean-source 3회 반복 local evidence를 curated set으로
+보관한다. 이는 implementation verification이며 portfolio final evidence, production benchmark
+또는 machine-independent performance conclusion은 아니다. 최종 portfolio comparison은
+L10에서 별도로 구성한다.
 
 ## Mitigations — Local evidence
 
@@ -478,14 +497,22 @@ fixed local `LAB_IMPLEMENTATION` 조건에서 비교했다. 이는 GitHub exact 
 재현이나 production recommendation이 아니며, 상세 결과와 경계는
 [L07 curated evidence](results/curated/l07/README.md)에 있다.
 
-## Azure validation — Planned
+## Azure validation
 
-AKS resource, SKU, topology 또는 비용 가정은 아직 확정하지 않았다. L09에서 별도
-preflight와 승인 경계를 거쳐 검증한다.
+L09는 Azure AKS Free tier 단일 node pool에서 L06 capacity cascade path를 3회 paired
+repetition으로 검증하고, 완전한 destroy로 잔여 소유 resource 0을 확인했다. Retail-price API
+기반 추정 지출액은 약 $0.21 USD이고, Azure Cost Management의 실제 observed spend는
+subscription-scoped exact L09 resource group 필터로 관측된 약 223.20 KRW
+(`223.20039963118 KRW`)다. 이 관측값은 카드/은행 최종 invoice 확정액이 아니다. 원문,
+cloud/local mechanism 비교와 destroy evidence는
+[L09 curated evidence](results/curated/l09/README.md)에 있다.
 
-## Demo — Planned
+## Demo
 
-재현 스크립트, 시각 자료, 발표 흐름과 최종 evidence package는 L10에서 구성한다.
+L10은 새 실험을 추가하지 않고 기존 evidence를 SRE narrative와 재현 가능한 demo로 정리한다.
+대표 live demo는 L06(`make l06-smoke`/`make l06-verify`)이고, L07–L09는 curated evidence로
+설명한다. 면접관을 위한 10분 case study는 [docs/portfolio.md](docs/portfolio.md), 발표/녹화
+흐름과 demo failure fallback 경로는 [docs/demo-runbook.md](docs/demo-runbook.md)에 있다.
 
 ## Repository status
 
@@ -497,5 +524,8 @@ preflight와 승인 경계를 거쳐 검증한다.
 - Completed foundation: L05 — HPA Blind Spot (implementation verified; 3 clean local repetitions)
 - Completed foundation: L06 — Full Capacity Cascade (implementation verified; 3 clean local repetitions)
 - Completed foundation: L07 — RCA Mitigations (implementation verified; 3 clean local repetitions)
+- Completed foundation: L08 — Chaos Mesh Reproduction (implementation verified; 3 clean-source repetitions with abort safety and cleanup)
+- Completed foundation: L09 — Azure AKS Validation (implementation verified; 3 clean cloud repetitions, destroy/zero-residual and Cost Management observation curated)
+- Completed foundation: L10 — Portfolio Evidence and Demo (implementation verified; portfolio evidence, demo runbook and clean-checkout reproducibility confirmed)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님
