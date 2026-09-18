@@ -469,7 +469,7 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L09까지는 completed
 foundation이며, L09는 AKS 기술 검증·destroy·Cost Management observed spend까지 모두
-curated evidence로 확정됐다. L10은 이 evidence를 portfolio package로 정리한다.
+curated evidence로 확정됐다. L10은 이 evidence를 portfolio package로 정리했다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -526,6 +526,6 @@ L10은 새 실험을 추가하지 않고 기존 evidence를 SRE narrative와 재
 - Completed foundation: L07 — RCA Mitigations (implementation verified; 3 clean local repetitions)
 - Completed foundation: L08 — Chaos Mesh Reproduction (implementation verified; 3 clean-source repetitions with abort safety and cleanup)
 - Completed foundation: L09 — Azure AKS Validation (implementation verified; 3 clean cloud repetitions, destroy/zero-residual and Cost Management observation curated)
-- L10 — Portfolio Evidence and Demo: `feat/l10-portfolio-demo`에 L09 final state(origin/main)를 통합한 portfolio package (see [roadmap](docs/roadmap.md))
+- Completed foundation: L10 — Portfolio Evidence and Demo (implementation verified; portfolio evidence, demo runbook and clean-checkout reproducibility confirmed)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

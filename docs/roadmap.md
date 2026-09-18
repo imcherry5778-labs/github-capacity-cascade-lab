@@ -154,7 +154,7 @@
 - **Done:** Source integrity, 최소 3회 비교, limitation, 재현 명령이 하나의 package로 검토된다.
 - **Non-goals:** 미측정 결과 작성, 장애 spectacle, GitHub 내부 구현 주장.
 - **Dependencies:** L00–L09의 검증된 core evidence.
-- **Status:** Current — implementation prepared on `feat/l10-portfolio-demo`; final integration and Complete status gated on L09 merge to `main`.
+- **Status:** Complete — portfolio evidence, demo runbook, clean-checkout reproducibility and package integrity verified.
 
 ## L11 — Sidecar vs Ambient Architecture Comparison
 
