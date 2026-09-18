@@ -125,6 +125,13 @@ non-injected k6 Job (in aks cluster, load namespace)
   - **전체 실행 시간:** 약 44분 (프로비저닝 8분 + 검증 25분 + 회수 8분 + 쿼리 3분)
   - **Retail-price 기반 추정 지출액:** 약 **$0.21 USD** (승인 예산 상한 $2.00 USD 대비 약 10.5% 수준)
   - *주의: 위 $0.21 USD는 확정 청구액(actual cost)이 아니며 리테일 가격표에 기반한 예상 지출액(estimated spend)이다.*
-- **Azure Cost Management API (Actual Cost Observation Pending):**
-  - 실행 직후 실제 Cost Management query에서는 Azure 비용 파이프라인의 24~48시간 수집 지연으로 인해 `available: false`가 관찰되었다 (`measured L09 observation`).
-  - 따라서 actual cost observation은 아직 pending 상태이며($0으로 간주하지 않음), 약 $0.21 USD는 Retail Prices API와 실행 시간에 기반한 estimated spend다. 수집 파이프라인 반영 후 `make l09-cost`를 통해 확정 청구 데이터를 관찰할 예정이다.
+- **Azure Cost Management API 기반 실측 관측 지출액 (Cost Management Observed Spend):**
+  - **상태:** `available: true` ([`cost-observation.json`](cost-observation.json))
+  - **쿼리 범위:** Subscription scope, exact L09 2개 Resource Group 필터 (`rg-capacity-cascade-l09-09180624`, `rg-capacity-cascade-l09-09180624-nodes`)
+  - **관측 지출액 (PreTaxCost):** 약 **223.20 KRW** (정합 수치: `223.20039963118 KRW`, `measured L09 observation`)
+    - Primary RG (`rg-capacity-cascade-l09-09180624`): 약 5.43 KRW (ACR Basic 등)
+    - Node RG (`rg-capacity-cascade-l09-09180624-nodes`): 약 217.77 KRW (VM Standard_D4s_v7 + Managed OS Disk)
+  - **관측 시각:** 2026-09-18T14:07:02Z (`subscription_fingerprint: 6838db8ca34b`)
+  - **비용 해석 주의:**
+    - 위 관측값은 Azure Cost Management Query API로 확인된 실측 지출액(`Cost Management observed spend`)이며, 카드사/은행 최종 invoice 확정액을 의미하지 않는다.
+    - 실행 직후에는 수집 파이프라인 지연으로 인해 `available: false`로 관찰되었으나, 수집 파이프라인 반영 후 `make l09-cost` 재조회를 통해 실측 관측 데이터가 확정되었다.

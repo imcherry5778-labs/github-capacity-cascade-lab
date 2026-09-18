@@ -141,7 +141,7 @@
 - **Done:** Provision/destroy, 비용, 결과, drift와 한계가 증명되고 잔여 resource가 없다.
 - **Non-goals:** GitHub Central US infrastructure 매핑, production architecture, SKU 사전 확정.
 - **Dependencies:** L07–L08; explicit cloud authorization and budget.
-- **Status:** Current — AKS technical validation and destroy complete; actual Cost Management observation pending.
+- **Status:** Complete — AKS technical validation, 3 paired repetitions, destroy/zero-residual verification, cloud drift, and Cost Management observation curated.
 
 ## L10 — Portfolio Evidence and Demo
 
