@@ -88,7 +88,8 @@ Demo가 실패해도 portfolio story는 curated evidence로 계속 설명 가능
    - 모든 topology/threshold는 `LAB_IMPLEMENTATION`이며 GitHub 사실이 아니다.
    - 각 결과는 fixed local/cloud condition의 최소 3회 반복이며 production benchmark가 아니다.
    - Mitigation 비교는 우열 순위가 아니다.
-   - L09 실제 Cost Management observed spend는 문서 작성 시점에 pending이다.
+   - L09 Cost Management observed spend(약 223.20 KRW)는 실측 관측값이며 확정 청구액
+     (final invoice)이 아니다. Retail-price 추정치(~$0.21 USD)와는 서로 다른 수치다.
 
 ## Preflight before presenting
 

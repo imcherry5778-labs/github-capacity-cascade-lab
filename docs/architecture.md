@@ -464,10 +464,10 @@ flowchart LR
 
 ## Beyond L08
 
-L09 (Azure AKS validation) is not merely future work: technical validation and full teardown are
-complete, and Cost Management observed spend is pending. [Roadmap](roadmap.md) holds the
-authoritative status, and [L09 curated evidence](../results/curated/l09/README.md) holds its
-own architecture, measured comparison and destroy contract. L10 (Portfolio/Demo packaging)
+L09 (Azure AKS validation) is complete: technical validation, full teardown and Cost Management
+observed spend are all curated. [Roadmap](roadmap.md) holds the authoritative status, and
+[L09 curated evidence](../results/curated/l09/README.md) holds its own architecture, measured
+comparison, destroy contract and cost observation. L10 (Portfolio/Demo packaging)
 connects L00–L09 evidence into one reviewable package without adding new topology; see
 [portfolio](portfolio.md) and [demo runbook](demo-runbook.md). Gateway, Ambient/CNI,
 Prometheus/Grafana/KEDA, HTTP/2·HTTP/3, gRPC, tracing and production tuning remain out of scope

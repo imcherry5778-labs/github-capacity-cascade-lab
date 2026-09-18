@@ -467,9 +467,9 @@ Request ID, token, 임의 URL 또는 사용자 입력은 label로 사용하지 �
 
 ## Learning roadmap
 
-L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L08까지는 completed
-foundation이고, L09는 AKS 기술 검증과 destroy까지 완료했으며 Cost Management observed
-spend만 pending이다. L10은 이 evidence를 portfolio package로 정리한다.
+L00부터 L10까지가 core이며 L11–L12는 optional extension이다. L00부터 L09까지는 completed
+foundation이며, L09는 AKS 기술 검증·destroy·Cost Management observed spend까지 모두
+curated evidence로 확정됐다. L10은 이 evidence를 portfolio package로 정리한다.
 모든 단계의 학습 질문과 완료 기준은
 [roadmap](docs/roadmap.md)에 있다.
 
@@ -501,9 +501,11 @@ fixed local `LAB_IMPLEMENTATION` 조건에서 비교했다. 이는 GitHub exact 
 
 L09는 Azure AKS Free tier 단일 node pool에서 L06 capacity cascade path를 3회 paired
 repetition으로 검증하고, 완전한 destroy로 잔여 소유 resource 0을 확인했다. Retail-price API
-기반 추정 지출액은 약 $0.21 USD이고, Azure Cost Management의 실제 observed spend는 비용
-파이프라인 수집 지연으로 아직 pending이다. 원문, cloud/local mechanism 비교와 destroy
-evidence는 [L09 curated evidence](results/curated/l09/README.md)에 있다.
+기반 추정 지출액은 약 $0.21 USD이고, Azure Cost Management의 실제 observed spend는
+subscription-scoped exact L09 resource group 필터로 관측된 약 223.20 KRW
+(`223.20039963118 KRW`)다. 이 관측값은 카드/은행 최종 invoice 확정액이 아니다. 원문,
+cloud/local mechanism 비교와 destroy evidence는
+[L09 curated evidence](results/curated/l09/README.md)에 있다.
 
 ## Demo
 
@@ -523,7 +525,7 @@ L10은 새 실험을 추가하지 않고 기존 evidence를 SRE narrative와 재
 - Completed foundation: L06 — Full Capacity Cascade (implementation verified; 3 clean local repetitions)
 - Completed foundation: L07 — RCA Mitigations (implementation verified; 3 clean local repetitions)
 - Completed foundation: L08 — Chaos Mesh Reproduction (implementation verified; 3 clean-source repetitions with abort safety and cleanup)
-- L09 — Azure AKS Validation: Current — AKS technical validation and destroy complete; actual Cost Management observation pending (see [roadmap](docs/roadmap.md))
-- L10 — Portfolio Evidence and Demo: implementation prepared on `feat/l10-portfolio-demo`; final integration gated on L09 merge to `main`
+- Completed foundation: L09 — Azure AKS Validation (implementation verified; 3 clean cloud repetitions, destroy/zero-residual and Cost Management observation curated)
+- L10 — Portfolio Evidence and Demo: `feat/l10-portfolio-demo`에 L09 final state(origin/main)를 통합한 portfolio package (see [roadmap](docs/roadmap.md))
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
 - Push/merge/CI: 이 단계의 범위 아님

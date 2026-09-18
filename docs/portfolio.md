@@ -158,8 +158,10 @@ Kubernetes에서도 비슷한 mechanism을 보였다**이다.
 - Teardown 후 Resource Graph/CLI로 확인한 잔여 소유 resource는 0
   (`residual_owned_resources: 0`, [destroy-contract.json](../results/curated/l09/destroy-contract.json)).
 - **비용:** Retail Prices API 기반 추정 지출액은 약 **$0.21 USD**(승인 예산 $2.00의
-  ~10.5%)다. Azure Cost Management의 실제 observed spend는 비용 파이프라인의 24–48시간
-  수집 지연으로 **아직 pending**이며, $0으로 간주하지 않는다.
+  ~10.5%)다. Azure Cost Management API로 subscription-scoped exact L09 resource group
+  필터를 조회한 실측 observed spend(PreTaxCost)는 약 **223.20 KRW**
+  (`223.20039963118 KRW`, [cost-observation.json](../results/curated/l09/cost-observation.json))다.
+  이는 리테일 견적과 별개의 실측 관측값이며 카드/은행 최종 invoice 확정액이 아니다.
 - Cluster autoscaler 상호작용과 인터넷 경계 WAN latency의 복구 영향은 이 실험 범위에서
   측정하지 않았다(`UNKNOWN`).
 
@@ -189,7 +191,8 @@ Kubernetes에서도 비슷한 mechanism을 보였다**이다.
 - Mitigation 비교는 trade-off 관찰이며 보편적인 우열 순위가 아니다.
 - L09는 1-node Free tier subscription quota 제약 아래 실행됐고 cluster autoscaler와
   cross-region WAN 영향은 측정하지 않았다.
-- L09 actual Cost Management observed spend는 이 문서 작성 시점에 pending이다.
+- L09 Cost Management observed spend(약 223.20 KRW)는 subscription-scoped exact L09
+  resource group 쿼리의 관측값이며 카드/은행 최종 invoice 확정액이 아니다.
 
 ## 12. Evidence claim map
 
@@ -205,7 +208,7 @@ Kubernetes에서도 비슷한 mechanism을 보였다**이다.
 | 8 | Controlled abort는 CR을 즉시 삭제하고 잔여 CR/Pod 0을 남긴다 | `MEASURED EVIDENCE` | [L08 curated evidence](../results/curated/l08/README.md) abort-smoke | 로컬 cleanup 계약 검증일 뿐 |
 | 9 | Azure AKS에서 retry 증폭 비율(~2.32x physical, ~3.0x overflow)이 local k3d와 거의 동일하게 재현됐다 | `MEASURED EVIDENCE` | [L09 curated evidence](../results/curated/l09/README.md) §2–3 | 1-node Free tier, single fixed condition, production parity 주장 아님 |
 | 10 | L09 teardown 후 잔여 소유 Azure resource는 0이다 | `MEASURED EVIDENCE` | [destroy-contract.json](../results/curated/l09/destroy-contract.json) | 이 run에 한정된 검증 |
-| 11 | L09 retail-price 기반 추정 지출액은 약 $0.21 USD이고, 실제 Cost Management observed spend는 pending이다 | `MEASURED EVIDENCE` / boundary | [L09 curated evidence](../results/curated/l09/README.md) §7 | 확정 청구액이 아님; pending을 $0으로 간주하지 않음 |
+| 11 | L09 retail-price 기반 추정 지출액은 약 $0.21 USD이고, 실제 Cost Management observed spend는 약 223.20 KRW(`223.20039963118 KRW`)다 | `MEASURED EVIDENCE` | [L09 curated evidence](../results/curated/l09/README.md) §7, [cost-observation.json](../results/curated/l09/cost-observation.json) | 리테일 견적과 실측 관측값은 서로 다른 수치이며, 관측값도 확정 청구액(final invoice)이 아님 |
 | 12 | Application-CPU 관찰만으로는 sidecar 쪽 capacity 소진을 판정할 수 없다 | `INFERENCE` | [facts-and-assumptions](facts-and-assumptions.md) I01/I03 | GitHub의 정확한 HPA 설정을 뜻하지 않음 |
 
 ## 13. Reproduce / inspect evidence
