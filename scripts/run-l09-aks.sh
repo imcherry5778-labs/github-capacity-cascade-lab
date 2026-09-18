@@ -64,6 +64,7 @@ check_required_tools() {
   done
 }
 
+
 get_subscription_fingerprint() {
   az account show --query id -o tsv 2>/dev/null | tr -d '\n' | sha256sum | cut -c1-12
 }
@@ -240,30 +241,38 @@ mkdir -p "${helm_config_home}" "${helm_cache_home}" "${helm_data_home}" "${chart
 export KUBECONFIG="${kubeconfig_file}" HELM_CONFIG_HOME="${helm_config_home}" HELM_CACHE_HOME="${helm_cache_home}" HELM_DATA_HOME="${helm_data_home}"
 
 cleanup_cloud_resources() {
-  local state
-  state="$(load_state)"
-  local rg node_rg
-  rg="$(printf '%s' "${state}" | jq -r '.resource_group // empty')"
-  [[ -n "${rg}" ]] || rg="${RESOURCE_GROUP}"
-  node_rg="${rg}-nodes"
-  printf '\n=== Cleanup Cloud Resources: %s and %s ===\n' "${rg}" "${node_rg}"
-  for g in "${rg}" "${node_rg}"; do
-    if az group exists --name "${g}" 2>/dev/null | grep -q true; then
-      printf 'Deleting Azure resource group: %s...\n' "${g}"
-      az group delete --name "${g}" --yes --no-wait 2>/dev/null || true
-    fi
-  done
-  printf 'Waiting for resource group deletion confirmation...\n'
-  for _ in {1..90}; do
-    if ! az group exists --name "${rg}" 2>/dev/null | grep -q true && ! az group exists --name "${node_rg}" 2>/dev/null | grep -q true; then
-      printf 'Resource groups successfully deleted.\n'
-      break
-    fi
-    sleep 5
-  done
-  rm -rf "${runtime_root}" "${STATE_FILE}"
+  do_destroy
 }
 
+kubectl() {
+  local retries=4
+  local count=0
+  local wait_sec=2
+  until command kubectl "$@"; do
+    local exit_code=$?
+    count=$((count + 1))
+    if [[ ${count} -ge ${retries} ]]; then
+      return ${exit_code}
+    fi
+    printf 'kubectl failed (attempt %d/%d). Retrying in %ds...\n' "${count}" "${retries}" "${wait_sec}" >&2
+    sleep "${wait_sec}"
+  done
+}
+
+helm() {
+  local retries=4
+  local count=0
+  local wait_sec=2
+  until command helm "$@"; do
+    local exit_code=$?
+    count=$((count + 1))
+    if [[ ${count} -ge ${retries} ]]; then
+      return ${exit_code}
+    fi
+    printf 'helm failed (attempt %d/%d). Retrying in %ds...\n' "${count}" "${retries}" "${wait_sec}" >&2
+    sleep "${wait_sec}"
+  done
+}
 
 ensure_providers_registered() {
   printf '%s\n' '--- Ensuring Resource Providers are Registered ---'
@@ -484,7 +493,7 @@ do_provision() {
 # Scenario runner helper functions
 start_port_forward() {
   local namespace=$1 target=$2 remote_port=$3 log_file=$4 pid_var=$5 port_var=$6 pid port=""
-  kubectl port-forward --namespace "${namespace}" "${target}" :"${remote_port}" >"${log_file}" 2>&1 & pid=$!
+  command kubectl port-forward --namespace "${namespace}" "${target}" :"${remote_port}" >"${log_file}" 2>&1 & pid=$!
   for _ in {1..80}; do
     port="$(sed -n 's/^Forwarding from 127\.0\.0\.1:\([0-9][0-9]*\) ->.*/\1/p' "${log_file}" | head -n 1)"
     [[ -n "${port}" ]] && break
@@ -595,7 +604,7 @@ probe_service_datapath() {
     --command -- /bin/sh -c "wget -qO- http://l09-haproxy.${namespace}.svc.cluster.local:8080/readyz" \
     >"${scenario_dir}/datapath-probe-create.log"
   for _ in {1..120}; do
-    phase="$(kubectl get pod "${probe}" --namespace "${LOAD_NAMESPACE}" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
+    phase="$(command kubectl get pod "${probe}" --namespace "${LOAD_NAMESPACE}" -o jsonpath='{.status.phase}' 2>/dev/null || true)"
     [[ "${phase}" == Succeeded || "${phase}" == Failed ]] && break
     sleep 0.25
   done
@@ -708,11 +717,11 @@ spec:
 EOF
   workload_start_epoch="$(date +%s)"
   kubectl apply -f "${scenario_dir}/k6-job.yaml" >"${scenario_dir}/k6-job-apply.log"
-  for _ in {1..60}; do load_pod="$(kubectl get pods --namespace "${LOAD_NAMESPACE}" --selector "job-name=${job}" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"; [[ -n "${load_pod}" ]] && break; sleep 0.2; done
+  for _ in {1..60}; do load_pod="$(command kubectl get pods --namespace "${LOAD_NAMESPACE}" --selector "job-name=${job}" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"; [[ -n "${load_pod}" ]] && break; sleep 0.2; done
   [[ -n "${load_pod}" ]] || { printf 'k6 Job Pod was not created\n' >&2; return 1; }
   kubectl get pod "${load_pod}" --namespace "${LOAD_NAMESPACE}" -o json >"${scenario_dir}/k6-pod.json"
   [[ "$(jq '[.spec.containers[].name] | index("istio-proxy")' "${scenario_dir}/k6-pod.json")" == null ]] || { printf 'load generator must not have an injected sidecar\n' >&2; return 1; }
-  for _ in {1..720}; do kubectl exec --namespace "${LOAD_NAMESPACE}" "${load_pod}" -c k6 -- test -f /results/k6.done >/dev/null 2>&1 && { result_ready=true; break; }; [[ "$(kubectl get pod "${load_pod}" --namespace "${LOAD_NAMESPACE}" -o jsonpath='{.status.phase}')" == Failed ]] && break; sleep 0.5; done
+  for _ in {1..720}; do command kubectl exec --namespace "${LOAD_NAMESPACE}" "${load_pod}" -c k6 -- test -f /results/k6.done >/dev/null 2>&1 && { result_ready=true; break; }; [[ "$(command kubectl get pod "${load_pod}" --namespace "${LOAD_NAMESPACE}" -o jsonpath='{.status.phase}')" == Failed ]] && break; sleep 0.5; done
   kubectl logs --namespace "${LOAD_NAMESPACE}" "${load_pod}" -c k6 >"${scenario_dir}/k6-console.log" 2>&1 || true
   [[ "${result_ready}" == true ]] || { printf 'k6 result files did not become available\n' >&2; return 1; }
   kubectl exec --namespace "${LOAD_NAMESPACE}" "${load_pod}" -c k6 -- cat /results/k6.exit >"${scenario_dir}/k6.exit"
@@ -814,8 +823,8 @@ run_aks_scenario() {
 
   local old_pod
   old_pod="$(kubectl get pods --namespace "${namespace}" --selector 'app.kubernetes.io/instance=auth-sim' -o jsonpath='{.items[0].metadata.name}')"
-  kubectl apply -f "${scenario_dir}/retry-disabled-rendered.yaml" >"${scenario_dir}/retry-disabled-apply.log"
-  kubectl rollout restart deployment/auth-sim --namespace "${namespace}" >"${scenario_dir}/retry-disabled-rollout-restart.log"
+  kubectl apply -f "${scenario_dir}/retry-disabled-rendered.yaml" >"${scenario_dir}/retry-disabled-apply.log" 2>&1
+  kubectl rollout restart deployment/auth-sim --namespace "${namespace}" >"${scenario_dir}/retry-disabled-rollout-restart.log" 2>&1
   kubectl rollout status deployment/auth-sim --namespace "${namespace}" --timeout=180s >"${scenario_dir}/retry-disabled-rollout-status.log" 2>&1 || { cat "${scenario_dir}/retry-disabled-rollout-status.log" >&2; return 1; }
 
   local pod
