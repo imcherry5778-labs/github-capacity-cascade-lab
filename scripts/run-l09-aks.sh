@@ -793,17 +793,19 @@ run_aks_scenario() {
   helm upgrade --install auth-sim "${CHART_DIR}" --namespace "${namespace}" \
     --set-string image.repository="${acr_login_server}/auth-sim" \
     --set-string image.tag="${IMAGE_TAG}" \
+    --set image.pullPolicy=IfNotPresent \
     --set-string adminSecret.name="${ADMIN_SECRET}" \
     --set-string adminSecret.key=token \
     --set sidecarMetricsExporter.enabled=true \
-    --wait --timeout 180s >"${scenario_dir}/auth-sim-helm-install.log" 2>&1
-  kubectl rollout status deployment/auth-sim --namespace "${namespace}" --timeout=180s >"${scenario_dir}/auth-sim-rollout.log"
+    --wait --timeout 180s >"${scenario_dir}/auth-sim-helm-install.log" 2>&1 || { cat "${scenario_dir}/auth-sim-helm-install.log" >&2; return 1; }
+  kubectl rollout status deployment/auth-sim --namespace "${namespace}" --timeout=180s >"${scenario_dir}/auth-sim-rollout.log" 2>&1 || { cat "${scenario_dir}/auth-sim-rollout.log" >&2; return 1; }
+
 
   local old_pod
   old_pod="$(kubectl get pods --namespace "${namespace}" --selector 'app.kubernetes.io/instance=auth-sim' -o jsonpath='{.items[0].metadata.name}')"
   kubectl apply -f "${scenario_dir}/retry-disabled-rendered.yaml" >"${scenario_dir}/retry-disabled-apply.log"
   kubectl rollout restart deployment/auth-sim --namespace "${namespace}" >"${scenario_dir}/retry-disabled-rollout-restart.log"
-  kubectl rollout status deployment/auth-sim --namespace "${namespace}" --timeout=180s >"${scenario_dir}/retry-disabled-rollout-status.log"
+  kubectl rollout status deployment/auth-sim --namespace "${namespace}" --timeout=180s >"${scenario_dir}/retry-disabled-rollout-status.log" 2>&1 || { cat "${scenario_dir}/retry-disabled-rollout-status.log" >&2; return 1; }
 
   local pod
   pod="$(kubectl get pods --namespace "${namespace}" --selector 'app.kubernetes.io/instance=auth-sim' -o json | jq -r '[.items[] | select(.metadata.deletionTimestamp == null) | select([.status.conditions[]? | select(.type == "Ready" and .status == "True")] | length == 1)][0].metadata.name // empty')"
@@ -817,7 +819,8 @@ run_aks_scenario() {
   proxy_image="$(jq -r '[.spec.containers[]?,.spec.initContainers[]? | select(.name=="istio-proxy")][0].image' "${scenario_dir}/pod.json")"
   kubectl apply -f "${scenario_dir}/hpa-rendered.yaml" >"${scenario_dir}/hpa-apply.log"
   kubectl apply -f "${scenario_dir}/haproxy-rendered.yaml" >"${scenario_dir}/haproxy-apply.log"
-  kubectl rollout status deployment/l09-haproxy --namespace "${namespace}" --timeout=180s >"${scenario_dir}/haproxy-rollout.log"
+  kubectl rollout status deployment/l09-haproxy --namespace "${namespace}" --timeout=180s >"${scenario_dir}/haproxy-rollout.log" 2>&1 || { cat "${scenario_dir}/haproxy-rollout.log" >&2; return 1; }
+
 
   probe_service_datapath "${scenario}" "${namespace}" "${scenario_dir}"
   discover_proxy_config "${namespace}" "${pod}" "${scenario_dir}"
