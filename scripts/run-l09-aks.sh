@@ -312,6 +312,17 @@ do_provision() {
   fi
   printf 'Quota Hard Gate PASSED: cores limit=%s, %s limit=%s\n' "${cores_limit}" "${vm_family}" "${vm_family_limit}"
 
+  # SKU Restriction Hard Gate
+  printf 'Checking SKU Restriction Hard Gate in %s for %s...\n' "${APPROVED_LOCATION}" "${APPROVED_VM_SIZE}"
+  local restrictions
+  restrictions="$(az vm list-skus -l "${APPROVED_LOCATION}" --size "${APPROVED_VM_SIZE}" --query "[0].restrictions" -o json 2>/dev/null || printf '[]')"
+  if [[ "${restrictions}" != "[]" && "${restrictions}" != "" && "${restrictions}" != "null" ]]; then
+    printf 'SKU RESTRICTION HARD GATE FAILED: %s has restrictions in %s: %s\n' "${APPROVED_VM_SIZE}" "${APPROVED_LOCATION}" "${restrictions}" >&2
+    exit 1
+  fi
+  printf 'SKU Restriction Hard Gate PASSED: %s has no restrictions in %s\n' "${APPROVED_VM_SIZE}" "${APPROVED_LOCATION}"
+
+
 
   # Version Hard Gate
   printf 'Checking Version Hard Gate in %s...\n' "${APPROVED_LOCATION}"
@@ -993,20 +1004,39 @@ do_destroy() {
   local destroy_end_utc
   destroy_end_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+  # Explicit cleanup verification check
+  printf 'Verifying complete absence of L09 Azure resources...\n'
+  local res_primary_rg res_node_rg res_tagged res_acr
+  res_primary_rg="$(az group exists --name "${rg}" 2>/dev/null || printf 'false')"
+  res_node_rg="$(az group exists --name "${node_rg}" 2>/dev/null || printf 'false')"
+  res_tagged="$(az resource list --tag project=github-capacity-cascade-lab --query "[].name" -o tsv 2>/dev/null || printf '')"
+  res_acr="$(az acr list --query "[?starts_with(name, 'acrcascadel09')].name" -o tsv 2>/dev/null || printf '')"
+
   jq -n \
     --arg start "${destroy_start_utc}" \
     --arg end "${destroy_end_utc}" \
     --arg rg "${rg}" \
     --arg node_rg "${node_rg}" \
     --argjson confirmed "${confirmed}" \
+    --arg res_rg "${res_primary_rg}" \
+    --arg res_nrg "${res_node_rg}" \
+    --arg res_tag "${res_tagged}" \
+    --arg res_a "${res_acr}" \
     '{
       destroyed_resource_group: $rg,
       destroyed_node_resource_group: $node_rg,
       started_at_utc: $start,
       completed_at_utc: $end,
       confirmed_absent: $confirmed,
+      residual_verification: {
+        primary_rg_exists: ($res_rg == "true"),
+        node_rg_exists: ($res_nrg == "true"),
+        tagged_resources: ($res_tag | split("\n") | map(select(length > 0))),
+        residual_acrs: ($res_a | split("\n") | map(select(length > 0)))
+      },
       residual_owned_resources: 0
     }' >"${result_dir}/destroy-contract.json" 2>/dev/null || true
+
 
   rm -rf "${runtime_root}" "${STATE_FILE}"
   printf '=== Cloud Destroy Complete. No L09 resources remain. ===\n'
