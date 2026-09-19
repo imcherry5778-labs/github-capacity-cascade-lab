@@ -78,7 +78,7 @@ architecture, component documentation과 별도 incident를 분리한다. Freshn
 ## Component primary documentation
 
 이 section의 source type은 모두 `COMPONENT_PRIMARY_DOCUMENTATION`이다.
-아래 source는 repository가 L01–L05에서 실제 선택한 component와 contract에만 적용한다.
+아래 source는 repository가 각 learning unit에서 실제 선택한 component와 contract에만 적용한다.
 `Does not support` 제한은 각 source에 독립적으로 적용된다.
 
 | ID | Version / source | Supports | Does not support | Relevant learning units | Verification status |

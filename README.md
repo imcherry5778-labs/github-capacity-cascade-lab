@@ -562,4 +562,4 @@ selection boundary는 [L12 curated evidence](results/curated/l12/README.md)에 �
 - Optional Extension: L11 — Sidecar vs Ambient Architecture Comparison (implementation verified; 3 clean local repetitions; not part of the L00–L10 core)
 - Optional Extension: L12 — External DevOps Delivery Continuity (implementation verified; 3 clean local matrices curated; not part of the L00–L10 core)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
-- Push/merge/CI: 이 단계의 범위 아님
+- GitHub-hosted repository CI: 별도로 구성하지 않았으며, L12는 Optional delivery-continuity experiment에서만 격리된 local Forgejo Actions fixture를 사용한다.
