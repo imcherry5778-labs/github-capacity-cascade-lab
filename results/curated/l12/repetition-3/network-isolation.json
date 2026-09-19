@@ -1,0 +1,6 @@
+{
+  "docker_network_internal": true,
+  "local_forgejo_reachable": true,
+  "github_https_blocked": true,
+  "passed": true
+}

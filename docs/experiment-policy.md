@@ -59,6 +59,26 @@ README에는 임시 P95, RPS 또는 amplification 값을 자동 반영하지 않
 - Curated single run도 local exploratory evidence다. Portfolio evidence에는 동일 조건 최소
   3회 반복 규칙을 그대로 적용한다.
 
+### L12 delivery-continuity policy
+
+L12 separates `prepare` (online) from `verify` (outage). Only prepare may pull the three pinned
+images, create the vendor archive, seed fixture repositories or upload prepared package inputs.
+`make l12-verify` must fail closed when those inputs are absent; it must not invoke prepare, pull an
+image, run `go mod download`, use a public module proxy, clone GitHub or install a package.
+
+Every scenario receives a new disposable runner container and workspace. The runner has no host Docker
+socket, host repository, user directory, kubeconfig, SSH agent, cloud credential, privileged mode or
+device. It is restricted to the internal Docker network; its local Forgejo reachability and failed
+public-GitHub HTTPS probe are saved as an explicit gate. The control bridge used for loopback Forgejo
+API orchestration is not treated as an egress-isolation assertion for Forgejo servers.
+
+Expected CI failures in source/action/unprepared-revision scenarios are only experiment PASS when the
+recorded assertion identifies the requested dependency boundary, no new candidate is activated, and
+the existing witness passes healthz/readyz/token probes. A SHA256 mismatch is a deployment rejection,
+not a successful CD path. Credentials are per-runtime, mode `0600`, omitted from logs/evidence, and
+removed by the exact ownership cleanup. Raw L12 results remain append-only; selected JSON/log/summary
+files are copied without modification and compared byte-for-byte before curation.
+
 ## Comparison rules
 
 최종 비교 실험은 최소 3회 반복한다. 각 반복은 같은 workload, duration, fault timing,

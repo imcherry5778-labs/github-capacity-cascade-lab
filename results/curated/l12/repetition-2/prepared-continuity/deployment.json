@@ -1,0 +1,11 @@
+{
+  "expected_sha256": "451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f",
+  "actual_sha256": "451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f",
+  "source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+  "image": "capacity-cascade-l12/auth-sim-candidate:r2-prepared-prepared-continuity-4",
+  "container": "capacity-cascade-l12-candidate-r2",
+  "tampered": false,
+  "deployment_started": true,
+  "runtime_healthy": true,
+  "passed": true
+}

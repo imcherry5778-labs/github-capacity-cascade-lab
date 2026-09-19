@@ -556,3 +556,51 @@ TCP L4 connection/byte count — and are recorded as `NON-EQUIVALENT`, not as a 
 comparison. See [L11 curated evidence](../results/curated/l11/README.md) for the full per-run
 tables, the retry-disable proof, the ztunnel metric/log evidence and the stated limitations.
 
+## L12 External DevOps Delivery Continuity
+
+L12는 GitHub production topology가 아니다. `primary source-platform fixture`를 local
+Compose lifecycle로 up/down시킬 수 있게 만든 `LAB_IMPLEMENTATION`이며, Continuity fixture는
+production HA source platform 또는 automatic failback이 아니다.
+
+```mermaid
+flowchart LR
+    H[Host orchestrator and bounded CD executor]
+    P[Primary Forgejo fixture]
+    C[Continuity Forgejo\napp-source, l12-action, control repo, Generic Packages]
+    R[Disposable Forgejo Runner\nhost executor inside container]
+    W[Existing auth-sim witness]
+    D[Separate auth-sim candidate]
+
+    H -->|loopback API only| P
+    H -->|loopback API only| C
+    C -->|workflow_dispatch| R
+    R -->|source/action/package on internal network| C
+    R -->|Primary only in S0/S4| P
+    H -->|verified package only, fixed scratch recipe| D
+    W -. remains probed during rejected delivery .-> H
+```
+
+The two Forgejo servers are on an `internal: true` Docker network with the runner. They are also
+attached to a separate control bridge solely so the host can use loopback-published Forgejo APIs;
+this is **not** evidence that the servers have no egress. The hard isolation claim is narrower and
+measured: every fresh runner is attached only to the internal network, the local Continuity service
+is reachable, and a bounded public GitHub HTTPS probe fails. No host firewall, DNS, `/etc/hosts`,
+Docker socket, user home, repository worktree, SSH agent, kubeconfig, cloud credential or privileged
+device is mounted into the runner.
+
+The runner uses Forgejo's `host` executor, but its host is the disposable runner container, not the
+developer workstation. The official security caveat for that executor still applies: it is not a
+multi-tenant production runner isolation design. A new container, registration and workspace are
+created per job; no build/action cache is reused as evidence.
+
+Prepare is the only online phase. It seeds both fixtures with the same source/action objects,
+generates a Go vendor archive, uploads it with a manifest to the Continuity Generic Package Registry,
+and records source/action/toolchain hashes. Verify never calls prepare and runs with `GOTOOLCHAIN=local`,
+`GOPROXY=off`, `GOSUMDB=off`, `GONOSUMDB=*`, and `-mod=vendor`. The runner only tests, builds and
+uploads an artifact; a bounded host-side CD executor downloads it, checks source/run/vendor/binary
+SHA256 linkage, then uses a repository-owned scratch image recipe. It never executes an artifact
+provided Dockerfile or script.
+
+The full source SHA → workflow run → binary SHA256 → registry artifact SHA256 → candidate image →
+candidate container → health/readiness/token probe chain, the expected failure boundaries and the
+three clean repetitions are retained in [L12 curated evidence](../results/curated/l12/README.md).

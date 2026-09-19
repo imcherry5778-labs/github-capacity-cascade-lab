@@ -1,0 +1,16 @@
+2026-09-19T11:47:11.0414910Z Runner 2f5e932e-8be6-4abf-95e8-279421becbfb (version:v13.1.0) received task 2 of job delivery, triggered by event: workflow_dispatch
+2026-09-19T11:47:11.0450782Z workflow prepared
+2026-09-19T11:47:11.0483144Z   ☁️  git clone 'http://continuity:3000/l12/l12-action' # ref=e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:11.1406297Z   ☁️  git fetch 'http://continuity:3000/l12/l12-action' skipped; ref=e735cac7b96b71319dca899e18e06191c286987d cached
+2026-09-19T11:47:11.1537095Z ⭐ Run Pre http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:11.1546638Z   ✅  Success - Pre http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:11.1568922Z ⭐ Run Main http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:11.1600399Z ⭐ Run Main set -eu\nprintf 'L12_ACTION_MARKER origin=%s\n' 'continuity'
+2026-09-19T11:47:11.1614529Z L12_ACTION_MARKER origin=continuity
+2026-09-19T11:47:11.1663529Z Cloning into '/tmp/tmp.jjMeKk/source'...
+2026-09-19T11:47:11.1917876Z fatal: unable to access 'http://primary:3000/l12/app-source.git/': Could not resolve host: primary (DNS server returned general failure)
+2026-09-19T11:47:11.1995203Z ⚙️ [runner]: RUN exit status 128
+2026-09-19T11:47:11.2003226Z ⭐ Run Post http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:11.2043586Z   ✅  Success - Post http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:11.2122476Z 🏁  Job failed
+2026-09-19T11:47:11.2135264Z Job 'delivery' failed

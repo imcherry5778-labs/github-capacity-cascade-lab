@@ -1,0 +1,16 @@
+2026-09-19T11:47:56.8662629Z Runner d8006bf4-4a0d-4ff3-ba07-d3c6df8aeca3 (version:v13.1.0) received task 5 of job delivery, triggered by event: workflow_dispatch
+2026-09-19T11:47:56.8693042Z workflow prepared
+2026-09-19T11:47:56.8717212Z   ☁️  git clone 'http://continuity:3000/l12/l12-action' # ref=e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:56.9459477Z   ☁️  git fetch 'http://continuity:3000/l12/l12-action' skipped; ref=e735cac7b96b71319dca899e18e06191c286987d cached
+2026-09-19T11:47:56.9584406Z ⭐ Run Pre http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:56.9587529Z   ✅  Success - Pre http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:56.9591098Z ⭐ Run Main http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:56.9620244Z ⭐ Run Main set -eu\nprintf 'L12_ACTION_MARKER origin=%s\n' 'continuity'
+2026-09-19T11:47:56.9633930Z L12_ACTION_MARKER origin=continuity
+2026-09-19T11:47:56.9677544Z Cloning into '/tmp/tmp.EAPLHc/source'...
+2026-09-19T11:47:57.1666456Z fatal: unable to read tree (61234eaff8643f1b6725e9e76620f6cef2f7efc7)
+2026-09-19T11:47:57.1747193Z ⚙️ [runner]: RUN exit status 128
+2026-09-19T11:47:57.1754464Z ⭐ Run Post http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:57.1806188Z   ✅  Success - Post http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:57.1882209Z 🏁  Job failed
+2026-09-19T11:47:57.1900158Z Job 'delivery' failed

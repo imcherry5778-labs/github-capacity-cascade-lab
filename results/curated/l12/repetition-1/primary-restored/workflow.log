@@ -1,0 +1,22 @@
+2026-09-19T11:48:01.6377024Z Runner 75eecc22-4a92-4903-8630-d188c0b294ae (version:v13.1.0) received task 6 of job delivery, triggered by event: workflow_dispatch
+2026-09-19T11:48:01.6403734Z workflow prepared
+2026-09-19T11:48:01.6426878Z   ☁️  git clone 'http://primary:3000/l12/l12-action' # ref=e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:48:01.7000471Z   ☁️  git fetch 'http://primary:3000/l12/l12-action' skipped; ref=e735cac7b96b71319dca899e18e06191c286987d cached
+2026-09-19T11:48:01.7102763Z ⭐ Run Pre http://primary:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:48:01.7107488Z   ✅  Success - Pre http://primary:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:48:01.7122729Z ⭐ Run Main http://primary:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:48:01.7153090Z ⭐ Run Main set -eu\nprintf 'L12_ACTION_MARKER origin=%s\n' 'primary'
+2026-09-19T11:48:01.7166479Z L12_ACTION_MARKER origin=primary
+2026-09-19T11:48:01.7212921Z Cloning into '/tmp/tmp.kNEEmK/source'...
+2026-09-19T11:48:02.0386319Z HEAD is now at 0217cb9 Merge pull request #15 from imcherry5778-labs/feat/l11-sidecar-ambient
+2026-09-19T11:48:02.0422379Z L12_CHECKOUT_OK source_sha=0217cb98ce49547a3a929b909204b7278b95692c source_url=http://primary:3000/l12/app-source.git
+2026-09-19T11:48:22.3663890Z ?   	github.com/imcherry5778-labs/github-capacity-cascade-lab/cmd/auth-sim	[no test files]
+2026-09-19T11:48:22.3787357Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/cmd/l05-custom-metrics-adapter	0.005s
+2026-09-19T11:48:22.3788017Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/cmd/proxy-metrics-exporter	0.005s
+2026-09-19T11:48:22.3788215Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/fault	0.005s
+2026-09-19T11:48:22.8611159Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/server	0.045s
+2026-09-19T11:48:22.8612024Z ?   	github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/telemetry	[no test files]
+2026-09-19T11:48:34.1204465Z L12_BUILD_OK source_sha=0217cb98ce49547a3a929b909204b7278b95692c vendor_sha256=b79d50de1ba83429041b6256b1a9b335cef4537b04dd809870ccd3bdbd9325a8 binary_sha256=451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f artifact_version=prepared-primary-control-6
+2026-09-19T11:48:34.5129419Z ⭐ Run Post http://primary:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:48:34.5151001Z   ✅  Success - Post http://primary:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:48:34.5187783Z 🏁  Job succeeded

@@ -1,0 +1,6 @@
+{
+  "healthz": true,
+  "readyz": true,
+  "token": true,
+  "healthy": true
+}

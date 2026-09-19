@@ -176,11 +176,22 @@
 
 - **ID:** L12
 - **Title:** External DevOps Delivery Continuity Extension
-- **Goal:** Source platform 장애 시 delivery continuity라는 별도 질문을 탐색한다.
-- **Learn:** Runtime availability와 software delivery dependency failure를 구분한다.
-- **Build:** Core lab과 격리된 최소 continuity scenario와 decision record.
-- **Observe:** Dependency outage 동안 build/deploy 가능 범위와 security/consistency trade-off.
-- **Done:** Core incident lab과 혼동되지 않는 독립 evidence와 limitation을 제공한다.
-- **Non-goals:** 현재 범위에서 external system 도입, GitHub outage 회피를 보장한다는 주장.
+- **Goal:** Source platform 장애 시 delivery continuity라는 별도 질문을 local evidence로 검증한다.
+- **Learn:** Runtime availability와 source/action/toolchain/dependency/artifact/job-control delivery
+  dependency를 구분한다.
+- **Build:** Pinned local Primary/Continuity Forgejo fixtures, fresh disposable Runner, prepared
+  source/action/vendor inputs, Generic Package Registry, bounded CD executor와 exact cleanup.
+- **Observe:** Primary outage 동안 새 workflow job의 시작, offline test/build, artifact hash chain,
+  candidate deployment, intended dependency failure와 existing-runtime witness.
+- **Done:** 같은 prepared inputs를 쓴 3 clean matrices가 S0–S4와 N1/N2, runner egress probe,
+  provenance, exact cleanup을 모두 contract PASS로 기록하고 curated evidence가 raw와
+  byte-for-byte 일치한다.
+- **Non-goals:** GitHub topology/recommendation, production HA Forgejo, automatic mirroring or
+  failback, Kubernetes/cloud/monitoring, production RTO/RPO or supply-chain security claim.
 - **Dependencies:** L10 완료와 별도 scope 승인.
-- **Status:** Optional / Planned.
+- **Status:** Optional Extension — Complete. Primary source/action fixture outage 중 prepared
+  continuity path가 3 clean local matrices에서 새 job → offline test/build → package artifact
+  SHA256 verification → separate local candidate deployment까지 성공했다. Source/action dependency
+  outage, unprepared revision과 tampered artifact는 intended boundary에서 안전하게 거절됐다.
+  [Curated evidence](../results/curated/l12/README.md)와
+  [architecture](architecture.md#l12-external-devops-delivery-continuity)를 참고한다.

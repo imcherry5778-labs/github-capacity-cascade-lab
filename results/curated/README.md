@@ -17,6 +17,7 @@ evidence의 누적 index다. 각 learning unit은 source run, 설정, 측정 결
 | L08 — Chaos Mesh Reproduction | 선언적 NetworkChaos fault window와 신호 상관, abort/cleanup 안전성 | 3 clean local repetitions curated | [L08](l08/README.md) |
 | L09 — Azure AKS Validation | Managed Kubernetes (Azure AKS) 환경에서의 capacity-cascade 보존성 검증 | 3 clean cloud repetitions curated | [L09](l09/README.md) |
 | L11 — Sidecar vs Ambient Architecture Comparison (Optional) | Destination proxy placement가 바뀔 때 capacity/resource signal, proxy ownership, request path의 차이 | 3 clean local repetitions curated | [L11](l11/README.md) |
+| L12 — External DevOps Delivery Continuity (Optional) | Prepared source/action/toolchain/vendor/package path로 Primary source-platform outage 중 새 delivery 가능 여부와 safe rejection | 3 clean local matrices curated | [L12](l12/README.md) |
 
 Curated evidence도 단일 local run이면 portfolio final evidence나 production benchmark가
 아니다. Raw result는 기존 timestamp directory에 append-only로 남고, curated 파일은

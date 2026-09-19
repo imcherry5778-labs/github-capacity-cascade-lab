@@ -1,0 +1,8 @@
+{
+  "expected_sha256": "451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f",
+  "actual_sha256": "e85e26d009b0697f4972e7a6b539c12f930c208be5800badd883c9312650822a",
+  "source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+  "tampered": true,
+  "deployment_started": false,
+  "passed_rejection": true
+}
