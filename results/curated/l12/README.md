@@ -69,10 +69,11 @@ results.
 ## Limits and conclusion
 
 This evidence supports only this local, fixed revision/action/vendor/toolchain/Compose condition:
-while the Primary fixture was down, a new independent job could build, verify, and deploy the prepared
-revision only after every required delivery input was already present on the Continuity path. A source
-copy alone was insufficient when an action dependency remained on Primary, and unavailable revisions
-or altered artifacts were rejected rather than silently substituted.
+while the Primary fixture was down, the S3 continuity path—with prepared source, action, toolchain,
+vendored dependencies, independent job-control, package and bounded CD inputs together—could build,
+verify, and deploy the prepared revision. S1/S2 separately show delivery failure when source or action
+dependency remained on Primary; they do not independently prove the necessity of every other S3 input.
+Unavailable revisions or altered artifacts were rejected rather than silently substituted.
 
 It does **not** establish GitHub customer architecture, GitHub endorsement of Forgejo, production
 resilience, universal dependency coverage, HA source control, automatic mirroring/failback, production

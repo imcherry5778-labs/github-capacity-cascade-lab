@@ -536,8 +536,8 @@ delivery 가능성이 서로 다르다**는 별도 local question을 검증한�
 Primary fixture를 의도적으로 중지한 뒤, 독립된 Continuity Forgejo에서 새
 `workflow_dispatch` job을 생성했다. 준비된 exact source revision, action commit, Go 1.26.7
 toolchain, vendored dependency bundle, Generic Package Registry와 bounded host-side CD recipe가
-모두 있을 때만 offline test/build → hash verification → 별도 `auth-sim` candidate deployment가
-성공했다.
+함께 구성된 S3 continuity path에서 offline test/build → hash verification → 별도 `auth-sim`
+candidate deployment가 성공했다.
 
 3개의 clean local matrix에서 Primary control과 restored control은 성공했고, Primary source
 또는 action에 남은 dependency는 expected workflow failure로 안전하게 멈췄다. 준비되지 않은
