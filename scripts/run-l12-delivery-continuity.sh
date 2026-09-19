@@ -472,14 +472,17 @@ runner_log() {
 }
 
 dispatch_workflow() {
-  local number="$1" workflow="$2" inputs_json="${3:-{}}" response status
+  local number="$1" workflow="$2" inputs_json='{}' response request status
+  if [[ $# -ge 3 && -n "$3" ]]; then inputs_json="$3"; fi
   response="$(mktemp "$RUNTIME_DIR/dispatch.XXXXXX")"
+  request="$(mktemp "$RUNTIME_DIR/dispatch-body.XXXXXX")"
+  jq -n --argjson inputs "$inputs_json" '{ref:"main",inputs:$inputs}' >"$request"
   status="$(curl --silent --show-error --output "$response" --write-out '%{http_code}' \
     --netrc-file "$(run_dir "$number")/secrets/netrc" -H 'Content-Type: application/json' \
-    --data "{\"ref\":\"main\",\"inputs\":$inputs_json}" \
+    --data-binary "@$request" \
     "$(api_url "$number" continuity)/api/v1/repos/l12/l12-control/actions/workflows/$workflow/dispatches")"
-  [[ "$status" == 204 ]] || { cat "$response" >&2; rm -f "$response"; die "workflow dispatch $workflow returned HTTP $status"; }
-  rm -f "$response"
+  [[ "$status" == 204 ]] || { cat "$response" >&2; rm -f "$response" "$request"; die "workflow dispatch $workflow returned HTTP $status"; }
+  rm -f "$response" "$request"
 }
 
 latest_workflow() {
@@ -526,7 +529,7 @@ primary_stop() {
   if ! curl --fail --silent --show-error --max-time 3 "$(api_url "$number" primary)/l12/l12-action/archive/$action_sha.tar.gz" >/dev/null 2>&1; then action_failed=true; fi
   jq -n --arg outage_started_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg source_sha "$source_sha" --arg action_sha "$action_sha" \
     --argjson primary_health_available "$health" --argjson primary_source_unavailable "$source_failed" --argjson primary_action_unavailable "$action_failed" \
-    '{outage_started_at:$outage_started_at,source_sha:$source_sha,action_sha:$action_sha,primary_health_available:$primary_health_available,primary_source_unavailable:$primary_source_unavailable,primary_action_unavailable:$primary_action_unavailable,passed:((.primary_health_available|not) and .primary_source_unavailable and .primary_action_unavailable)}' >"$destination"
+    '{outage_started_at:$outage_started_at,source_sha:$source_sha,action_sha:$action_sha,primary_health_available:$primary_health_available,primary_source_unavailable:$primary_source_unavailable,primary_action_unavailable:$primary_action_unavailable} | . + {passed:((.primary_health_available|not) and .primary_source_unavailable and .primary_action_unavailable)}' >"$destination"
   jq -e '.passed == true' "$destination" >/dev/null || die 'primary outage was not proven'
 }
 
@@ -559,9 +562,10 @@ deploy_artifact() {
   if [[ "$expected_sha" != "$actual_sha" ]]; then
     jq -n --arg expected_sha256 "$expected_sha" --arg actual_sha256 "$actual_sha" --arg source_sha "$source_sha" \
       --argjson tampered "$tamper" '{expected_sha256:$expected_sha256,actual_sha256:$actual_sha256,source_sha:$source_sha,tampered:$tampered,deployment_started:false,passed_rejection:true}' \
-      >"$scenario_dir/deployment.json"
+    >"$scenario_dir/deployment.json"
     return 0
   fi
+  chmod 0755 "$binary"
   context="$artifact_dir/image-context"
   mkdir -p "$context"
   cp "$binary" "$context/auth-sim"
@@ -594,7 +598,8 @@ EOF
 }
 
 workflow_scenario() {
-  local number="$1" scenario="$2" workflow="$3" expected="$4" result_dir="$5" inputs="${6:-{}}"
+  local number="$1" scenario="$2" workflow="$3" expected="$4" result_dir="$5" inputs='{}'
+  if [[ $# -ge 6 && -n "$6" ]]; then inputs="$6"; fi
   local scenario_dir="$result_dir/$scenario" runner log job_log run_json workflow_name runner_code witness
   scenario_dir="$result_dir/$scenario"
   mkdir -p "$scenario_dir"
@@ -656,7 +661,7 @@ create_unprepared_commit() {
   git -C "$fixture_dir" add L12_UNPREPARED_FIXTURE.txt
   git -C "$fixture_dir" commit -m 'test: add unprepared L12 fixture revision' >/dev/null
   cnew="$(git -C "$fixture_dir" rev-parse HEAD)"
-  git_push "$number" primary app-source "$fixture_dir"
+  git_push "$number" primary app-source "$fixture_dir" >/dev/null
   printf '%s' "$cnew"
 }
 
@@ -729,6 +734,7 @@ run_matrix() {
   mark_contract "$result_dir/primary-control/contract.json" false true
 
   cnew="$(create_unprepared_commit "$number")"
+  [[ "$cnew" =~ ^[0-9a-f]{40}$ ]] || die 'synthetic unprepared revision is not a single commit SHA'
   primary_stop "$number" "$result_dir/outage-window.json"
 
   workflow_scenario "$number" source-unavailable source-unavailable.yml source_dependency_unavailable "$result_dir"
