@@ -1,0 +1,25 @@
+name: l12-unprepared-revision
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact source revision requested for delivery.
+        required: true
+        type: string
+jobs:
+  delivery:
+    runs-on: l12-host
+    env:
+      L12_ARTIFACT_VERSION: __ARTIFACT_PREFIX__-${{ forgejo.run_id }}
+      L12_EXPECTED_VENDOR_SHA256: __VENDOR_SHA256__
+      L12_FORGEJO_RUN_ID: ${{ forgejo.run_id }}
+      L12_SCENARIO: unprepared-revision
+      L12_SOURCE_SHA: ${{ inputs.source_sha }}
+      L12_SOURCE_URL: http://continuity:3000/l12/app-source.git
+    steps:
+      - uses: http://continuity:3000/l12/l12-action@__ACTION_SHA__
+        with:
+          expected-action-origin: continuity
+      - name: offline-build-and-upload
+        shell: sh
+        run: __BUILD_SCRIPT__

@@ -575,6 +575,24 @@ l11-verify: l11-check ## Sidecar/ambient-ztunnel pair를 한 cluster lifecycle�
 l11-clean: ## exact L11 cluster/process만 정리하고 evidence는 보존합니다.
 	@ISTIO_VERSION="$(L11_ISTIO_VERSION)" K6_IMAGE="$(L11_K6_IMAGE)" K3S_IMAGE="$(L11_K3S_IMAGE)" scripts/run-l11-sidecar-ambient.sh clean
 
+l12-doctor: ## L12 delivery-continuity에 필요한 existing local tool과 Docker daemon을 확인합니다.
+	scripts/run-l12-delivery-continuity.sh doctor
+
+l12-check: ## L12 pinned Forgejo/Runner, internal network, action pinning 및 scope를 정적으로 검사합니다.
+	scripts/run-l12-delivery-continuity.sh check
+
+l12-prepare: ## L12 ONLINE PREPARATION ONLY: immutable source/vendor/action/package inputs와 3개 fresh fixture pair를 준비합니다.
+	scripts/run-l12-delivery-continuity.sh prepare
+
+l12-smoke: ## Prepared L12 fixture에서 Primary normal path를 한 번 검증하고 fresh prepared r1 fixture를 복원합니다.
+	scripts/run-l12-delivery-continuity.sh smoke
+
+l12-verify: ## Prepared inputs만 소비하여 S0-S4, N1/N2의 3회 fresh delivery-continuity matrix를 실행합니다; prepare를 호출하지 않습니다.
+	scripts/run-l12-delivery-continuity.sh verify
+
+l12-clean: ## L12가 소유한 container/network/volume/image/temp credential만 제거하고 raw evidence는 보존합니다.
+	scripts/run-l12-delivery-continuity.sh clean
+
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"
 	@rmdir "$(dir $(BINARY))" 2>/dev/null || true

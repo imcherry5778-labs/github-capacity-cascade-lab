@@ -1,0 +1,13 @@
+name: l12-prepared-marker
+description: Emit a minimal, lab-owned marker before source checkout.
+inputs:
+  expected-action-origin:
+    description: Expected action origin for this scenario.
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: sh
+      run: |
+        set -eu
+        printf 'L12_ACTION_MARKER origin=%s\n' '${{ inputs.expected-action-origin }}'
