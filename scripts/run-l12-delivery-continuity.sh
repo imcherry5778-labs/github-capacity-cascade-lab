@@ -753,7 +753,7 @@ run_matrix() {
   jq -e '.passed == true and .runtime_healthy == true' "$result_dir/prepared-continuity/deployment.json" >/dev/null
   mark_contract "$result_dir/prepared-continuity/contract.json" true true
 
-  workflow_scenario "$number" unprepared-revision unprepared-revision.yml unprepared_revision "{\"source_sha\":\"$cnew\"}"
+  workflow_scenario "$number" unprepared-revision unprepared-revision.yml unprepared_revision "$result_dir" "{\"source_sha\":\"$cnew\"}"
   jq -e '.workflow_conclusion == "failure" and .existing_runtime_healthy == true' "$result_dir/unprepared-revision/contract.json" >/dev/null
   rg -q 'L12_ACTION_MARKER origin=continuity' "$result_dir/unprepared-revision/workflow.log"
   ! rg -q 'L12_CHECKOUT_OK|L12_BUILD_OK' "$result_dir/unprepared-revision/workflow.log"
