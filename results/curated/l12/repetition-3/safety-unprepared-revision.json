@@ -1,0 +1,8 @@
+{
+  "requested_source_sha": "ed34ccd99bb15f8ecf2ca3738b0d5f7e8bb2e03f",
+  "prepared_source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+  "fallback_to_prepared_revision": false,
+  "deployment_started": false,
+  "existing_runtime_healthy": true,
+  "experiment_contract_passed": true
+}

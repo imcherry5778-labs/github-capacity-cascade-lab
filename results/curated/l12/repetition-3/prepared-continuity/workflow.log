@@ -1,0 +1,22 @@
+2026-09-19T11:51:47.2097601Z Runner 69fe38bf-c9bf-43c9-b690-aa9800a0739e (version:v13.1.0) received task 4 of job delivery, triggered by event: workflow_dispatch
+2026-09-19T11:51:47.2143217Z workflow prepared
+2026-09-19T11:51:47.2177672Z   ☁️  git clone 'http://continuity:3000/l12/l12-action' # ref=e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:51:47.3305872Z   ☁️  git fetch 'http://continuity:3000/l12/l12-action' skipped; ref=e735cac7b96b71319dca899e18e06191c286987d cached
+2026-09-19T11:51:47.3451557Z ⭐ Run Pre http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:51:47.3457626Z   ✅  Success - Pre http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:51:47.3466681Z ⭐ Run Main http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:51:47.3499287Z ⭐ Run Main set -eu\nprintf 'L12_ACTION_MARKER origin=%s\n' 'continuity'
+2026-09-19T11:51:47.3513143Z L12_ACTION_MARKER origin=continuity
+2026-09-19T11:51:47.3565018Z Cloning into '/tmp/tmp.LAoipp/source'...
+2026-09-19T11:51:47.6856399Z HEAD is now at 0217cb9 Merge pull request #15 from imcherry5778-labs/feat/l11-sidecar-ambient
+2026-09-19T11:51:47.6896876Z L12_CHECKOUT_OK source_sha=0217cb98ce49547a3a929b909204b7278b95692c source_url=http://continuity:3000/l12/app-source.git
+2026-09-19T11:52:07.6722968Z ?   	github.com/imcherry5778-labs/github-capacity-cascade-lab/cmd/auth-sim	[no test files]
+2026-09-19T11:52:07.6790985Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/cmd/l05-custom-metrics-adapter	0.004s
+2026-09-19T11:52:07.6791503Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/cmd/proxy-metrics-exporter	0.003s
+2026-09-19T11:52:07.6791666Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/fault	0.004s
+2026-09-19T11:52:08.0983346Z ok  	github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/server	0.043s
+2026-09-19T11:52:08.0983904Z ?   	github.com/imcherry5778-labs/github-capacity-cascade-lab/internal/telemetry	[no test files]
+2026-09-19T11:52:19.0345814Z L12_BUILD_OK source_sha=0217cb98ce49547a3a929b909204b7278b95692c vendor_sha256=b79d50de1ba83429041b6256b1a9b335cef4537b04dd809870ccd3bdbd9325a8 binary_sha256=451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f artifact_version=prepared-prepared-continuity-4
+2026-09-19T11:52:19.3982221Z ⭐ Run Post http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:52:19.4009384Z   ✅  Success - Post http://continuity:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:52:19.4063206Z 🏁  Job succeeded

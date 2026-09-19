@@ -1,0 +1,7 @@
+2026-09-19T11:47:13.8920514Z Runner 2f3c70bb-704e-494a-a59e-7839d5f1f58c (version:v13.1.0) received task 3 of job delivery, triggered by event: workflow_dispatch
+2026-09-19T11:47:13.8974579Z workflow prepared
+2026-09-19T11:47:13.9002212Z   ☁️  git clone 'http://primary:3000/l12/l12-action' # ref=e735cac7b96b71319dca899e18e06191c286987d
+2026-09-19T11:47:13.9186603Z ⚙️ [runner]: unable to clone 'http://primary:3000/l12/l12-action' to '/data/.cache/act/85/5deeadf50a1316cc3cc81f8fc49637cdf54f48c54ce2a89a4b5574a06ca292': Cloning into bare repository '/data/.cache/act/85/5deeadf50a1316cc3cc81f8fc49637cdf54f48c54ce2a89a4b5574a06ca292'...\nfatal: unable to access 'http://primary:3000/l12/l12-action/': Could not resolve host: primary (DNS server returned general failure): exit status 128
+2026-09-19T11:47:13.9187559Z skipping post step for 'http://primary:3000/l12/l12-action@e735cac7b96b71319dca899e18e06191c286987d'; step was not executed
+2026-09-19T11:47:13.9188178Z 🏁  Job failed
+2026-09-19T11:47:13.9192672Z unable to clone 'http://primary:3000/l12/l12-action' to '/data/.cache/act/85/5deeadf50a1316cc3cc81f8fc49637cdf54f48c54ce2a89a4b5574a06ca292': Cloning into bare repository '/data/.cache/act/85/5deeadf50a1316cc3cc81f8fc49637cdf54f48c54ce2a89a4b5574a06ca292'...\nfatal: unable to access 'http://primary:3000/l12/l12-action/': Could not resolve host: primary (DNS server returned general failure): exit status 128

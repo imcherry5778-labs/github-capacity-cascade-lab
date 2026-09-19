@@ -1,0 +1,66 @@
+services:
+  primary:
+    image: codeberg.org/forgejo/forgejo:15.0.9
+    environment:
+      FORGEJO__actions__ENABLED: "true"
+      FORGEJO__database__DB_TYPE: sqlite3
+      FORGEJO__repository__DISABLE_HTTP_GIT: "false"
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__server__DOMAIN: primary
+      FORGEJO__server__HTTP_PORT: "3000"
+      FORGEJO__server__ROOT_URL: http://primary:3000/
+      USER_GID: "1000"
+      USER_UID: "1000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/api/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+    networks:
+      - l12_internal
+      - l12_control
+    ports:
+      - "127.0.0.1:${L12_PRIMARY_PORT}:3000"
+    volumes:
+      - primary_data:/data
+
+  continuity:
+    image: codeberg.org/forgejo/forgejo:15.0.9
+    environment:
+      FORGEJO__actions__ENABLED: "true"
+      FORGEJO__database__DB_TYPE: sqlite3
+      FORGEJO__repository__DISABLE_HTTP_GIT: "false"
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__server__DOMAIN: continuity
+      FORGEJO__server__HTTP_PORT: "3000"
+      FORGEJO__server__ROOT_URL: http://continuity:3000/
+      USER_GID: "1000"
+      USER_UID: "1000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/api/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+    networks:
+      - l12_internal
+      - l12_control
+    ports:
+      - "127.0.0.1:${L12_CONTINUITY_PORT}:3000"
+    volumes:
+      - continuity_data:/data
+
+networks:
+  l12_internal:
+    name: ${L12_NETWORK_NAME}
+    internal: true
+  l12_control:
+    name: ${L12_CONTROL_NETWORK_NAME}
+    internal: false
+
+volumes:
+  primary_data:
+  continuity_data:

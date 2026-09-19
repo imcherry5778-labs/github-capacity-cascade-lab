@@ -1,0 +1,79 @@
+{
+  "primary_control": {
+    "scenario": "primary-control",
+    "expected_outcome": "primary_available",
+    "runner_exit_code": "0",
+    "workflow_conclusion": "success",
+    "workflow_status": "success",
+    "existing_runtime_healthy": true,
+    "new_deployment_started": false,
+    "experiment_contract_passed": true
+  },
+  "source_unavailable": {
+    "scenario": "source-unavailable",
+    "expected_outcome": "source_dependency_unavailable",
+    "runner_exit_code": "0",
+    "workflow_conclusion": "failure",
+    "workflow_status": "failure",
+    "existing_runtime_healthy": true,
+    "new_deployment_started": false,
+    "experiment_contract_passed": true
+  },
+  "action_unavailable": {
+    "scenario": "action-unavailable",
+    "expected_outcome": "action_dependency_unavailable",
+    "runner_exit_code": "0",
+    "workflow_conclusion": "failure",
+    "workflow_status": "failure",
+    "existing_runtime_healthy": true,
+    "new_deployment_started": false,
+    "experiment_contract_passed": true
+  },
+  "prepared_continuity": {
+    "scenario": "prepared-continuity",
+    "expected_outcome": "prepared_continuity",
+    "runner_exit_code": "0",
+    "workflow_conclusion": "success",
+    "workflow_status": "success",
+    "existing_runtime_healthy": true,
+    "new_deployment_started": true,
+    "experiment_contract_passed": true,
+    "cd": {
+      "expected_sha256": "451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f",
+      "actual_sha256": "451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f",
+      "source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+      "image": "capacity-cascade-l12/auth-sim-candidate:r3-prepared-prepared-continuity-4",
+      "container": "capacity-cascade-l12-candidate-r3",
+      "tampered": false,
+      "deployment_started": true,
+      "runtime_healthy": true,
+      "passed": true
+    }
+  },
+  "primary_restored": {
+    "scenario": "primary-restored",
+    "expected_outcome": "primary_restored",
+    "runner_exit_code": "0",
+    "workflow_conclusion": "success",
+    "workflow_status": "success",
+    "existing_runtime_healthy": true,
+    "new_deployment_started": false,
+    "experiment_contract_passed": true
+  },
+  "unprepared_revision": {
+    "requested_source_sha": "ed34ccd99bb15f8ecf2ca3738b0d5f7e8bb2e03f",
+    "prepared_source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+    "fallback_to_prepared_revision": false,
+    "deployment_started": false,
+    "existing_runtime_healthy": true,
+    "experiment_contract_passed": true
+  },
+  "tampered_artifact": {
+    "expected_sha256": "451ddd097041f655e817a2b5ae3ebb8900c4592c490c98a616882a3f220f896f",
+    "actual_sha256": "e85e26d009b0697f4972e7a6b539c12f930c208be5800badd883c9312650822a",
+    "source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+    "tampered": true,
+    "deployment_started": false,
+    "passed_rejection": true
+  }
+}

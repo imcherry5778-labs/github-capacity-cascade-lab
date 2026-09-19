@@ -1,0 +1,10 @@
+{
+  "scenario": "primary-control",
+  "expected_outcome": "primary_available",
+  "runner_exit_code": "0",
+  "workflow_conclusion": "success",
+  "workflow_status": "success",
+  "existing_runtime_healthy": true,
+  "new_deployment_started": false,
+  "experiment_contract_passed": true
+}

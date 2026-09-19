@@ -1,0 +1,9 @@
+{
+  "outage_started_at": "2026-09-19T11:47:09Z",
+  "source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+  "action_sha": "e735cac7b96b71319dca899e18e06191c286987d",
+  "primary_health_available": false,
+  "primary_source_unavailable": true,
+  "primary_action_unavailable": true,
+  "passed": true
+}

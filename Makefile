@@ -34,7 +34,7 @@ L11_ISTIO_VERSION ?= $(L04_ISTIO_VERSION)
 L11_K6_IMAGE ?= $(L04_K6_IMAGE)
 L11_K3S_IMAGE ?= $(L03_K3S_IMAGE)
 
-.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean l09-doctor l09-check l09-preflight l09-provision l09-smoke l09-verify l09-destroy l09-cost l10-check l11-doctor l11-check l11-smoke l11-scenario l11-verify l11-clean
+.PHONY: help doctor fmt fmt-check lint test build run k6-check smoke scenario docker-build docker-smoke verify clean l01-doctor l01-check l01-smoke l01-verify l01-scenario l01-clean l02-doctor l02-check l02-smoke l02-scenario l02-verify l02-clean l03-doctor l03-check l03-smoke l03-verify l03-clean l04-doctor l04-check l04-smoke l04-scenario l04-verify l04-clean l05-doctor l05-check l05-smoke l05-scenario l05-verify l05-clean l06-doctor l06-check l06-smoke l06-scenario l06-verify l06-clean l07-doctor l07-check l07-smoke l07-scenario l07-verify l07-clean l08-doctor l08-check l08-smoke l08-abort-smoke l08-verify l08-clean l09-doctor l09-check l09-preflight l09-provision l09-smoke l09-verify l09-destroy l09-cost l10-check l11-doctor l11-check l11-smoke l11-scenario l11-verify l11-clean l12-doctor l12-check l12-prepare l12-smoke l12-verify l12-clean
 
 help: ## 사용 가능한 대상을 표시합니다.
 	@awk 'BEGIN {FS = ":.*## "; print "대상:"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -574,6 +574,24 @@ l11-verify: l11-check ## Sidecar/ambient-ztunnel pair를 한 cluster lifecycle�
 
 l11-clean: ## exact L11 cluster/process만 정리하고 evidence는 보존합니다.
 	@ISTIO_VERSION="$(L11_ISTIO_VERSION)" K6_IMAGE="$(L11_K6_IMAGE)" K3S_IMAGE="$(L11_K3S_IMAGE)" scripts/run-l11-sidecar-ambient.sh clean
+
+l12-doctor: ## L12 delivery-continuity에 필요한 existing local tool과 Docker daemon을 확인합니다.
+	scripts/run-l12-delivery-continuity.sh doctor
+
+l12-check: ## L12 pinned Forgejo/Runner, internal network, action pinning 및 scope를 정적으로 검사합니다.
+	scripts/run-l12-delivery-continuity.sh check
+
+l12-prepare: ## L12 ONLINE PREPARATION ONLY: immutable source/vendor/action/package inputs와 3개 fresh fixture pair를 준비합니다.
+	scripts/run-l12-delivery-continuity.sh prepare
+
+l12-smoke: ## Prepared L12 fixture에서 Primary normal path를 한 번 검증하고 fresh prepared r1 fixture를 복원합니다.
+	scripts/run-l12-delivery-continuity.sh smoke
+
+l12-verify: ## Prepared inputs만 소비하여 S0-S4, N1/N2의 3회 fresh delivery-continuity matrix를 실행합니다; prepare를 호출하지 않습니다.
+	scripts/run-l12-delivery-continuity.sh verify
+
+l12-clean: ## L12가 소유한 container/network/volume/image/temp credential만 제거하고 raw evidence는 보존합니다.
+	scripts/run-l12-delivery-continuity.sh clean
 
 clean: ## 실험 증거를 보존하고 생성된 바이너리를 제거합니다.
 	rm -f "$(BINARY)"

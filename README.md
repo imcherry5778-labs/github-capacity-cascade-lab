@@ -529,6 +529,23 @@ Preflight에서 pinned 1.30.4 `istio/cni` chart의 k3d platform override가 실�
 결과와 한계는 [L11 curated evidence](results/curated/l11/README.md)와
 [architecture](docs/architecture.md#l11-sidecar-vs-ambient-ztunnel-comparison)에 있다.
 
+## Delivery continuity (Optional Extension)
+
+L12는 GitHub incident의 topology를 복제하는 단계가 아니라, **runtime availability와 새
+delivery 가능성이 서로 다르다**는 별도 local question을 검증한다. Pinned Forgejo 15.0.9
+Primary fixture를 의도적으로 중지한 뒤, 독립된 Continuity Forgejo에서 새
+`workflow_dispatch` job을 생성했다. 준비된 exact source revision, action commit, Go 1.26.7
+toolchain, vendored dependency bundle, Generic Package Registry와 bounded host-side CD recipe가
+함께 구성된 S3 continuity path에서 offline test/build → hash verification → 별도 `auth-sim`
+candidate deployment가 성공했다.
+
+3개의 clean local matrix에서 Primary control과 restored control은 성공했고, Primary source
+또는 action에 남은 dependency는 expected workflow failure로 안전하게 멈췄다. 준비되지 않은
+revision은 prior revision으로 fallback하지 않았고, tampered artifact는 SHA256 gate에서
+deployment 전에 거절됐다. 이는 local fixed-condition evidence이며 GitHub customer topology,
+production RTO/RPO, production HA CI/CD security 또는 Forgejo 권고를 뜻하지 않는다. 원문과
+selection boundary는 [L12 curated evidence](results/curated/l12/README.md)에 있다.
+
 ## Repository status
 
 - Completed foundation: L00 — Minimal Workload and k6
@@ -543,5 +560,6 @@ Preflight에서 pinned 1.30.4 `istio/cni` chart의 k3d platform override가 실�
 - Completed foundation: L09 — Azure AKS Validation (implementation verified; 3 clean cloud repetitions, destroy/zero-residual and Cost Management observation curated)
 - Completed foundation: L10 — Portfolio Evidence and Demo (implementation verified; portfolio evidence, demo runbook and clean-checkout reproducibility confirmed)
 - Optional Extension: L11 — Sidecar vs Ambient Architecture Comparison (implementation verified; 3 clean local repetitions; not part of the L00–L10 core)
+- Optional Extension: L12 — External DevOps Delivery Continuity (implementation verified; 3 clean local matrices curated; not part of the L00–L10 core)
 - Go module: `github.com/imcherry5778-labs/github-capacity-cascade-lab`
-- Push/merge/CI: 이 단계의 범위 아님
+- GitHub-hosted repository CI: 별도로 구성하지 않았으며, L12는 Optional delivery-continuity experiment에서만 격리된 local Forgejo Actions fixture를 사용한다.

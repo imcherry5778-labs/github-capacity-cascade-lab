@@ -1,0 +1,11 @@
+{
+  "source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+  "action_sha": "e735cac7b96b71319dca899e18e06191c286987d",
+  "forgejo_server": "codeberg.org/forgejo/forgejo:15.0.9",
+  "forgejo_runner": "code.forgejo.org/forgejo/runner:13.1.0",
+  "go_image": "golang:1.26.7",
+  "server_digest": "codeberg.org/forgejo/forgejo@sha256:91a5310c86934339e16bd06b6078aada836e3d8935b2d70f6598108cbfaed5d1",
+  "runner_digest": "code.forgejo.org/forgejo/runner@sha256:c4af85fd9f0dd03788676a534781a87c71aa2c6a37737143e017eb94d4312952",
+  "go_digest": "golang@sha256:e30143be198ab04cf7ba25fba83ab3a692ca584c994aad0bf131fa0eb32dd8c1",
+  "vendor_tar_sha256": "b79d50de1ba83429041b6256b1a9b335cef4537b04dd809870ccd3bdbd9325a8"
+}

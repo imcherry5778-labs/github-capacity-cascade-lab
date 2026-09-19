@@ -1,0 +1,7 @@
+{
+  "source_sha": "0217cb98ce49547a3a929b909204b7278b95692c",
+  "go_mod_sha256": "9111a3558f90ca4b2780609d6b11cc4007c93b182f007a548330ee67dfb2bdc4",
+  "go_sum_sha256": "0a65f5bb25e54cd4b5def4f5755f31835657046c17f71f20cf1e32cfca4be63a",
+  "vendor_tar_sha256": "b79d50de1ba83429041b6256b1a9b335cef4537b04dd809870ccd3bdbd9325a8",
+  "go_toolchain": "go version go1.26.7 linux/amd64"
+}
